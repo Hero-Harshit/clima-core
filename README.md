@@ -49,14 +49,17 @@ python -m climacore.cli.main audit --source india_weather_air_quality_50_cities
 # 3. Build time-safe processed features
 python -m climacore.cli.main prepare --model air_quality
 python -m climacore.cli.main prepare --model heat_risk
+python -m climacore.cli.main prepare --model rain_risk
 
 # 4. Train LightGBM model and export artifacts
 python -m climacore.cli.main train --model air_quality
 python -m climacore.cli.main train --model heat_risk
+python -m climacore.cli.main train --model rain_risk
 
 # 5. Display chronological evaluation report
 python -m climacore.cli.main evaluate --model air_quality
 python -m climacore.cli.main evaluate --model heat_risk
+python -m climacore.cli.main evaluate --model rain_risk
 
 # 6. Run unit tests
 pytest -v tests
@@ -92,6 +95,22 @@ pytest -v tests
   - **RMSE:** **1.42 $^\circ\text{C}$** (vs 1.56 $^\circ\text{C}$ persistence, vs 2.54 $^\circ\text{C}$ climatology)
   - **$R^2$:** **0.9510**
   - **Artifact:** `artifacts/models/heat_risk/v0.1.0/model.txt` (SHA-256: `92843a9d316b1a3a6420cdfd46fca44629c22c753fdb180373b99478d94ada1a`)
+
+### C. RainRisk Model (`v0.1.0` — Two-Part Hurdle Model)
+- **Target:** Next-day precipitation occurrence ($\ge 1.0\text{ mm}$) and volume ($\text{mm}$)
+- **Architecture:**
+  - **Part 1:** LightGBM Classifier for Rain Occurrence ($P(\text{Rain} \ge 1.0\text{ mm})$)
+  - **Part 2:** Conditional LightGBM Regressor for Volume ($E[\text{Rain} \mid \text{Rain} \ge 1.0\text{ mm}]$)
+  - **Combined Expectation:** $\hat{y} = P(\text{Rain} \ge 1.0\text{ mm}) \times E[\text{Rain} \mid \text{Rain} \ge 1.0\text{ mm}]$
+- **Chronological Split:**
+  - **Train:** 2020-01-08 to 2024-12-31 (91,000 rows)
+  - **Validation:** 2025-01-01 to 2025-12-31 (18,250 rows)
+  - **Test (Holdout):** 2026-01-01 to 2026-10-29 (15,100 rows untouched)
+- **Holdout Test Results:**
+  - **Classifier PR-AUC:** **0.8840** | **ROC-AUC:** **0.9134** | **Brier Score:** **0.1157** (vs 0.2319 persistence)
+  - **Two-Part MAE:** **3.18 mm** (outperformed Direct Single Regressor at 3.25 mm and Persistence at 3.38 mm)
+  - **Two-Part RMSE:** **7.40 mm** (outperformed Persistence at 8.93 mm and Climatology at 8.44 mm)
+  - **Artifacts:** `artifacts/models/rain_risk/v0.1.0/` (contains `classifier_model.txt`, `conditional_regressor_model.txt`, `direct_regressor_model.txt`)
 
 ---
 

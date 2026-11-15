@@ -16,6 +16,8 @@ from climacore.models.air_quality.dataset import prepare_air_quality_dataset
 from climacore.models.air_quality.train import train_air_quality_model
 from climacore.models.heat_risk.dataset import prepare_heat_risk_dataset
 from climacore.models.heat_risk.train import train_heat_risk_model
+from climacore.models.rain_risk.dataset import prepare_rain_risk_dataset
+from climacore.models.rain_risk.train import train_rain_risk_models
 
 logger = get_logger("climacore.cli")
 
@@ -57,6 +59,9 @@ def cmd_prepare(args):
     elif args.model == "heat_risk":
         _, feats, meta = prepare_heat_risk_dataset()
         print(f"\nHeatRisk dataset prepared: {meta['rows']:,} rows, {meta['feature_count']} features.")
+    elif args.model == "rain_risk":
+        _, feats, meta = prepare_rain_risk_dataset()
+        print(f"\nRainRisk dataset prepared: {meta['rows']:,} rows, {meta['feature_count']} features.")
     else:
         print(f"Unknown model: {args.model}")
 
@@ -75,6 +80,13 @@ def cmd_train(args):
         print(f"  Test MAE: {results['metrics']['lightgbm_test']['mae']} deg C")
         print(f"  Test RMSE: {results['metrics']['lightgbm_test']['rmse']} deg C")
         print(f"  Test R2: {results['metrics']['lightgbm_test']['r2_score']}")
+    elif args.model == "rain_risk":
+        results = train_rain_risk_models()
+        print("\nRainRisk Two-Part Model Trained Successfully:")
+        print(f"  Occurrence PR-AUC: {results['classification_metrics']['lightgbm_classifier']['pr_auc']}")
+        print(f"  Two-Part Test MAE: {results['regression_metrics']['two_part_hurdle_test']['mae']} mm")
+        print(f"  Two-Part Test RMSE: {results['regression_metrics']['two_part_hurdle_test']['rmse']} mm")
+        print(f"  Direct Regressor MAE: {results['regression_metrics']['direct_single_regressor_test']['mae']} mm")
     else:
         print(f"Unknown model: {args.model}")
 
@@ -88,13 +100,18 @@ def cmd_evaluate(args):
         return
     with open(eval_file, "r", encoding="utf-8") as f:
         data = json.load(f)
-    print(f"\n=== Evaluation Summary for {args.model} ({data['version']}) ===")
-    print(f"Target: {data['target']} ({data['units']})")
+    print(f"\n=== Evaluation Summary for {args.model} ({data.get('version', 'v0.1.0')}) ===")
+    print(f"Target: {data['target']} ({data.get('units', '')})")
     print(f"Split: {data['split_definition']['test']}")
-    print("\nMetrics Comparison on Test Set:")
-    for m_name, m_vals in data["metrics"].items():
-        if "test" in m_name:
-            print(f"  {m_name:25s} | MAE: {m_vals.get('mae')} | RMSE: {m_vals.get('rmse')}")
+    if "regression_metrics" in data:
+        print("\nRegression Metrics Comparison on Test Set:")
+        for m_name, m_vals in data["regression_metrics"].items():
+            print(f"  {m_name:30s} | MAE: {m_vals.get('mae')} | RMSE: {m_vals.get('rmse')} | R2: {m_vals.get('r2_score')}")
+    elif "metrics" in data:
+        print("\nMetrics Comparison on Test Set:")
+        for m_name, m_vals in data["metrics"].items():
+            if "test" in m_name:
+                print(f"  {m_name:25s} | MAE: {m_vals.get('mae')} | RMSE: {m_vals.get('rmse')}")
 
 
 def main():
@@ -110,15 +127,15 @@ def main():
 
     # prepare
     p_prep = subparsers.add_parser("prepare", help="Prepare features and clean dataset")
-    p_prep.add_argument("--model", required=True, choices=["air_quality", "heat_risk"], help="Target model")
+    p_prep.add_argument("--model", required=True, choices=["air_quality", "heat_risk", "rain_risk"], help="Target model")
 
     # train
     p_train = subparsers.add_parser("train", help="Train model and export artifacts")
-    p_train.add_argument("--model", required=True, choices=["air_quality", "heat_risk"], help="Model to train")
+    p_train.add_argument("--model", required=True, choices=["air_quality", "heat_risk", "rain_risk"], help="Model to train")
 
     # evaluate
     p_eval = subparsers.add_parser("evaluate", help="Display model evaluation report")
-    p_eval.add_argument("--model", required=True, choices=["air_quality", "heat_risk"], help="Model to evaluate")
+    p_eval.add_argument("--model", required=True, choices=["air_quality", "heat_risk", "rain_risk"], help="Model to evaluate")
 
     args = parser.parse_args()
     if args.command == "sources":

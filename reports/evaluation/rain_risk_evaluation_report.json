@@ -1,0 +1,124 @@
+{
+  "model_name": "climacore_rain_risk_two_part",
+  "version": "v0.1.0",
+  "target": "target_precipitation_next_day",
+  "units": "mm",
+  "split_definition": {
+    "train": "2020-01-08 to 2024-12-31 (91,000 rows)",
+    "validation": "2025-01-01 to 2025-12-31 (18,250 rows)",
+    "test": "2026-01-01 to 2026-10-29 (15,100 rows)"
+  },
+  "models_summary": {
+    "classifier_best_iteration": 244,
+    "conditional_regressor_best_iteration": 173,
+    "direct_regressor_best_iteration": 195
+  },
+  "classification_metrics": {
+    "lightgbm_classifier": {
+      "accuracy": 0.8369,
+      "precision": 0.8102,
+      "recall": 0.7788,
+      "f1_score": 0.7942,
+      "roc_auc": 0.9134,
+      "pr_auc": 0.884,
+      "brier_score": 0.1157
+    },
+    "persistence_brier_score": 0.1874,
+    "climatology_brier_score": 0.1448
+  },
+  "regression_metrics": {
+    "two_part_hurdle_test": {
+      "mae": 3.1756,
+      "rmse": 7.4035,
+      "mean_bias": 0.3357,
+      "r2_score": 0.3927
+    },
+    "direct_single_regressor_test": {
+      "mae": 3.2544,
+      "rmse": 7.4135,
+      "mean_bias": 0.4466,
+      "r2_score": 0.3911
+    },
+    "persistence_test": {
+      "mae": 3.3816,
+      "rmse": 8.9322,
+      "mean_bias": -0.0117,
+      "r2_score": 0.116
+    },
+    "climatology_test": {
+      "mae": 4.1212,
+      "rmse": 8.4366,
+      "mean_bias": 0.728,
+      "r2_score": 0.2114
+    }
+  },
+  "heavy_rain_event_metrics": {
+    "true_heavy_count": 1026,
+    "two_part_heavy_recall": 0.422,
+    "two_part_heavy_precision": 0.5523,
+    "direct_heavy_recall": 0.4386,
+    "direct_heavy_precision": 0.5448
+  },
+  "top_predictive_features": [
+    {
+      "feature": "city_cat",
+      "importance": 1078
+    },
+    {
+      "feature": "cos_day_of_year",
+      "importance": 356
+    },
+    {
+      "feature": "shortwave_radiation_sum",
+      "importance": 315
+    },
+    {
+      "feature": "wind_direction_10m_dominant",
+      "importance": 302
+    },
+    {
+      "feature": "day_of_year",
+      "importance": 256
+    },
+    {
+      "feature": "relative_humidity_2m_mean",
+      "importance": 235
+    },
+    {
+      "feature": "precipitation_hours",
+      "importance": 234
+    },
+    {
+      "feature": "precipitation_sum",
+      "importance": 230
+    },
+    {
+      "feature": "sin_day_of_year",
+      "importance": 219
+    },
+    {
+      "feature": "wind_speed_10m_max",
+      "importance": 179
+    },
+    {
+      "feature": "apparent_temperature_max",
+      "importance": 174
+    },
+    {
+      "feature": "precipitation_hours_roll_sum_14d",
+      "importance": 159
+    },
+    {
+      "feature": "weather_code",
+      "importance": 156
+    },
+    {
+      "feature": "shortwave_radiation_sum_lag_1",
+      "importance": 149
+    },
+    {
+      "feature": "temperature_2m_min",
+      "importance": 137
+    }
+  ]
+}

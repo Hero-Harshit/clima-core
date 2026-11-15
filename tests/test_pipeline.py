@@ -78,4 +78,31 @@ def test_air_quality_model_artifact_parity():
     
     assert len(preds) == 10
     assert not np.isnan(preds).any()
-    assert (preds > 0).all()  # PM2.5 concentrations must be positive
+    assert (preds > 0).all()
+
+
+def test_rain_risk_two_part_parity():
+    root = get_project_root()
+    clf_path = root / "artifacts" / "models" / "rain_risk" / "v0.1.0" / "classifier_model.txt"
+    reg_path = root / "artifacts" / "models" / "rain_risk" / "v0.1.0" / "conditional_regressor_model.txt"
+    parquet_path = root / "data" / "processed" / "rain_risk_train_ready.parquet"
+
+    if not clf_path.exists() or not reg_path.exists() or not parquet_path.exists():
+        pytest.skip("RainRisk models or parquet dataset not yet built")
+
+    clf_booster = lgb.Booster(model_file=str(clf_path))
+    reg_booster = lgb.Booster(model_file=str(reg_path))
+    df = pd.read_parquet(parquet_path)
+    sample = df.tail(20)
+
+    clf_feats = clf_booster.feature_name()
+    reg_feats = reg_booster.feature_name()
+
+    probs = clf_booster.predict(sample[clf_feats])
+    cond_amounts = np.maximum(0.0, reg_booster.predict(sample[reg_feats]))
+    two_part_preds = probs * cond_amounts
+
+    assert len(two_part_preds) == 20
+    assert not np.isnan(two_part_preds).any()
+    assert (two_part_preds >= 0.0).all()
+    assert (probs >= 0.0).all() and (probs <= 1.0).all()
