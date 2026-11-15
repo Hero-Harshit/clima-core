@@ -1,0 +1,60 @@
+{
+  "engine": "Clima-Core CompoundRisk Engine",
+  "version": "v0.1.0",
+  "evaluated_at_utc": "2026-11-15T16:25:30.266423+00:00",
+  "total_test_observations": 15100,
+  "severity_distribution": {
+    "Low": 11315,
+    "Moderate": 3705,
+    "High": 80
+  },
+  "compounded_co_occurring_events": {
+    "count": 137,
+    "percentage": 0.91
+  },
+  "dominant_hazard_drivers": {
+    "Extreme Heat": 8914,
+    "Air Quality (PM2.5)": 4516,
+    "Rainfall Hazard": 1670
+  },
+  "highest_risk_cities_avg_2026": {
+    "Delhi": 33.1,
+    "Agra": 32.5,
+    "Kanpur": 28.4,
+    "Ludhiana": 27.8,
+    "Lucknow": 27.1
+  },
+  "lowest_risk_cities_avg_2026": {
+    "Mysuru": 15.1,
+    "Port Blair": 14.8,
+    "Shillong": 13.4,
+    "Shimla": 12.5,
+    "Leh": 5.2
+  },
+  "case_studies": {
+    "delhi_pre_monsoon_peak": {
+      "city": "Delhi",
+      "date": "2026-05-27",
+      "compound_risk_score": 65.7,
+      "severity_category": "High",
+      "is_compounded_event": true,
+      "dominant_driver": "Extreme Heat",
+      "aq_score": 77.2,
+      "heat_score": 84.3,
+      "rain_score": 0.1,
+      "advisories_count": 3
+    },
+    "mumbai_monsoon_peak": {
+      "city": "Mumbai",
+      "date": "2026-07-01",
+      "compound_risk_score": 27.9,
+      "severity_category": "Moderate",
+      "is_compounded_event": false,
+      "dominant_driver": "Rainfall Hazard",
+      "aq_score": 7.0,
+      "heat_score": 18.9,
+      "rain_score": 62.9,
+      "advisories_count": 0
+    }
+  }
+}

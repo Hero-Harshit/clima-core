@@ -1,7 +1,7 @@
 """
 Command Line Interface for Clima-Core.
 Provides commands for source registry inspection, data auditing, dataset preparation,
-model training, evaluation, and artifact inspection.
+model training, evaluation, and compound risk assessment.
 """
 
 import argparse
@@ -18,6 +18,8 @@ from climacore.models.heat_risk.dataset import prepare_heat_risk_dataset
 from climacore.models.heat_risk.train import train_heat_risk_model
 from climacore.models.rain_risk.dataset import prepare_rain_risk_dataset
 from climacore.models.rain_risk.train import train_rain_risk_models
+from climacore.models.compound_risk.scoring import CompoundRiskEngine
+from climacore.models.compound_risk.evaluate import run_compound_risk_evaluation
 
 logger = get_logger("climacore.cli")
 
@@ -87,6 +89,11 @@ def cmd_train(args):
         print(f"  Two-Part Test MAE: {results['regression_metrics']['two_part_hurdle_test']['mae']} mm")
         print(f"  Two-Part Test RMSE: {results['regression_metrics']['two_part_hurdle_test']['rmse']} mm")
         print(f"  Direct Regressor MAE: {results['regression_metrics']['direct_single_regressor_test']['mae']} mm")
+    elif args.model == "compound_risk":
+        results = run_compound_risk_evaluation()
+        print("\nCompoundRisk Engine Evaluation Completed:")
+        print(f"  Total 2026 Test Observations: {results['total_test_observations']:,}")
+        print(f"  Compounded Co-Occurring Events: {results['compounded_co_occurring_events']['count']:,} ({results['compounded_co_occurring_events']['percentage']}%)")
     else:
         print(f"Unknown model: {args.model}")
 
@@ -100,6 +107,22 @@ def cmd_evaluate(args):
         return
     with open(eval_file, "r", encoding="utf-8") as f:
         data = json.load(f)
+
+    if args.model == "compound_risk":
+        print(f"\n=== Evaluation Summary for CompoundRisk ({data.get('version', 'v0.1.0')}) ===")
+        print(f"Total Observations: {data['total_test_observations']:,}")
+        print("\nSeverity Distribution:")
+        for cat, cnt in data["severity_distribution"].items():
+            print(f"  {cat:15s}: {cnt:,} days")
+        print(f"\nMulti-Hazard Co-Occurring Compounded Events: {data['compounded_co_occurring_events']['count']:,} ({data['compounded_co_occurring_events']['percentage']}%)")
+        print("\nDominant Drivers:")
+        for drv, cnt in data["dominant_hazard_drivers"].items():
+            print(f"  {drv:25s}: {cnt:,} days")
+        print("\nTop 5 Highest Average Risk Cities (2026):")
+        for city, score in data["highest_risk_cities_avg_2026"].items():
+            print(f"  {city:20s}: {score}/100")
+        return
+
     print(f"\n=== Evaluation Summary for {args.model} ({data.get('version', 'v0.1.0')}) ===")
     print(f"Target: {data['target']} ({data.get('units', '')})")
     print(f"Split: {data['split_definition']['test']}")
@@ -112,6 +135,31 @@ def cmd_evaluate(args):
         for m_name, m_vals in data["metrics"].items():
             if "test" in m_name:
                 print(f"  {m_name:25s} | MAE: {m_vals.get('mae')} | RMSE: {m_vals.get('rmse')}")
+
+
+def cmd_assess(args):
+    """Run an on-demand compound risk calculation with custom values."""
+    engine = CompoundRiskEngine()
+    res = engine.calculate_single(
+        pm2_5_pred=args.pm25,
+        temp_max_pred=args.temp,
+        precip_pred=args.rain,
+        city=args.city,
+        date=args.date,
+    )
+    print(f"\n=== Clima-Core Compound Risk Assessment ===")
+    print(f"City: {res['city']} | Date: {res['date']}")
+    print(f"Compound Risk Score: {res['compound_risk_score']} / 100 [{res['severity_category']}]")
+    print(f"Dominant Driver: {res['dominant_driver']}")
+    if res['is_compounded_event']:
+        print(f"Multi-Hazard Compounding Active: Multiplier = {res['compound_multiplier']}x")
+    print("\nSub-Hazard Breakdown:")
+    for h_name, h_info in res["sub_hazards"].items():
+        print(f"  {h_name:15s} | Raw: {h_info['raw_value']} {h_info['unit']} | Score: {h_info['score_0_100']}/100 [{h_info['category']}] | Contribution: {h_info['contribution_pct']}%")
+    if res["advisories"]:
+        print("\nActive Advisories:")
+        for adv in res["advisories"]:
+            print(f"  - {adv}")
 
 
 def main():
@@ -131,11 +179,19 @@ def main():
 
     # train
     p_train = subparsers.add_parser("train", help="Train model and export artifacts")
-    p_train.add_argument("--model", required=True, choices=["air_quality", "heat_risk", "rain_risk"], help="Model to train")
+    p_train.add_argument("--model", required=True, choices=["air_quality", "heat_risk", "rain_risk", "compound_risk"], help="Model to train/evaluate")
 
     # evaluate
     p_eval = subparsers.add_parser("evaluate", help="Display model evaluation report")
-    p_eval.add_argument("--model", required=True, choices=["air_quality", "heat_risk", "rain_risk"], help="Model to evaluate")
+    p_eval.add_argument("--model", required=True, choices=["air_quality", "heat_risk", "rain_risk", "compound_risk"], help="Model to evaluate")
+
+    # assess (on-demand compound scoring)
+    p_assess = subparsers.add_parser("assess", help="Assess compound risk for given values")
+    p_assess.add_argument("--city", default="Delhi", help="City name")
+    p_assess.add_argument("--date", default="2026-05-27", help="Date YYYY-MM-DD")
+    p_assess.add_argument("--pm25", type=float, required=True, help="PM2.5 concentration in ug/m3")
+    p_assess.add_argument("--temp", type=float, required=True, help="Max temperature in deg C")
+    p_assess.add_argument("--rain", type=float, default=0.0, help="Precipitation in mm")
 
     args = parser.parse_args()
     if args.command == "sources":
@@ -148,6 +204,8 @@ def main():
         cmd_train(args)
     elif args.command == "evaluate":
         cmd_evaluate(args)
+    elif args.command == "assess":
+        cmd_assess(args)
 
 
 if __name__ == "__main__":
