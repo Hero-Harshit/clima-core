@@ -408,8 +408,12 @@ def main():
     p_assess.add_argument(
         "--persona",
         default=None,
-        choices=["student", "farmer", "gig_worker", "commuter", "healthcare", "city_official", "all"],
-        help="Generate tailored persona intelligence"
+        choices=[
+            "student", "farmer", "gig_worker", "commuter", "healthcare", "city_official",
+            "maritime", "industry", "aviation", "water", "insurance", "cold_chain", "tourism",
+            "all"
+        ],
+        help="Generate tailored persona intelligence across 13 economic sectors"
     )
 
     args = parser.parse_args()

@@ -28,6 +28,14 @@ class PersonaInput(BaseModel):
     historical_percentile: float = Field(default=50.0, description="Empirical 44-year historical severity percentile (0-100)")
     soil_moisture_deficit_index: Optional[float] = Field(default=None, description="Root-Zone / Topsoil Moisture Deficit Index (-3.0 extreme dry to +3.0 wet)")
     flash_drought_alert: Optional[int] = Field(default=0, description="Agricultural flash drought hazard flag (0 or 1)")
+    gale_wind_gust_kmh: Optional[float] = Field(default=None, description="Forecasted peak wind gust speed in km/h")
+    cyclone_distance_km: Optional[float] = Field(default=None, description="Distance to nearest active cyclonic system in km")
+    cyclone_grade: Optional[str] = Field(default=None, description="IMD intensity grade of nearest cyclonic system (e.g. CS, SCS, VSCS, SuCS)")
+    groundwater_depletion_level: Optional[float] = Field(default=None, description="Aquifer water table depth in meters below ground level (mbgl)")
+    reservoir_storage_percent: Optional[float] = Field(default=None, description="Current reservoir storage as % of live capacity")
+    wet_bulb_temp_c: Optional[float] = Field(default=None, description="Estimated wet-bulb temperature in °C")
+    surface_solar_radiation_w_m2: Optional[float] = Field(default=None, description="Solar surface irradiance in W/m²")
+    uhi_temperature_delta_c: Optional[float] = Field(default=None, description="Urban Heat Island temperature anomaly in °C")
 
 
 class PersonaResult(BaseModel):
