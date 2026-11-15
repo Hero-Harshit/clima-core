@@ -67,3 +67,49 @@ def test_quantile_uncertainty_monotonicity():
     # Monotonicity test: p10 <= p50 <= p90 across all samples (with tiny numerical tolerance)
     assert (p50 >= p10 - 0.5).all(), "Median should generally exceed 10th percentile"
     assert (p90 >= p50 - 0.5).all(), "90th percentile should generally exceed median"
+
+
+def test_climate_master_44y_model_artifact():
+    root = get_project_root()
+    model_file = root / "artifacts" / "models" / "climate_master_44y" / "v0.1.0" / "model.txt"
+    assert model_file.exists(), f"Climate Master model artifact missing at {model_file}"
+
+    booster = lgb.Booster(model_file=str(model_file))
+    assert booster.num_trees() > 0
+    feature_names = booster.feature_name()
+    assert len(feature_names) > 10
+    assert "temperature_2m_max_lag_1" in feature_names
+
+
+def test_imd_rain_gauge_model_artifact():
+    root = get_project_root()
+    model_file = root / "artifacts" / "models" / "imd_rain_gauge" / "v0.1.0" / "model.txt"
+    assert model_file.exists(), f"IMD Rain Gauge model artifact missing at {model_file}"
+
+    booster = lgb.Booster(model_file=str(model_file))
+    assert booster.num_trees() > 0
+    feature_names = booster.feature_name()
+    assert "imd_rainfall_mm_lag_1" in feature_names
+
+
+def test_cpcb_station_model_artifact():
+    root = get_project_root()
+    model_file = root / "artifacts" / "models" / "cpcb_station" / "v0.1.0" / "model.txt"
+    assert model_file.exists(), f"CPCB Station model artifact missing at {model_file}"
+
+    booster = lgb.Booster(model_file=str(model_file))
+    assert booster.num_trees() > 0
+    feature_names = booster.feature_name()
+    assert "cpcb_pm2_5_mean_lag_1" in feature_names
+
+
+def test_apparent_heat_stress_model_artifact():
+    root = get_project_root()
+    model_file = root / "artifacts" / "models" / "apparent_heat_stress" / "v0.1.0" / "model.txt"
+    assert model_file.exists(), f"Apparent Heat Stress model artifact missing at {model_file}"
+
+    booster = lgb.Booster(model_file=str(model_file))
+    assert booster.num_trees() > 0
+    feature_names = booster.feature_name()
+    assert "apparent_temperature_max_lag_1" in feature_names
+

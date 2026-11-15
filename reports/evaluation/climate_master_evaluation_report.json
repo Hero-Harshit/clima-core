@@ -1,0 +1,24 @@
+{
+  "model_name": "climacore_climate_master_44y",
+  "training_data_rows": 708248,
+  "total_historical_rows": 822598,
+  "date_span": "1980 to 2024 (44 years)",
+  "cities_count": 50,
+  "best_iteration": 1000,
+  "test_holdout_period": "2022-01-01 to 2024-12-31 (3 years)",
+  "test_rows": 54800,
+  "metrics": {
+    "climate_master_lgbm": {
+      "mae": 0.971,
+      "rmse": 1.3492,
+      "r2": 0.9502,
+      "bias": -0.2793
+    },
+    "persistence_baseline": {
+      "mae": 1.0299,
+      "rmse": 1.4957
+    }
+  },
+  "artifact_file": "model.txt",
+  "artifact_sha256": "95a0993de32832a6e648af27ec15509fb82d5e6522796ec10ebc49ddf9ff49a7"
+}

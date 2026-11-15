@@ -1,0 +1,26 @@
+{
+  "model_name": "climacore_apparent_heat_stress",
+  "training_data_rows": 91000,
+  "total_cleaned_rows": 124350,
+  "date_span": "2020 to 2026 (7 years)",
+  "cities_count": 50,
+  "best_iteration": 700,
+  "test_holdout_period": "2026-01-01 to 2026-10-30",
+  "test_rows": 15100,
+  "metrics": {
+    "apparent_heat_lgbm": {
+      "mae": 1.3364,
+      "rmse": 1.7797,
+      "r2": 0.9495,
+      "bias": -0.1012
+    },
+    "persistence_baseline": {
+      "mae": 1.7872,
+      "rmse": 2.4019
+    },
+    "high_thermal_danger_recall_gte_41c": 0.5909
+  },
+  "feature_count": 42,
+  "artifact_file": "model.txt",
+  "artifact_sha256": "76a18ed74c87f5b2f90c8a09315951310d0b935b2766134e2eefab14048c9b1c"
+}

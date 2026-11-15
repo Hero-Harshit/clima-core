@@ -1,0 +1,25 @@
+{
+  "model_name": "climacore_imd_rain_gauge",
+  "training_data_rows": 52224,
+  "total_cleaned_rows": 87264,
+  "date_span": "2021 to 2025 (5 years of IMD 0.25\u00b0 gridded observations)",
+  "cities_count": 48,
+  "best_iteration": 800,
+  "test_holdout_period": "2025-01-01 to 2025-12-31 (1 full calendar year)",
+  "test_rows": 17472,
+  "metrics": {
+    "imd_gauge_lgbm": {
+      "mae": 3.24,
+      "rmse": 10.9109,
+      "r2": 0.2653,
+      "bias": -2.3479
+    },
+    "persistence_baseline": {
+      "mae": 5.2565,
+      "rmse": 14.8692
+    }
+  },
+  "feature_count": 61,
+  "artifact_file": "model.txt",
+  "artifact_sha256": "a96ddfd8a37827bbfff185a64943311fe02c81b80233cff8e67bfbeb35b489cd"
+}

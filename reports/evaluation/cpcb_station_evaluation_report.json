@@ -1,0 +1,25 @@
+{
+  "model_name": "climacore_cpcb_station",
+  "training_data_rows": 13222,
+  "total_cleaned_rows": 24762,
+  "date_span": "2015 to 2020 (CPCB CAAQMS continuous ground monitoring network)",
+  "cities_count": 26,
+  "best_iteration": 294,
+  "test_holdout_period": "2020-01-01 to 2020-07-01",
+  "test_rows": 4431,
+  "metrics": {
+    "cpcb_station_lgbm": {
+      "mae": 12.2724,
+      "rmse": 18.5954,
+      "r2": 0.7075,
+      "bias": 5.2927
+    },
+    "persistence_baseline": {
+      "mae": 13.8765,
+      "rmse": 23.2689
+    }
+  },
+  "feature_count": 32,
+  "artifact_file": "model.txt",
+  "artifact_sha256": "4a6e16b4b35a59474959e16f717ae0aebe51016d7100183538eef0bfaf851af0"
+}

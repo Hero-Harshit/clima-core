@@ -17,9 +17,9 @@ def add_temporal_features(df: pd.DataFrame, date_col: str = "date") -> pd.DataFr
     df = df.copy()
     dt = pd.to_datetime(df[date_col])
 
-    df["day_of_year"] = dt.dt.dayofyear
+    df["day_of_year"] = dt.dt.day_of_year
     df["month"] = dt.dt.month
-    df["day_of_week"] = dt.dt.dayofweek
+    df["day_of_week"] = dt.dt.day_of_week
     df["is_weekend"] = (df["day_of_week"] >= 5).astype(int)
 
     # Cyclical day of year
