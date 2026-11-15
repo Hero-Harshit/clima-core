@@ -26,6 +26,8 @@ class PersonaInput(BaseModel):
     imd_heatwave_alert: int = Field(default=0, description="IMD Heatwave level: 0=None, 1=Yellow, 2=Orange, 3=Red")
     atmospheric_stagnation: int = Field(default=0, description="Atmospheric stagnation trapping flag (0 or 1)")
     historical_percentile: float = Field(default=50.0, description="Empirical 44-year historical severity percentile (0-100)")
+    soil_moisture_deficit_index: Optional[float] = Field(default=None, description="Root-Zone / Topsoil Moisture Deficit Index (-3.0 extreme dry to +3.0 wet)")
+    flash_drought_alert: Optional[int] = Field(default=0, description="Agricultural flash drought hazard flag (0 or 1)")
 
 
 class PersonaResult(BaseModel):

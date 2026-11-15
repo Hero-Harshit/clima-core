@@ -1,0 +1,56 @@
+{
+  "model_name": "climacore_bioclimatic_clustering",
+  "cities_count": 50,
+  "climate_normals_span": "1980 to 2024 (44 years)",
+  "features_count": 17,
+  "optimal_k": 5,
+  "k_selection_metrics": {
+    "k_4": {
+      "silhouette": 0.332,
+      "davies_bouldin": 1.1992
+    },
+    "k_5": {
+      "silhouette": 0.3466,
+      "davies_bouldin": 0.9782
+    },
+    "k_6": {
+      "silhouette": 0.3153,
+      "davies_bouldin": 0.8855
+    },
+    "k_7": {
+      "silhouette": 0.3217,
+      "davies_bouldin": 0.8422
+    }
+  },
+  "metrics": {
+    "silhouette_score": 0.3466,
+    "davies_bouldin_score": 0.9782,
+    "kmeans_reload_parity_diff": 0.0,
+    "gmm_reload_parity_diff": 0.0
+  },
+  "regime_assignments": {
+    "0": "HUMID_TROPICAL_COASTAL",
+    "1": "DECCAN_PLATEAU_HIGH_WIND",
+    "2": "INDO_GANGETIC_THERMAL_INVERSION",
+    "3": "SUB_HIMALAYAN_MONTANE",
+    "4": "HUMID_MONSOON_DELUGE_COASTAL"
+  },
+  "artifacts": {
+    "scaler": {
+      "file": "scaler.joblib",
+      "sha256": "cd0d8fee5c1b2087e26bb56b5f75b1692e3cf2378e64fbd4729bfabbb6cc205f"
+    },
+    "kmeans": {
+      "file": "kmeans.joblib",
+      "sha256": "76dc38137a9883bb9601062e10acdf8417d5adf5d035e2aa5e3808a63ec443e6"
+    },
+    "gmm": {
+      "file": "gmm.joblib",
+      "sha256": "f7f223d1ac5d33dfb6a7b681d517d0268158bf259d9384256c800d2525751246"
+    },
+    "city_profiles": {
+      "file": "city_bioclimatic_profiles.json",
+      "sha256": "8f40fcfed8271cc0d6f4a6df3ea5d2ab856fef95b0173cc31b4387fcb06c95df"
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "model_name": "climacore_gale_gust_hazard",
+  "training_data_rows": 708248,
+  "total_cleaned_rows": 822698,
+  "date_span": "1980 to 2024 (44 years)",
+  "cities_count": 50,
+  "gale_threshold_kmh": 50.0,
+  "best_iteration": 475,
+  "test_holdout_period": "2022-01-01 to 2024-12-31 (3 years)",
+  "test_rows": 59650,
+  "test_gale_events": 2501,
+  "metrics": {
+    "gale_classifier": {
+      "roc_auc": 0.8988,
+      "pr_auc": 0.4218,
+      "accuracy": 0.935,
+      "recall": 0.5418,
+      "precision": 0.3318,
+      "brier_score": 0.0473
+    },
+    "persistence_baseline": {
+      "accuracy": 0.9387,
+      "recall": 0.2687
+    }
+  },
+  "feature_count": 76,
+  "artifact_file": "model.txt",
+  "artifact_sha256": "5a09dcb5e8582b92939520230314d95c2c4fee7dd4d41cba4da6cca1ba54c9bf"
+}

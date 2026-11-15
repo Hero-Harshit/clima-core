@@ -53,25 +53,18 @@ def extract_imd_rainfall_for_cities(
         time_var = "TIME" if "TIME" in ds else "time"
         rain_var = "RAINFALL" if "RAINFALL" in ds else list(ds.data_vars.keys())[0]
 
-        # Extract for each city using nearest neighbor
-        for _, c_row in df_cities.iterrows():
-            city_name = c_row["city"]
-            c_lat = float(c_row["latitude"])
-            c_lon = float(c_row["longitude"])
+        # Vectorized extraction for all cities simultaneously
+        lats = xr.DataArray(df_cities["latitude"].values, dims="points")
+        lons = xr.DataArray(df_cities["longitude"].values, dims="points")
 
-            sub = ds[rain_var].sel({lat_var: c_lat, lon_var: c_lon}, method="nearest")
-            time_vals = pd.to_datetime(sub[time_var].values)
-            rain_vals = sub.values
+        sub = ds[rain_var].sel({lat_var: lats, lon_var: lons}, method="nearest")
+        time_vals = pd.to_datetime(sub[time_var].values).strftime("%Y-%m-%d")
+        rain_vals = np.where(sub.values < 0, np.nan, np.round(sub.values, 2))
 
-            # Replace missing / negative fill values (IMD uses -999.0 for invalid/ocean)
-            rain_vals = np.where(rain_vals < 0, np.nan, rain_vals)
-
-            city_df = pd.DataFrame({
-                "city": city_name,
-                "date": time_vals.strftime("%Y-%m-%d"),
-                "imd_rainfall_mm": np.round(rain_vals, 2),
-            })
-            all_records.append(city_df)
+        df_year = pd.DataFrame(rain_vals, index=time_vals, columns=df_cities["city"].values)
+        df_long = df_year.unstack().reset_index()
+        df_long.columns = ["city", "date", "imd_rainfall_mm"]
+        all_records.append(df_long)
 
         ds.close()
 

@@ -1,0 +1,25 @@
+{
+  "model_name": "climacore_uhi_microclimate",
+  "training_data_rows": 708248,
+  "total_cleaned_rows": 822448,
+  "date_span": "1980 to 2024 (44 years)",
+  "cities_count": 50,
+  "best_iteration": 600,
+  "test_holdout_period": "2022-01-01 to 2024-12-31 (3 years)",
+  "test_rows": 59400,
+  "metrics": {
+    "uhi_lgbm": {
+      "mae": 0.1018,
+      "rmse": 0.1467,
+      "r2": 0.5912,
+      "bias": 0.0205
+    },
+    "persistence_baseline": {
+      "mae": 0.1303,
+      "rmse": 0.2023
+    }
+  },
+  "feature_count": 57,
+  "artifact_file": "model.txt",
+  "artifact_sha256": "20cfcb4475e41ac97f40a78bb3db9b79de2286671da36bfcd467d01e199af256"
+}

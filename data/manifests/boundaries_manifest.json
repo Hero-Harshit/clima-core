@@ -1,0 +1,21 @@
+{
+  "source_id": "india_administrative_boundaries",
+  "display_name": "Official India District & State Boundaries GeoJSON",
+  "crs": "EPSG:4326 (WGS84)",
+  "districts": {
+    "file": "india_districts.geojson",
+    "feature_count": 594,
+    "size_bytes": 34511324,
+    "sha256": "052f51f39f2cb865db15e55b42cc167c4710ff3d214b1ae20f044a1b3b0f4cf5"
+  },
+  "states": {
+    "file": "india_states.geojson",
+    "feature_count": 36,
+    "size_bytes": 23018018,
+    "sha256": "ae3d9f03b820b0ad053c205628b40a477c8b4bb66392f52b501a187f48e8359e"
+  },
+  "nwic_raw_shapefile": {
+    "folder": "data/raw/boundaries/district_nwic_shp",
+    "projection": "Lambert_Conformal_Conic (Survey of India LCC)"
+  }
+}

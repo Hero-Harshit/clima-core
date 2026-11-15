@@ -1,0 +1,41 @@
+{
+  "model_name": "climacore_soil_moisture_drought",
+  "training_data_rows": 199234,
+  "total_cleaned_rows": 229908,
+  "date_span": "1980 to 2024 (44 years)",
+  "cities_count": 14,
+  "test_holdout_period": "2022-01-01 to 2024-12-31 (3 years)",
+  "test_rows": 15330,
+  "metrics": {
+    "rootzone_regressor": {
+      "mae": 0.00699,
+      "rmse": 0.01341,
+      "r2": 0.9822,
+      "persistence_mae": 0.01125,
+      "persistence_rmse": 0.02139,
+      "reload_parity_diff": 0.0
+    },
+    "flash_drought_classifier": {
+      "roc_auc": 0.9686,
+      "pr_auc": 0.8651,
+      "accuracy": 0.9516,
+      "recall": 0.7034,
+      "precision": 0.8841,
+      "brier_score": 0.0388,
+      "persistence_accuracy": 0.9477,
+      "persistence_recall": 0.7846,
+      "reload_parity_diff": 0.0
+    }
+  },
+  "feature_count": 82,
+  "artifacts": {
+    "rootzone_model": {
+      "file": "rootzone_model.txt",
+      "sha256": "2ac965e5402310db35c8bd9dbe6030b49abd6afb628034c906b5ad5b68c4a136"
+    },
+    "flash_drought_model": {
+      "file": "flash_drought_model.txt",
+      "sha256": "51f57bcf0f200ba547be79b5424a46643870f135f3dcfed041942d8d2ba3cda6"
+    }
+  }
+}

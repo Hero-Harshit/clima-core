@@ -52,15 +52,33 @@ def evaluate_farmer_persona(inp: PersonaInput) -> PersonaResult:
         restrictions.append("Extreme temperature (>=36°C) threatens grain weight and premature crop ripening.")
         advisories.append("Apply light sprinkler irrigation in evening to induce canopy evaporative cooling.")
 
+    # 5. Soil Moisture Deficit & Agricultural Flash Drought
+    smdi = inp.soil_moisture_deficit_index
+    flash_drought = inp.flash_drought_alert == 1
+    drought_stress_score = 0.0
+
+    if flash_drought:
+        restrictions.append("FLASH DROUGHT WARNING: Topsoil moisture collapsed to critical decile (<P10). Severe wilting imminent.")
+        advisories.append("Trigger emergency deficit irrigation or mulching immediately to preserve root-zone moisture.")
+        drought_stress_score = 95.0
+    elif smdi is not None and smdi <= -1.5:
+        advisories.append(f"Pronounced root-zone moisture deficit (SMDI: {smdi:+.2f}). Crop water extraction impaired.")
+        drought_stress_score = 75.0
+    elif smdi is not None and smdi < -0.5:
+        advisories.append(f"Mild soil moisture stress (SMDI: {smdi:+.2f}). Monitor soil drying rate.")
+        drought_stress_score = 40.0
+
     # Compute Overall Agro Impact Score (0 to 100)
     # High score means severe agro-climatic stress (drought, extreme storm, or heat shock)
     deficit_score = min(100.0, max(0.0, (-water_balance / 8.0) * 100.0)) if water_balance < 0 else min(100.0, (water_balance / 40.0) * 100.0)
     heat_shock_score = 100.0 if terminal_heat_shock else (50.0 if inp.temp_max >= 33.0 else 10.0)
-    agro_score = round(float(0.40 * deficit_score + 0.35 * heat_shock_score + 0.25 * (80.0 if fungal_risk == "HIGH" else 20.0)), 1)
+    base_agro = 0.35 * deficit_score + 0.30 * heat_shock_score + 0.20 * (80.0 if fungal_risk == "HIGH" else 20.0)
+    agro_score = round(float(max(base_agro, 0.40 * drought_stress_score + 0.60 * base_agro)), 1)
+    agro_score = min(100.0, max(0.0, agro_score))
 
-    if agro_score >= 75.0 or terminal_heat_shock or rain >= 65.0:
+    if agro_score >= 75.0 or terminal_heat_shock or rain >= 65.0 or flash_drought:
         status = "CRITICAL"
-    elif agro_score >= 50.0 or fungal_risk == "HIGH":
+    elif agro_score >= 50.0 or fungal_risk == "HIGH" or (smdi is not None and smdi <= -1.5):
         status = "HIGH_ALERT"
     elif agro_score >= 30.0:
         status = "CAUTION"
@@ -79,7 +97,9 @@ def evaluate_farmer_persona(inp: PersonaInput) -> PersonaResult:
         impact_score=agro_score,
         key_metrics={
             "crop_water_balance": f"{water_balance:+.1f} mm/day",
-            "irrigation_requirement": "URGENT" if water_balance <= -4.0 else ("MODERATE" if water_balance < 0 else "NONE_RAIN_SUFFICIENT"),
+            "soil_moisture_deficit_index": f"{smdi:+.2f}" if smdi is not None else "N/A",
+            "flash_drought_alert": "ACTIVE_CRITICAL" if flash_drought else "NONE",
+            "irrigation_requirement": "EMERGENCY" if flash_drought else ("URGENT" if water_balance <= -4.0 else ("MODERATE" if water_balance < 0 else "NONE_RAIN_SUFFICIENT")),
             "spraying_suitability": spraying_window,
             "fungal_disease_risk": fungal_risk,
             "terminal_heat_shock": terminal_heat_shock,

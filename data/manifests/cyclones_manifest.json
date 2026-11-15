@@ -1,0 +1,24 @@
+{
+  "source_id": "imd_cyclone_best_tracks_1982_2026",
+  "display_name": "IMD RSMC New Delhi North Indian Ocean Tropical Cyclone Best Tracks (1982-2026)",
+  "provider": "India Meteorological Department (Cyclone eAtlas & RSMC New Delhi)",
+  "spatial_coverage": "North Indian Ocean (Bay of Bengal, Arabian Sea, Coastal India)",
+  "temporal_coverage": "1982 to 2026 (45 years)",
+  "total_cyclonic_systems": 421,
+  "total_trajectory_points": 7456,
+  "cities_assessed": 50,
+  "raw_source_file": "Cyclone_Best_Tracks__Data__1982-2026_.xlsx",
+  "sha256_raw": "f29c4ad4ede53cbb7468680a41beeb0b0030e96b5af35f9749f74eeef29adcb6",
+  "sha256_tracks_parquet": "77e2882fb91b5575a29e5dd20ead4fd4252546d132d49165eb95aaae48636843",
+  "sha256_city_risk_parquet": "9a17f2e062a73c15490c7e2721d52cb0fcf93abe5b3bdc373e9f10e73ded3c56",
+  "retrieved_at_utc": "2026-11-15T22:23:19.696586+00:00",
+  "cyclone_intensity_scale": {
+    "D": "Depression (17-27 kt, 31-49 km/h)",
+    "DD": "Deep Depression (28-33 kt, 50-61 km/h)",
+    "CS": "Cyclonic Storm (34-47 kt, 62-88 km/h)",
+    "SCS": "Severe Cyclonic Storm (48-63 kt, 89-117 km/h)",
+    "VSCS": "Very Severe Cyclonic Storm (64-89 kt, 118-166 km/h)",
+    "ESCS": "Extremely Severe Cyclonic Storm (90-119 kt, 167-221 km/h)",
+    "SuCS": "Super Cyclonic Storm (>= 120 kt, >= 222 km/h)"
+  }
+}

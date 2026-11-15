@@ -81,6 +81,22 @@ def test_farmer_persona(sample_heatwave_smog_input, sample_monsoon_downpour_inpu
     assert res_wet.key_metrics["irrigation_requirement"] == "NONE_RAIN_SUFFICIENT"
 
 
+def test_farmer_flash_drought_alert():
+    inp = PersonaInput(
+        city="Nagpur",
+        date="2026-05-15",
+        temp_max=38.0,
+        pm2_5=45.0,
+        soil_moisture_deficit_index=-2.1,
+        flash_drought_alert=1,
+    )
+    res = evaluate_persona("farmer", inp)
+    assert res.status_level == "CRITICAL"
+    assert res.key_metrics["flash_drought_alert"] == "ACTIVE_CRITICAL"
+    assert res.key_metrics["irrigation_requirement"] == "EMERGENCY"
+    assert any("FLASH DROUGHT" in r for r in res.operational_restrictions)
+
+
 def test_gig_worker_persona_wbgt(sample_heatwave_smog_input):
     res = evaluate_persona("gig_worker", sample_heatwave_smog_input)
     assert res.status_level == "CRITICAL"

@@ -1,0 +1,28 @@
+{
+  "model_name": "climacore_transboundary_smoke",
+  "training_data_rows": 708248,
+  "total_cleaned_rows": 822648,
+  "date_span": "1980 to 2024 (44 years)",
+  "cities_count": 50,
+  "best_iteration": 301,
+  "test_holdout_period": "2022-01-01 to 2024-12-31 (3 years)",
+  "test_rows": 59600,
+  "test_advection_events": 5952,
+  "metrics": {
+    "advection_classifier": {
+      "roc_auc": 0.9766,
+      "pr_auc": 0.8043,
+      "accuracy": 0.9495,
+      "recall": 0.6877,
+      "precision": 0.7804,
+      "brier_score": 0.0365
+    },
+    "persistence_baseline": {
+      "accuracy": 0.9243,
+      "recall": 0.621
+    }
+  },
+  "feature_count": 58,
+  "artifact_file": "model.txt",
+  "artifact_sha256": "9ddb49be40f916ac9bbe5d53122586b304cfc69ce0bedb0b2e1a647fdc6959e5"
+}

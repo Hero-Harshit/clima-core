@@ -1,0 +1,33 @@
+{
+  "source_id": "imd_temperature_74y_50_cities",
+  "display_name": "IMD 74-Year Daily 1.0\u00b0 Gridded Temperature (1951-2024)",
+  "provider": "India Meteorological Department (Srivastava et al., 2009)",
+  "spatial_resolution": "1.0 x 1.0 degree (~100 km)",
+  "temporal_resolution": "Daily",
+  "date_span": "1951-01-01 to 2024-12-31 (74 years)",
+  "total_records": 1351450,
+  "cities_count": 50,
+  "variables": [
+    "imd_tmax_c",
+    "imd_tmin_c",
+    "imd_dtr_c",
+    "normal_tmax",
+    "normal_tmin",
+    "tmax_departure_c",
+    "tmin_departure_c",
+    "is_heatwave_day",
+    "is_severe_heatwave_day",
+    "is_coldwave_day",
+    "is_tropical_night",
+    "tmax_74y_percentile"
+  ],
+  "units": {
+    "temperatures": "deg C",
+    "departures": "deg C",
+    "percentiles": "dimensionless (0 to 100)"
+  },
+  "artifact_file": "imd_temperature_74y_50_cities.parquet",
+  "sha256": "18942a8d836c5ed3f821906272b85a1c13bdc73afdeb8e7451e58a01f1e98f5a",
+  "total_raw_binary_files": 148,
+  "retrieved_at_utc": "2026-11-15T22:03:58.650016+00:00"
+}

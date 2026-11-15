@@ -30,6 +30,11 @@ from climacore.models.rain_risk.extreme_rain import train_extreme_rain_classifie
 from climacore.models.heatwave_alert.train import train_heatwave_alert_model
 from climacore.models.cpcb_multipollutant.train import train_cpcb_multipollutant_models
 from climacore.models.atmospheric_stagnation.train import train_atmospheric_stagnation_model
+from climacore.models.uhi_microclimate.train import train_uhi_microclimate_model
+from climacore.models.transboundary_smoke.train import train_transboundary_smoke_model
+from climacore.models.gale_gust_hazard.train import train_gale_gust_hazard_model
+from climacore.models.bioclimatic_clustering.train import train_bioclimatic_clustering_model
+from climacore.models.soil_moisture_drought.train import train_soil_moisture_drought_models
 from climacore.explainability.engine import generate_explainability_artifacts
 from climacore.personas.models import PersonaInput
 from climacore.personas.engine import evaluate_persona, evaluate_all_personas
@@ -157,6 +162,36 @@ def cmd_train(args):
         print("\nAtmospheric Stagnation & Inversion Model Trained Successfully:")
         print(f"  ROC-AUC: {results['metrics']['stagnation_classifier']['roc_auc']}")
         print(f"  Accuracy: {results['metrics']['stagnation_classifier']['accuracy']*100:.2f}%")
+    elif args.model == "uhi_microclimate":
+        results = train_uhi_microclimate_model()
+        print("\nUrban Heat Island (UHI) Microclimate Model Trained Successfully:")
+        print(f"  Holdout Test MAE: {results['metrics']['uhi_lgbm']['mae']} deg C")
+        print(f"  Holdout Test RMSE: {results['metrics']['uhi_lgbm']['rmse']} deg C")
+        print(f"  Holdout Test R2: {results['metrics']['uhi_lgbm']['r2']}")
+    elif args.model == "transboundary_smoke":
+        results = train_transboundary_smoke_model()
+        print("\nTransboundary Smoke Drift & Wind Advection Model Trained Successfully:")
+        print(f"  ROC-AUC: {results['metrics']['advection_classifier']['roc_auc']}")
+        print(f"  PR-AUC: {results['metrics']['advection_classifier']['pr_auc']}")
+        print(f"  Accuracy: {results['metrics']['advection_classifier']['accuracy']*100:.2f}%")
+        print(f"  Recall: {results['metrics']['advection_classifier']['recall']*100:.2f}%")
+    elif args.model == "gale_gust_hazard":
+        results = train_gale_gust_hazard_model()
+        print("\nSevere Gale-Force Wind & Storm Gust Hazard Model Trained Successfully:")
+        print(f"  ROC-AUC: {results['metrics']['gale_classifier']['roc_auc']}")
+        print(f"  PR-AUC: {results['metrics']['gale_classifier']['pr_auc']}")
+        print(f"  Accuracy: {results['metrics']['gale_classifier']['accuracy']*100:.2f}%")
+        print(f"  Recall: {results['metrics']['gale_classifier']['recall']*100:.2f}%")
+    elif args.model == "bioclimatic_clustering":
+        results = train_bioclimatic_clustering_model()
+        print("\nSpatial Bioclimatic Climate Clustering Model Trained Successfully:")
+        print(f"  Optimal k: {results['optimal_k']}")
+        print(f"  Silhouette Score: {results['metrics']['silhouette_score']}")
+    elif args.model == "soil_moisture_drought":
+        results = train_soil_moisture_drought_models()
+        print("\nAgricultural Drought & Root-Zone Soil Moisture Models Trained Successfully:")
+        print(f"  Root-Zone Moisture Holdout MAE: {results['metrics']['rootzone_regressor']['mae']} m3/m3 (R2 = {results['metrics']['rootzone_regressor']['r2']})")
+        print(f"  Flash Drought Hazard Holdout ROC-AUC: {results['metrics']['flash_drought_classifier']['roc_auc']}, Accuracy: {results['metrics']['flash_drought_classifier']['accuracy']*100:.2f}%")
     elif args.model == "shap_explainability":
         results = generate_explainability_artifacts()
         print("\nSHAP Explainability Artifacts Generated Successfully.")
@@ -194,7 +229,21 @@ def cmd_evaluate(args):
             print(f"  {city:20s}: {score}/100")
         return
 
-    if args.model in ["climate_master_44y", "imd_rain_gauge", "cpcb_station", "apparent_heat_stress", "heatwave_alert", "atmospheric_stagnation"]:
+    if args.model == "soil_moisture_drought":
+        print(f"\n=== Evaluation Summary for {data.get('model_name', args.model)} ===")
+        print(f"Date Span: {data.get('date_span')}")
+        print(f"Cities Covered: {data.get('cities_count')}")
+        print(f"Training Rows: {data.get('training_data_rows', 0):,}")
+        print(f"Holdout Test Period: {data.get('test_holdout_period')} ({data.get('test_rows', 0):,} rows)")
+        print("\nRoot-Zone Regressor Metrics:")
+        for k, v in data["metrics"]["rootzone_regressor"].items():
+            print(f"  {k:25s}: {v}")
+        print("\nFlash Drought Classifier Metrics:")
+        for k, v in data["metrics"]["flash_drought_classifier"].items():
+            print(f"  {k:25s}: {v}")
+        return
+
+    if args.model in ["climate_master_44y", "imd_rain_gauge", "cpcb_station", "apparent_heat_stress", "heatwave_alert", "atmospheric_stagnation", "uhi_microclimate", "transboundary_smoke", "gale_gust_hazard"]:
         print(f"\n=== Evaluation Summary for {data.get('model_name', args.model)} ===")
         print(f"Date Span: {data.get('date_span')}")
         print(f"Cities Covered: {data.get('cities_count')}")
@@ -206,6 +255,18 @@ def cmd_evaluate(args):
         print(f"\nArtifact SHA256: {data.get('artifact_sha256')}")
         return
 
+    if args.model == "bioclimatic_clustering":
+        print(f"\n=== Evaluation Summary for {data.get('model_name')} ===")
+        print(f"Normals Span: {data.get('climate_normals_span')} across {data.get('cities_count')} cities")
+        print(f"Optimal Clusters (k): {data.get('optimal_k')}")
+        print(f"Silhouette Score: {data['metrics'].get('silhouette_score')}")
+        print(f"Davies-Bouldin Score: {data['metrics'].get('davies_bouldin_score')}")
+        print(f"Reload Parity: KMeans diff = {data['metrics'].get('kmeans_reload_parity_diff')}, GMM diff = {data['metrics'].get('gmm_reload_parity_diff')}")
+        print("\nRegime Assignments:")
+        for cid, reg in data.get("regime_assignments", {}).items():
+            print(f"  Cluster {cid}: {reg}")
+        return
+
     if args.model == "cpcb_multipollutant":
         print(f"\n=== Evaluation Summary for {data.get('model_name')} ===")
         print(f"Date Span: {data.get('date_span')} across {data.get('cities_count')} cities")
@@ -215,8 +276,8 @@ def cmd_evaluate(args):
         return
 
     print(f"\n=== Evaluation Summary for {args.model} ({data.get('version', 'v0.1.0')}) ===")
-    print(f"Target: {data['target']} ({data.get('units', '')})")
-    print(f"Split: {data['split_definition']['test']}")
+    print(f"Target: {data.get('target', 'N/A')} ({data.get('units', '')})")
+    print(f"Split: {data.get('split_definition', {}).get('test', 'Chronological Holdout')}")
     if "regression_metrics" in data:
         print("\nRegression Metrics Comparison on Test Set:")
         for m_name, m_vals in data["regression_metrics"].items():
@@ -315,7 +376,9 @@ def main():
             "air_quality", "heat_risk", "rain_risk", "compound_risk",
             "climate_master_44y", "imd_rain_gauge", "cpcb_station", "apparent_heat_stress",
             "multi_horizon", "uncertainty", "extreme_rain",
-            "heatwave_alert", "cpcb_multipollutant", "atmospheric_stagnation", "shap_explainability"
+            "heatwave_alert", "cpcb_multipollutant", "atmospheric_stagnation", "shap_explainability",
+            "uhi_microclimate", "transboundary_smoke", "gale_gust_hazard", "bioclimatic_clustering",
+            "soil_moisture_drought"
         ],
         help="Model to train/evaluate"
     )
@@ -328,7 +391,9 @@ def main():
         choices=[
             "air_quality", "heat_risk", "rain_risk", "compound_risk",
             "climate_master_44y", "imd_rain_gauge", "cpcb_station", "apparent_heat_stress",
-            "heatwave_alert", "cpcb_multipollutant", "atmospheric_stagnation"
+            "heatwave_alert", "cpcb_multipollutant", "atmospheric_stagnation",
+            "uhi_microclimate", "transboundary_smoke", "gale_gust_hazard", "bioclimatic_clustering",
+            "soil_moisture_drought"
         ],
         help="Model to evaluate"
     )

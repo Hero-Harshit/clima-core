@@ -1,0 +1,26 @@
+{
+  "source_id": "era5_land_soil_moisture_50_cities",
+  "display_name": "ERA5-Land Multi-Layer Soil Moisture & Temperature (1980-2024)",
+  "provider": "ECMWF / Copernicus CDS via Open-Meteo Archive API",
+  "spatial_resolution": "0.1\u00b0 (~9-10 km) over 50 Indian cities",
+  "temporal_resolution": "Daily",
+  "date_span": "1980-01-01 to 2024-12-31 (44 years)",
+  "cities_count": 14,
+  "total_records": 230118,
+  "variables": [
+    "soil_moisture_0_to_7cm_mean",
+    "soil_moisture_7_to_28cm_mean",
+    "soil_temperature_0_to_7cm_mean",
+    "topsoil_moisture_anomaly",
+    "rootzone_moisture_anomaly",
+    "soil_moisture_deficit_index",
+    "is_flash_drought_day"
+  ],
+  "units": {
+    "soil_moisture": "m3/m3 (volumetric water fraction)",
+    "soil_temperature": "deg C",
+    "soil_moisture_deficit_index": "dimensionless (-3 to +3)"
+  },
+  "artifact_file": "era5_soil_moisture_50_cities.parquet",
+  "sha256": "f45be116078b5554797ef144ad3c9f4a9d81b750651d456e846103c0e4b7c076"
+}

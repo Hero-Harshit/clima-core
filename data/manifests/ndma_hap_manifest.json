@@ -1,0 +1,17 @@
+{
+  "source_id": "ndma_heat_action_plan_triggers",
+  "display_name": "NDMA & State Heat Action Plan (HAP) City Alert Triggers",
+  "provider": "National Disaster Management Authority (NDMA) & Municipal Corporations",
+  "spatial_coverage": "50 Major Indian Urban Centers across 28 States and Union Territories",
+  "cities_covered": 50,
+  "json_path": "ndma_hap_triggers.json",
+  "parquet_path": "ndma_hap_triggers.parquet",
+  "sha256_json": "9d33ed9f3988396f757fb93a9ecaee452bc76a5939ca6d0fce39bbe1d5bb7eb3",
+  "sha256_parquet": "c325da215bce73a1b7459c3468d7ccb4659773d9daddd0b33e18f8198d51558e",
+  "updated_at_utc": "2026-11-15T22:26:55.753524+00:00",
+  "color_code_alert_standards": {
+    "Yellow": "Watch and Update: Moderate heat risk. Public awareness and hydration advisories.",
+    "Orange": "Be Prepared: High heat risk for vulnerable groups. School shifts adjusted, outdoor labor restricted.",
+    "Red": "Take Action: Extreme heat emergency. Non-essential outdoor labor prohibited 11am-4pm, cooling centers active."
+  }
+}
