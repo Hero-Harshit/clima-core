@@ -1,0 +1,211 @@
+{
+  "dataset": "india_weather_air_quality_50_cities",
+  "audited_at_utc": "2026-11-15T16:00:50.923225+00:00",
+  "files": [
+    {
+      "name": "weather_daily.csv",
+      "sha256": "6fe74082c230dcc90effaf1fea37f89050278cdf53f22a099fa1b9f4f1c58509",
+      "size_bytes": 9034526
+    },
+    {
+      "name": "air_quality_daily.csv",
+      "sha256": "dd753585283ecb449d4021b37ab1bf20c89dca13af90b21a8040520e6b10dfe5",
+      "size_bytes": 8656946
+    },
+    {
+      "name": "cities.csv",
+      "sha256": "b21222072aeda9571c6250d4223999ef5d62f322eff3b57ea8d5d70895e4aab0",
+      "size_bytes": 2418
+    }
+  ],
+  "cities_profile": {
+    "rows": 50,
+    "unique_cities": 50,
+    "columns": [
+      "city",
+      "state",
+      "region",
+      "latitude",
+      "longitude",
+      "elevation_m"
+    ],
+    "has_nulls": false,
+    "null_counts": {
+      "city": 0,
+      "state": 0,
+      "region": 0,
+      "latitude": 0,
+      "longitude": 0,
+      "elevation_m": 0
+    },
+    "lat_range": [
+      8.5241,
+      34.1526
+    ],
+    "lon_range": [
+      72.5714,
+      93.9368
+    ]
+  },
+  "weather_profile": {
+    "rows": 124750,
+    "columns": [
+      "date",
+      "city",
+      "temperature_2m_max",
+      "temperature_2m_min",
+      "temperature_2m_mean",
+      "apparent_temperature_max",
+      "precipitation_sum",
+      "precipitation_hours",
+      "relative_humidity_2m_mean",
+      "wind_speed_10m_max",
+      "wind_direction_10m_dominant",
+      "shortwave_radiation_sum",
+      "et0_fao_evapotranspiration",
+      "weather_code"
+    ],
+    "start_date": "2020-01-01",
+    "end_date": "2026-10-30",
+    "unique_cities": 50,
+    "duplicates_city_date": 0,
+    "missing_counts": {
+      "date": 0,
+      "city": 0,
+      "temperature_2m_max": 0,
+      "temperature_2m_min": 0,
+      "temperature_2m_mean": 0,
+      "apparent_temperature_max": 0,
+      "precipitation_sum": 0,
+      "precipitation_hours": 0,
+      "relative_humidity_2m_mean": 0,
+      "wind_speed_10m_max": 0,
+      "wind_direction_10m_dominant": 0,
+      "shortwave_radiation_sum": 0,
+      "et0_fao_evapotranspiration": 0,
+      "weather_code": 0
+    },
+    "missing_pct": {
+      "date": 0.0,
+      "city": 0.0,
+      "temperature_2m_max": 0.0,
+      "temperature_2m_min": 0.0,
+      "temperature_2m_mean": 0.0,
+      "apparent_temperature_max": 0.0,
+      "precipitation_sum": 0.0,
+      "precipitation_hours": 0.0,
+      "relative_humidity_2m_mean": 0.0,
+      "wind_speed_10m_max": 0.0,
+      "wind_direction_10m_dominant": 0.0,
+      "shortwave_radiation_sum": 0.0,
+      "et0_fao_evapotranspiration": 0.0,
+      "weather_code": 0.0
+    },
+    "physical_violations": {
+      "temperature_out_of_range": 91,
+      "negative_precipitation": 0,
+      "relative_humidity_out_of_0_100": 0
+    },
+    "temperature_2m_max_summary": {
+      "min": -12.6,
+      "mean": 29.469725851703405,
+      "max": 48.3
+    },
+    "precipitation_sum_summary": {
+      "min": 0.0,
+      "mean": 4.048068937875752,
+      "max": 293.1
+    }
+  },
+  "air_quality_profile": {
+    "rows": 77400,
+    "columns": [
+      "date",
+      "city",
+      "pm2_5_mean",
+      "pm2_5_max",
+      "pm10_mean",
+      "pm10_max",
+      "no2_mean",
+      "so2_mean",
+      "o3_8h_max",
+      "co_8h_max",
+      "dust_mean",
+      "aod_mean",
+      "us_aqi_max",
+      "hours_available",
+      "india_aqi",
+      "india_aqi_category",
+      "dominant_pollutant",
+      "india_aqi_pm",
+      "india_aqi_pm_category"
+    ],
+    "start_date": "2022-08-05",
+    "end_date": "2026-10-30",
+    "unique_cities": 50,
+    "duplicates_city_date": 0,
+    "missing_counts": {
+      "date": 0,
+      "city": 0,
+      "pm2_5_mean": 0,
+      "pm2_5_max": 0,
+      "pm10_mean": 0,
+      "pm10_max": 0,
+      "no2_mean": 0,
+      "so2_mean": 0,
+      "o3_8h_max": 0,
+      "co_8h_max": 0,
+      "dust_mean": 0,
+      "aod_mean": 0,
+      "us_aqi_max": 0,
+      "hours_available": 0,
+      "india_aqi": 0,
+      "india_aqi_category": 0,
+      "dominant_pollutant": 0,
+      "india_aqi_pm": 0,
+      "india_aqi_pm_category": 0
+    },
+    "missing_pct": {
+      "date": 0.0,
+      "city": 0.0,
+      "pm2_5_mean": 0.0,
+      "pm2_5_max": 0.0,
+      "pm10_mean": 0.0,
+      "pm10_max": 0.0,
+      "no2_mean": 0.0,
+      "so2_mean": 0.0,
+      "o3_8h_max": 0.0,
+      "co_8h_max": 0.0,
+      "dust_mean": 0.0,
+      "aod_mean": 0.0,
+      "us_aqi_max": 0.0,
+      "hours_available": 0.0,
+      "india_aqi": 0.0,
+      "india_aqi_category": 0.0,
+      "dominant_pollutant": 0.0,
+      "india_aqi_pm": 0.0,
+      "india_aqi_pm_category": 0.0
+    },
+    "physical_violations": {
+      "negative_pm2_5_mean": 0,
+      "negative_pm10_mean": 0
+    },
+    "pm2_5_mean_summary": {
+      "min": 0.48,
+      "mean": 35.47527971576227,
+      "max": 279.78
+    },
+    "pm10_mean_summary": {
+      "min": 0.62,
+      "mean": 56.24474961240309,
+      "max": 1788.14
+    }
+  },
+  "city_alignment": {
+    "cities_in_metadata_not_in_weather": [],
+    "cities_in_weather_not_in_metadata": [],
+    "cities_in_weather_not_in_aq": [],
+    "all_match": true
+  },
+  "validation_passed": true
+}

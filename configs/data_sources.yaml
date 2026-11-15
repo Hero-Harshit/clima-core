@@ -1,0 +1,53 @@
+sources:
+  india_weather_air_quality_50_cities:
+    source_id: "india_weather_air_quality_50_cities"
+    display_name: "India Daily Weather & Air Quality — 50 cities"
+    source_url: "https://huggingface.co/datasets/AkshayKarthick/india-weather-air-quality"
+    mirror_url: "https://www.kaggle.com/datasets/akshaykarthickms007/india-daily-weather-and-air-quality"
+    license: "CC-BY-4.0"
+    attribution: "Akshay Karthick; Open-Meteo Historical Weather API; CAMS"
+    provider: "Open-Meteo & CAMS via curated HuggingFace dataset"
+    spatial_coverage: "50 major Indian cities"
+    spatial_resolution: "City-centre model grid cell (~9-25km weather, ~45km CAMS air quality)"
+    temporal_resolution: "Daily"
+    files:
+      weather: "weather_daily.csv"
+      air_quality: "air_quality_daily.csv"
+      cities: "cities.csv"
+    value_type: "model_derived"
+    notes: >
+      Weather history originates from Open-Meteo (ERA5/ERA5-Land and ECMWF IFS products).
+      Air quality originates from CAMS global model.
+      These are model-derived grid-cell estimates, not direct CPCB physical ground stations.
+      CAMS surface ozone over India may be overestimated; india_aqi_pm is preferred over india_aqi.
+
+  open_meteo_previous_runs:
+    source_id: "open_meteo_previous_runs"
+    display_name: "Open-Meteo Previous Runs API"
+    documentation_url: "https://open-meteo.com/en/docs/previous-runs-api"
+    license: "CC-BY-4.0"
+    provider: "Open-Meteo"
+    spatial_resolution: "Varies by NWP model (GFS ~0.25°, ECMWF ~0.1°/0.25°, ICON ~0.1°)"
+    temporal_resolution: "Hourly / Daily aggregation"
+    lead_times_days: [0, 1, 2, 3, 4, 5, 6, 7]
+    value_type: "forecast"
+    notes: "Historical forecast runs at fixed lead offsets for training forecast correction models."
+
+  open_meteo_forecast:
+    source_id: "open_meteo_forecast"
+    display_name: "Open-Meteo Live Forecast API"
+    documentation_url: "https://open-meteo.com/en/docs"
+    license: "CC-BY-4.0"
+    provider: "Open-Meteo"
+    value_type: "forecast"
+    notes: "Live inference-time forecast feed."
+
+  imd_rainfall:
+    source_id: "imd_rainfall"
+    display_name: "IMD 0.25° Daily Gridded Rainfall"
+    documentation_url: "https://imdpune.gov.in/cmpg/Griddata/Rainfall_25_NetCDF.html"
+    provider: "India Meteorological Department (Pai et al., 2014)"
+    spatial_resolution: "0.25° x 0.25°"
+    temporal_resolution: "Daily"
+    value_type: "gridded_analysis"
+    notes: "High quality 1901-2024 historical rainfall grid over India. Requires NetCDF parsing."

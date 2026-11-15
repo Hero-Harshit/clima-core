@@ -1,0 +1,41 @@
+{
+  "source_id": "india_weather_air_quality_50_cities",
+  "display_name": "India Daily Weather & Air Quality — 50 cities",
+  "source_url": "https://huggingface.co/datasets/AkshayKarthick/india-weather-air-quality",
+  "retrieved_at_utc": "2026-11-15T16:00:50.923225+00:00",
+  "license": "CC-BY-4.0",
+  "attribution": "Akshay Karthick; Open-Meteo Historical Weather API; CAMS",
+  "upstream_sources": [
+    "Open-Meteo Historical Weather API (ERA5/ERA5-Land and ECMWF IFS)",
+    "Open-Meteo Air Quality API (Copernicus Atmosphere Monitoring Service - CAMS)"
+  ],
+  "files": [
+    {
+      "name": "weather_daily.csv",
+      "sha256": "6fe74082c230dcc90effaf1fea37f89050278cdf53f22a099fa1b9f4f1c58509",
+      "size_bytes": 9034526
+    },
+    {
+      "name": "air_quality_daily.csv",
+      "sha256": "dd753585283ecb449d4021b37ab1bf20c89dca13af90b21a8040520e6b10dfe5",
+      "size_bytes": 8656946
+    },
+    {
+      "name": "cities.csv",
+      "sha256": "b21222072aeda9571c6250d4223999ef5d62f322eff3b57ea8d5d70895e4aab0",
+      "size_bytes": 2418
+    }
+  ],
+  "coverage": {
+    "weather_start": "2020-01-01",
+    "weather_end": "2026-10-30",
+    "weather_rows": 124750,
+    "air_quality_start": "2022-08-05",
+    "air_quality_end": "2026-10-30",
+    "air_quality_rows": 77400,
+    "unique_cities": 50
+  },
+  "spatial_unit": "city-centre model grid cell",
+  "value_type": "model_derived",
+  "notes": "Grid cell estimates from ERA5/CAMS; not physical CPCB ground station monitors. CAMS ozone may be elevated."
+}

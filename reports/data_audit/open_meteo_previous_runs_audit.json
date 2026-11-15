@@ -1,0 +1,40 @@
+{
+  "api_name": "Open-Meteo Previous Runs API",
+  "audited_at_utc": "2026-11-15T16:02:38.913142+00:00",
+  "query_parameters": {
+    "city": "Delhi",
+    "latitude": 28.6139,
+    "longitude": 77.209,
+    "start_date": "2024-06-01",
+    "end_date": "2024-06-07",
+    "timezone": "Asia/Kolkata",
+    "variables_requested": [
+      "temperature_2m",
+      "temperature_2m_previous_day1",
+      "temperature_2m_previous_day2",
+      "precipitation",
+      "precipitation_previous_day1",
+      "relative_humidity_2m",
+      "wind_speed_10m"
+    ]
+  },
+  "response_status": 200,
+  "hourly_variables_returned": [
+    "time",
+    "temperature_2m",
+    "temperature_2m_previous_day1",
+    "temperature_2m_previous_day2",
+    "precipitation",
+    "precipitation_previous_day1",
+    "relative_humidity_2m",
+    "wind_speed_10m"
+  ],
+  "sample_data_count": 168,
+  "lead_time_alignment_verified": true,
+  "terms_and_limits": {
+    "free_tier_daily_call_limit": 10000,
+    "attribution": "CC BY 4.0; Open-Meteo",
+    "commercial_use_note": "Requires paid API key for commercial deployment; free tier is non-commercial/fair-use."
+  },
+  "feasibility_assessment": "FEASIBLE: Previous Runs API provides paired valid_time, analyzing target temperature_2m and forecast lead-time offsets (day1, day2). However, daily bulk queries across 50 cities for multiple years requires throttled batch downloads due to rate limits."
+}

@@ -1,0 +1,420 @@
+{
+  "model_name": "climacore_air_quality_lgbm",
+  "version": "v0.1.0",
+  "target": "target_pm2_5_next_day",
+  "units": "ug/m3",
+  "split_definition": {
+    "train": "2022-08-12 to 2025-05-31 (51,200 rows)",
+    "validation": "2025-06-01 to 2025-12-31 (10,700 rows)",
+    "test": "2026-01-01 to 2026-10-29 (15,100 rows)"
+  },
+  "best_iteration": 334,
+  "metrics": {
+    "lightgbm_test": {
+      "mae": 6.3796,
+      "rmse": 9.6255,
+      "mean_bias": -0.2298,
+      "r2_score": 0.8725,
+      "median_absolute_error": 4.0398,
+      "category_accuracy": 0.8074,
+      "macro_f1": 0.5638,
+      "severe_category_recall": 0.6174,
+      "confusion_matrix_labels": [
+        "Good",
+        "Satisfactory",
+        "Moderate",
+        "Poor",
+        "Very Poor",
+        "Severe"
+      ],
+      "confusion_matrix": [
+        [
+          7301,
+          917,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          691,
+          3705,
+          307,
+          10,
+          1,
+          0
+        ],
+        [
+          3,
+          530,
+          851,
+          98,
+          5,
+          0
+        ],
+        [
+          0,
+          11,
+          200,
+          194,
+          45,
+          0
+        ],
+        [
+          0,
+          0,
+          19,
+          69,
+          140,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          2,
+          0
+        ]
+      ]
+    },
+    "lightgbm_validation": {
+      "mae": 6.0661,
+      "rmse": 9.3551,
+      "mean_bias": 0.0381,
+      "r2_score": 0.9018,
+      "median_absolute_error": 3.7499,
+      "category_accuracy": 0.8313,
+      "macro_f1": 0.6049,
+      "severe_category_recall": 0.7649,
+      "confusion_matrix_labels": [
+        "Good",
+        "Satisfactory",
+        "Moderate",
+        "Poor",
+        "Very Poor",
+        "Severe"
+      ],
+      "confusion_matrix": [
+        [
+          5531,
+          589,
+          3,
+          0,
+          0,
+          0
+        ],
+        [
+          448,
+          2413,
+          199,
+          6,
+          1,
+          0
+        ],
+        [
+          0,
+          255,
+          592,
+          78,
+          10,
+          0
+        ],
+        [
+          0,
+          5,
+          122,
+          154,
+          26,
+          0
+        ],
+        [
+          0,
+          0,
+          5,
+          58,
+          205,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    "persistence_test": {
+      "mae": 6.9495,
+      "rmse": 10.7061,
+      "mean_bias": 0.1775,
+      "r2_score": 0.8423,
+      "median_absolute_error": 4.31,
+      "category_accuracy": 0.7928,
+      "macro_f1": 0.6329,
+      "severe_category_recall": 0.6478,
+      "confusion_matrix_labels": [
+        "Good",
+        "Satisfactory",
+        "Moderate",
+        "Poor",
+        "Very Poor",
+        "Severe"
+      ],
+      "confusion_matrix": [
+        [
+          7350,
+          856,
+          13,
+          0,
+          0,
+          0
+        ],
+        [
+          837,
+          3395,
+          451,
+          27,
+          4,
+          0
+        ],
+        [
+          5,
+          450,
+          865,
+          149,
+          18,
+          0
+        ],
+        [
+          0,
+          14,
+          152,
+          215,
+          69,
+          0
+        ],
+        [
+          0,
+          1,
+          16,
+          64,
+          146,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ]
+      ]
+    },
+    "rolling_7d_test": {
+      "mae": 9.3891,
+      "rmse": 14.029,
+      "mean_bias": 0.5995,
+      "r2_score": 0.7292,
+      "median_absolute_error": 6.0721,
+      "category_accuracy": 0.7175,
+      "macro_f1": 0.4787,
+      "severe_category_recall": 0.5304,
+      "confusion_matrix_labels": [
+        "Good",
+        "Satisfactory",
+        "Moderate",
+        "Poor",
+        "Very Poor",
+        "Severe"
+      ],
+      "confusion_matrix": [
+        [
+          6817,
+          1334,
+          64,
+          4,
+          0,
+          0
+        ],
+        [
+          1114,
+          3026,
+          525,
+          41,
+          8,
+          0
+        ],
+        [
+          24,
+          603,
+          687,
+          137,
+          36,
+          0
+        ],
+        [
+          0,
+          28,
+          178,
+          185,
+          59,
+          0
+        ],
+        [
+          0,
+          4,
+          25,
+          79,
+          120,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          2,
+          0
+        ]
+      ]
+    },
+    "climatology_test": {
+      "mae": 10.783,
+      "rmse": 16.2487,
+      "mean_bias": -3.3859,
+      "r2_score": 0.6367,
+      "median_absolute_error": 6.9826,
+      "category_accuracy": 0.6879,
+      "macro_f1": 0.4012,
+      "severe_category_recall": 0.2826,
+      "confusion_matrix_labels": [
+        "Good",
+        "Satisfactory",
+        "Moderate",
+        "Poor",
+        "Very Poor",
+        "Severe"
+      ],
+      "confusion_matrix": [
+        [
+          6993,
+          1209,
+          17,
+          0,
+          0,
+          0
+        ],
+        [
+          1613,
+          2859,
+          237,
+          3,
+          2,
+          0
+        ],
+        [
+          96,
+          963,
+          375,
+          44,
+          9,
+          0
+        ],
+        [
+          5,
+          152,
+          178,
+          98,
+          17,
+          0
+        ],
+        [
+          0,
+          34,
+          59,
+          72,
+          63,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          2,
+          0
+        ]
+      ]
+    }
+  },
+  "improvements_over_persistence": {
+    "mae_reduction_pct": 8.2,
+    "rmse_reduction_pct": 10.09
+  },
+  "top_features": [
+    {
+      "feature": "city_cat",
+      "importance": 798
+    },
+    {
+      "feature": "pm2_5_max",
+      "importance": 578
+    },
+    {
+      "feature": "pm2_5_mean",
+      "importance": 446
+    },
+    {
+      "feature": "pm2_5_mean_lag_1",
+      "importance": 292
+    },
+    {
+      "feature": "day_of_year",
+      "importance": 290
+    },
+    {
+      "feature": "us_aqi_max",
+      "importance": 275
+    },
+    {
+      "feature": "aod_mean",
+      "importance": 271
+    },
+    {
+      "feature": "wind_direction_10m_dominant",
+      "importance": 262
+    },
+    {
+      "feature": "cos_day_of_year",
+      "importance": 214
+    },
+    {
+      "feature": "aod_mean_lag_1",
+      "importance": 213
+    },
+    {
+      "feature": "sin_day_of_year",
+      "importance": 197
+    },
+    {
+      "feature": "o3_8h_max",
+      "importance": 191
+    },
+    {
+      "feature": "pm2_5_mean_roll_mean_14d",
+      "importance": 187
+    },
+    {
+      "feature": "wind_speed_10m_max",
+      "importance": 182
+    },
+    {
+      "feature": "pm10_mean_lag_1",
+      "importance": 172
+    }
+  ]
+}

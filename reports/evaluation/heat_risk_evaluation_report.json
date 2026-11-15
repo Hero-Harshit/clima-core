@@ -1,0 +1,115 @@
+{
+  "model_name": "climacore_heat_risk_lgbm",
+  "version": "v0.1.0",
+  "target": "target_temperature_2m_max_next_day",
+  "units": "deg_C",
+  "split_definition": {
+    "train": "2020-01-08 to 2024-12-31 (91,000 rows)",
+    "validation": "2025-01-01 to 2025-12-31 (18,250 rows)",
+    "test": "2026-01-01 to 2026-10-29 (15,100 rows)"
+  },
+  "best_iteration": 830,
+  "metrics": {
+    "lightgbm_test": {
+      "mae": 1.0236,
+      "rmse": 1.4175,
+      "mean_bias": -0.0397,
+      "r2_score": 0.951,
+      "median_absolute_error": 0.762
+    },
+    "lightgbm_validation": {
+      "mae": 0.9836,
+      "rmse": 1.3698,
+      "mean_bias": -0.0053,
+      "r2_score": 0.9547,
+      "median_absolute_error": 0.7239
+    },
+    "persistence_test": {
+      "mae": 1.1104,
+      "rmse": 1.559,
+      "mean_bias": -0.0156,
+      "r2_score": 0.9407,
+      "median_absolute_error": 0.8
+    },
+    "rolling_7d_test": {
+      "mae": 1.5199,
+      "rmse": 2.0726,
+      "mean_bias": -0.0753,
+      "r2_score": 0.8953,
+      "median_absolute_error": 1.1286
+    },
+    "climatology_test": {
+      "mae": 1.9524,
+      "rmse": 2.5368,
+      "mean_bias": -0.5818,
+      "r2_score": 0.8431,
+      "median_absolute_error": 1.5617
+    }
+  },
+  "improvements_over_persistence": {
+    "mae_reduction_pct": 7.82,
+    "rmse_reduction_pct": 9.08
+  },
+  "top_features": [
+    {
+      "feature": "city_cat",
+      "importance": 2204
+    },
+    {
+      "feature": "temperature_2m_max",
+      "importance": 1093
+    },
+    {
+      "feature": "shortwave_radiation_sum",
+      "importance": 925
+    },
+    {
+      "feature": "sin_day_of_year",
+      "importance": 855
+    },
+    {
+      "feature": "wind_direction_10m_dominant",
+      "importance": 809
+    },
+    {
+      "feature": "wind_speed_10m_max",
+      "importance": 668
+    },
+    {
+      "feature": "day_of_year",
+      "importance": 629
+    },
+    {
+      "feature": "cos_day_of_year",
+      "importance": 629
+    },
+    {
+      "feature": "shortwave_radiation_sum_lag_1",
+      "importance": 551
+    },
+    {
+      "feature": "et0_fao_evapotranspiration",
+      "importance": 520
+    },
+    {
+      "feature": "temperature_2m_mean",
+      "importance": 503
+    },
+    {
+      "feature": "temperature_2m_max_roll_std_3d",
+      "importance": 480
+    },
+    {
+      "feature": "precipitation_sum",
+      "importance": 477
+    },
+    {
+      "feature": "wind_speed_10m_max_lag_1",
+      "importance": 431
+    },
+    {
+      "feature": "temperature_2m_max_roll_std_7d",
+      "importance": 420
+    }
+  ]
+}

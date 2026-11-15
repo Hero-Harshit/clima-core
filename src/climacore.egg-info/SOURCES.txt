@@ -1,0 +1,6 @@
+pyproject.toml
+src/climacore.egg-info/PKG-INFO
+src/climacore.egg-info/SOURCES.txt
+src/climacore.egg-info/dependency_links.txt
+src/climacore.egg-info/requires.txt
+src/climacore.egg-info/top_level.txt

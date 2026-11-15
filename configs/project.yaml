@@ -1,0 +1,19 @@
+project:
+  name: "Clima-Core"
+  version: "0.1.0"
+  description: "AI-powered Environmental Risk Intelligence and Decision Support Platform"
+  stage: "milestone_1_ml_foundation"
+
+paths:
+  data_raw: "data/raw"
+  data_interim: "data/interim"
+  data_processed: "data/processed"
+  data_manifests: "data/manifests"
+  artifacts_models: "artifacts/models"
+  artifacts_cards: "artifacts/model_cards"
+  reports: "reports"
+
+conventions:
+  timezone_local: "Asia/Kolkata"
+  coordinate_system: "EPSG:4326"
+  random_seed: 42
