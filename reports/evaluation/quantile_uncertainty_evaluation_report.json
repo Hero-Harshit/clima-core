@@ -1,0 +1,30 @@
+{
+  "module": "quantile_uncertainty_regression",
+  "evaluated_at_utc": "2026-11-15T17:08:40.934585+00:00",
+  "quantiles_trained": [
+    0.1,
+    0.5,
+    0.9
+  ],
+  "nominal_coverage_target": "80%",
+  "heat_risk": {
+    "empirical_80pct_coverage": "76.26%",
+    "average_interval_width_deg_C": 2.95,
+    "sample_prediction": {
+      "p10_lower": 21.9,
+      "p50_median": 23.0,
+      "p90_upper": 23.7,
+      "actual": 22.8
+    }
+  },
+  "air_quality": {
+    "empirical_80pct_coverage": "75.38%",
+    "average_interval_width_ug_m3": 18.77,
+    "sample_prediction": {
+      "p10_lower": 65.4,
+      "p50_median": 78.4,
+      "p90_upper": 96.0,
+      "actual": 88.1
+    }
+  }
+}

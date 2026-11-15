@@ -1,0 +1,38 @@
+{
+  "module": "multi_horizon_forecasting",
+  "evaluated_at_utc": "2026-11-15T17:08:38.049127+00:00",
+  "heat_risk_lead_horizons": {
+    "24h_lead (t+1)": {
+      "mae": 1.0236,
+      "rmse": 1.4175,
+      "status": "primary_v0.1.0"
+    },
+    "48h_lead (t+2)": {
+      "mae": 1.3502,
+      "rmse": 1.8408,
+      "artifact": "heat_risk_48h_model.txt"
+    },
+    "72h_lead (t+3)": {
+      "mae": 1.5265,
+      "rmse": 2.058,
+      "artifact": "heat_risk_72h_model.txt"
+    }
+  },
+  "rain_risk_lead_horizons": {
+    "24h_lead (t+1)": {
+      "mae": 3.1756,
+      "rmse": 7.4035,
+      "status": "primary_v0.1.0"
+    },
+    "48h_lead (t+2)": {
+      "mae": 3.8245,
+      "rmse": 8.1371,
+      "artifact": "rain_risk_48h_model.txt"
+    },
+    "72h_lead (t+3)": {
+      "mae": 4.0157,
+      "rmse": 8.3041,
+      "artifact": "rain_risk_72h_model.txt"
+    }
+  }
+}

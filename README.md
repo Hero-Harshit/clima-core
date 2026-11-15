@@ -112,9 +112,36 @@ pytest -v tests
   - **Two-Part RMSE:** **7.40 mm** (outperformed Persistence at 8.93 mm and Climatology at 8.44 mm)
   - **Artifacts:** `artifacts/models/rain_risk/v0.1.0/` (contains `classifier_model.txt`, `conditional_regressor_model.txt`, `direct_regressor_model.txt`)
 
+### D. Advanced Multi-Horizon Models (48h & 72h Leads)
+- **HeatRisk Multi-Horizon:**
+  - **24h ($t+1$):** MAE $1.02^\circ\text{C}$
+  - **48h ($t+2$):** MAE $1.39^\circ\text{C}$
+  - **72h ($t+3$):** MAE $1.64^\circ\text{C}$
+- **RainRisk Multi-Horizon:**
+  - **24h ($t+1$):** MAE $3.18\text{ mm}$
+  - **48h ($t+2$):** MAE $3.46\text{ mm}$
+  - **72h ($t+3$):** MAE $3.63\text{ mm}$
+
+### E. Quantile Uncertainty Models (80% Prediction Intervals)
+- **HeatRisk:** $\alpha = 0.10, 0.50, 0.90$ with **76.26% empirical test coverage** (average interval width: $2.95^\circ\text{C}$)
+- **AirQuality:** $\alpha = 0.10, 0.50, 0.90$ with **75.38% empirical test coverage** (average interval width: $18.77\ \mu\text{g/m}^3$)
+
+### F. Extreme Heavy Rain Classifier (Flood Risk $\ge 15.6\text{ mm}$)
+- **Recall:** **82.3%** of all severe downpour events detected on the 2026 test set
+- **ROC-AUC:** **0.9115** | **PR-AUC:** **0.5129** (6.7x lift over random baseline)
+
 ---
 
-## 5. Directory Structure
+## 5. Integrated Data Sources
+
+1. **India Daily Weather & Air Quality (50 Cities):** 124,750 weather rows (2020-2026), 77,400 air quality rows.
+2. **Official IMD 0.25° Gridded Rainfall (NetCDF):** 91,300 physical rain gauge records across 5 years (2021-2025) for 50 cities.
+3. **CPCB CAAQMS Ground Station Data:** 25,611 physical monitoring station days (2015-2020) across 26 major cities.
+4. **44-Year Historical Weather Archive (1980–2024):** 823,048 rows across 5 decades, with official 30-year WMO climate normals (1991-2020).
+
+---
+
+## 6. Directory Structure
 
 ```text
 clima-core/

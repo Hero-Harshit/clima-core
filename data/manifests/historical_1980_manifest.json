@@ -1,0 +1,39 @@
+{
+  "source_id": "india_weather_historical_1980",
+  "display_name": "India 50 Cities 44-Year Historical Weather Archive (1980-2024)",
+  "retrieved_at_utc": "2026-11-15T17:06:47.022008+00:00",
+  "provider": "Open-Meteo ERA5 / ECMWF historical archive via curated Kaggle decades",
+  "spatial_resolution": "50 city-centre model grid cells",
+  "files": [
+    {
+      "name": "daily_data_combined_1980_to_1989.csv",
+      "size_bytes": 28792125,
+      "sha256": "e36bd6c6e6bc2da982c2544d2e6d75a916a0c37c053f6e6ad086ef27abe92473"
+    },
+    {
+      "name": "daily_data_combined_1990_to_1999.csv",
+      "size_bytes": 28197909,
+      "sha256": "af4613001189c3813169ab1fe14b2fd16a6a09c916b8770b80567ff168298482"
+    },
+    {
+      "name": "daily_data_combined_2000_to_2009.csv",
+      "size_bytes": 28787125,
+      "sha256": "bafb0589a535f7fc2779209a935e9aee3333b30ab8e06f68837fec176871eecf"
+    },
+    {
+      "name": "daily_data_combined_2010_to_2019.csv",
+      "size_bytes": 28789162,
+      "sha256": "1e86a426fd3dd7e3010cd6c3d0530d836350adfbd0c05d6df7f3a95bfd3cfa1a"
+    },
+    {
+      "name": "daily_data.csv",
+      "size_bytes": 15085586,
+      "sha256": "4102f1468770d2473bc6be33770c88c1119094518ce326f1c6c37deb59f4df74"
+    }
+  ],
+  "total_records": 823048,
+  "cities_count": 50,
+  "start_date": "1980-01-01",
+  "end_date": "2025-04-07",
+  "wmo_climate_normals_period": "1991-2020"
+}

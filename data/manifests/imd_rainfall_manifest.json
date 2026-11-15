@@ -1,0 +1,39 @@
+{
+  "source_id": "imd_rainfall",
+  "display_name": "IMD 0.25\u00b0 Daily Gridded Rainfall",
+  "retrieved_at_utc": "2026-11-15T17:05:33.297763+00:00",
+  "provider": "India Meteorological Department (Pai et al., 2014)",
+  "spatial_resolution": "0.25 x 0.25 degree (~25 km)",
+  "files": [
+    {
+      "name": "RF25_ind2021_rfp25.nc",
+      "size_bytes": 25431832,
+      "sha256": "fb0f291fa7e214a7811023a9309cead67233b6b4e0bfcc5b277643f976f68374"
+    },
+    {
+      "name": "RF25_ind2022_rfp25.nc",
+      "size_bytes": 25431832,
+      "sha256": "83ae0d4e48f3a408eec3b54844476d406faf70928dc13c79f0bd085e3b0224b8"
+    },
+    {
+      "name": "RF25_ind2023_rfp25.nc",
+      "size_bytes": 25431832,
+      "sha256": "1fa0cbcb56769fd3cd2702e36dc3ee1b81b74755b77c7f058c70dfc3afb82831"
+    },
+    {
+      "name": "RF25_ind2024_rfp25.nc",
+      "size_bytes": 25501532,
+      "sha256": "1ef02aeba5694dbb57a6cca23a3c2cc11740affb185137c1eacbeab59893228a"
+    },
+    {
+      "name": "RF25_ind2025_rfp25.nc",
+      "size_bytes": 25431832,
+      "sha256": "7d03cd397ebb1d7209ffae947d3965113643e1f30023cca657f0aa2c800af035"
+    }
+  ],
+  "extracted_cities_count": 50,
+  "total_records": 91300,
+  "start_date": "2021-01-01",
+  "end_date": "2025-12-31",
+  "notes": "Physical rain gauge ground truth interpolated onto regular grid. Negative fill values cleaned to NaN."
+}

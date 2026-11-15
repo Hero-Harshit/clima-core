@@ -1,0 +1,27 @@
+{
+  "model_name": "climacore_extreme_rain_classifier",
+  "threshold_mm": 15.6,
+  "classification_target": "precipitation >= 15.6 mm",
+  "evaluated_at_utc": "2026-11-15T17:09:16.117835+00:00",
+  "best_iteration": 296,
+  "test_metrics": {
+    "recall": 0.8226,
+    "precision": 0.2829,
+    "f1_score": 0.4211,
+    "pr_auc": 0.5129,
+    "roc_auc": 0.9115,
+    "confusion_matrix": [
+      [
+        11935,
+        2139
+      ],
+      [
+        182,
+        844
+      ]
+    ],
+    "actual_positive_events_in_2026": 1026,
+    "detected_events": 2983
+  },
+  "artifact_file": "extreme_rain_classifier.txt"
+}

@@ -1,0 +1,12 @@
+{
+  "source_id": "cpcb_ground_truth",
+  "display_name": "CPCB CAAQMS Physical Ground Station Air Quality Data",
+  "retrieved_at_utc": "2026-11-15T17:06:13.111429+00:00",
+  "provider": "Central Pollution Control Board (CPCB) via official station records",
+  "spatial_resolution": "Physical CAAQMS ground monitoring stations",
+  "total_records": 25611,
+  "cities_count": 26,
+  "start_date": "2015-01-01",
+  "end_date": "2020-07-01",
+  "notes": "Direct physical continuous ambient air quality monitoring stations (CAAQMS)."
+}
