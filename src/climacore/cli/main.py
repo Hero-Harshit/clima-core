@@ -31,6 +31,8 @@ from climacore.models.heatwave_alert.train import train_heatwave_alert_model
 from climacore.models.cpcb_multipollutant.train import train_cpcb_multipollutant_models
 from climacore.models.atmospheric_stagnation.train import train_atmospheric_stagnation_model
 from climacore.explainability.engine import generate_explainability_artifacts
+from climacore.personas.models import PersonaInput
+from climacore.personas.engine import evaluate_persona, evaluate_all_personas
 
 logger = get_logger("climacore.cli")
 
@@ -250,6 +252,44 @@ def cmd_assess(args):
         for adv in res["advisories"]:
             print(f"  - {adv}")
 
+    # Optional Persona Tailored Intelligence
+    if getattr(args, "persona", None):
+        p_input = PersonaInput(
+            city=args.city,
+            date=args.date,
+            temp_max=args.temp,
+            precipitation_mm=args.rain,
+            pm2_5=args.pm25,
+            rain_probability=0.8 if args.rain >= 1.0 else 0.1,
+            imd_heatwave_alert=2 if args.temp >= 44.0 else (1 if args.temp >= 40.0 else 0),
+        )
+        if args.persona == "all":
+            all_res = evaluate_all_personas(p_input)
+            print("\n=== Tailored Multi-Persona Impact Profiles ===")
+            for pid, pdata in all_res.items():
+                print(f"\n[{pdata['persona_title']}] - STATUS: {pdata['status_level']} (Impact: {pdata['impact_score']}/100)")
+                for k, v in pdata["key_metrics"].items():
+                    print(f"    • {k}: {v}")
+                if pdata["operational_restrictions"] and pdata["operational_restrictions"] != ["No administrative restrictions in effect."]:
+                    print("    ⚠️ RESTRICTIONS:")
+                    for r in pdata["operational_restrictions"]:
+                        print(f"      - {r}")
+        else:
+            p_res = evaluate_persona(args.persona, p_input)
+            print(f"\n=== Tailored Persona Intelligence: {p_res.persona_title} ===")
+            print(f"Status: {p_res.status_level} | Impact Score: {p_res.impact_score} / 100")
+            print("\nKey Role Metrics:")
+            for k, v in p_res.key_metrics.items():
+                print(f"  • {k}: {v}")
+            if p_res.operational_restrictions:
+                print("\nOperational Restrictions:")
+                for r in p_res.operational_restrictions:
+                    print(f"  - {r}")
+            if p_res.advisories:
+                print("\nRole-Specific Advisories:")
+                for a in p_res.advisories:
+                    print(f"  - {a}")
+
 
 def main():
     parser = argparse.ArgumentParser(prog="climacore", description="Clima-Core ML CLI")
@@ -300,6 +340,12 @@ def main():
     p_assess.add_argument("--pm25", type=float, required=True, help="PM2.5 concentration in ug/m3")
     p_assess.add_argument("--temp", type=float, required=True, help="Max temperature in deg C")
     p_assess.add_argument("--rain", type=float, default=0.0, help="Precipitation in mm")
+    p_assess.add_argument(
+        "--persona",
+        default=None,
+        choices=["student", "farmer", "gig_worker", "commuter", "healthcare", "city_official", "all"],
+        help="Generate tailored persona intelligence"
+    )
 
     args = parser.parse_args()
     if args.command == "sources":
