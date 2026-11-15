@@ -1,0 +1,27 @@
+{
+  "model_name": "climacore_imd_heatwave_alert",
+  "training_data_rows": 708248,
+  "total_cleaned_rows": 822648,
+  "date_span": "1980 to 2024 (44 years)",
+  "cities_count": 50,
+  "best_iteration": 140,
+  "test_holdout_period": "2022-01-01 to 2024-12-31 (3 years)",
+  "test_rows": 59600,
+  "test_heatwave_events": 1190,
+  "metrics": {
+    "heatwave_classifier": {
+      "roc_auc": 0.9852,
+      "pr_auc": 0.6286,
+      "recall": 0.7546,
+      "precision": 0.4417,
+      "brier_score": 0.017
+    },
+    "persistence_baseline": {
+      "recall": 0.4681,
+      "precision": 0.4681
+    }
+  },
+  "feature_count": 67,
+  "artifact_file": "model.txt",
+  "artifact_sha256": "d951cab4a3ecc724fe58a1565fed5b055f3e6edc463f40a6a1f045ac2b25d34a"
+}

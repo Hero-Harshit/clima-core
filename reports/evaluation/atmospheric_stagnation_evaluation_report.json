@@ -1,0 +1,29 @@
+{
+  "model_name": "climacore_atmospheric_stagnation",
+  "training_data_rows": 708248,
+  "total_cleaned_rows": 822648,
+  "date_span": "1980 to 2024 (44 years)",
+  "cities_count": 50,
+  "best_iteration": 417,
+  "test_holdout_period": "2022-01-01 to 2024-12-31 (3 years)",
+  "test_rows": 59600,
+  "test_stagnant_days": 5679,
+  "metrics": {
+    "stagnation_classifier": {
+      "roc_auc": 0.9519,
+      "pr_auc": 0.637,
+      "accuracy": 0.9249,
+      "recall": 0.5147,
+      "precision": 0.63,
+      "brier_score": 0.0505
+    },
+    "persistence_baseline": {
+      "accuracy": 0.9029,
+      "recall": 0.4934,
+      "precision": 0.4906
+    }
+  },
+  "feature_count": 59,
+  "artifact_file": "model.txt",
+  "artifact_sha256": "15e8f11a898ab6eb9f1bf650e026cce9014d7d95e33f96d38bd3d5a4c9c2b213"
+}

@@ -1,0 +1,46 @@
+{
+  "model_name": "climacore_cpcb_multipollutant",
+  "date_span": "2015 to 2020",
+  "cities_count": 26,
+  "test_holdout_period": "2020-01-01 to 2020-07-01",
+  "pm10": {
+    "pollutant": "PM10",
+    "training_rows": 7734,
+    "test_rows": 4228,
+    "best_iteration": 145,
+    "metrics": {
+      "lgbm": {
+        "mae": 22.8106,
+        "rmse": 34.8648,
+        "r2": 0.6782,
+        "bias": 7.3706
+      },
+      "persistence": {
+        "mae": 27.2,
+        "rmse": 44.8529
+      }
+    },
+    "artifact_file": "pm10_model.txt",
+    "artifact_sha256": "540be07f4f24db8fe76475a7a2be1159163e4807bc064ef3d732e3b8eba1053e"
+  },
+  "no2": {
+    "pollutant": "NO2",
+    "training_rows": 13532,
+    "test_rows": 4337,
+    "best_iteration": 173,
+    "metrics": {
+      "lgbm": {
+        "mae": 4.3887,
+        "rmse": 6.608,
+        "r2": 0.8379,
+        "bias": 1.2052
+      },
+      "persistence": {
+        "mae": 4.8386,
+        "rmse": 8.3059
+      }
+    },
+    "artifact_file": "no2_model.txt",
+    "artifact_sha256": "a70177dafbbd4f1ad54fc049311d81b46cd6efd9363d10dc0b6de02aeb761ba1"
+  }
+}

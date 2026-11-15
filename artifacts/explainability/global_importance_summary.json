@@ -1,0 +1,102 @@
+{
+  "heat_risk": {
+    "top_10_global_drivers": [
+      {
+        "feature": "temperature_2m_max",
+        "mean_abs_shap": 1.9304
+      },
+      {
+        "feature": "temperature_2m_max_roll_mean_3d",
+        "mean_abs_shap": 0.3602
+      },
+      {
+        "feature": "temperature_2m_max_roll_mean_14d",
+        "mean_abs_shap": 0.2766
+      },
+      {
+        "feature": "apparent_temperature_max",
+        "mean_abs_shap": 0.1866
+      },
+      {
+        "feature": "precipitation_sum",
+        "mean_abs_shap": 0.134
+      },
+      {
+        "feature": "temperature_2m_mean",
+        "mean_abs_shap": 0.127
+      },
+      {
+        "feature": "sin_day_of_year",
+        "mean_abs_shap": 0.1114
+      },
+      {
+        "feature": "precipitation_hours",
+        "mean_abs_shap": 0.1028
+      },
+      {
+        "feature": "apparent_temperature_max_roll_max_14d",
+        "mean_abs_shap": 0.0818
+      },
+      {
+        "feature": "wind_speed_10m_max",
+        "mean_abs_shap": 0.0802
+      }
+    ],
+    "base_value": 29.2827
+  },
+  "air_quality": {
+    "top_10_global_drivers": [
+      {
+        "feature": "pm2_5_mean",
+        "mean_abs_shap": 9.2685
+      },
+      {
+        "feature": "pm2_5_max",
+        "mean_abs_shap": 2.433
+      },
+      {
+        "feature": "city_cat",
+        "mean_abs_shap": 0.8576
+      },
+      {
+        "feature": "precipitation_sum",
+        "mean_abs_shap": 0.8414
+      },
+      {
+        "feature": "pm2_5_mean_lag_1",
+        "mean_abs_shap": 0.8057
+      },
+      {
+        "feature": "cos_day_of_year",
+        "mean_abs_shap": 0.5394
+      },
+      {
+        "feature": "co_8h_max",
+        "mean_abs_shap": 0.5379
+      },
+      {
+        "feature": "wind_speed_10m_max",
+        "mean_abs_shap": 0.4903
+      },
+      {
+        "feature": "pm2_5_mean_roll_mean_14d",
+        "mean_abs_shap": 0.4769
+      },
+      {
+        "feature": "pm10_mean_lag_1",
+        "mean_abs_shap": 0.4721
+      }
+    ],
+    "base_value": 36.0029
+  },
+  "heatwave_alert": {
+    "model_type": "Binary LightGBM IMD Heatwave Alert Classifier",
+    "features_audited": 67,
+    "expected_base_log_odds": -8.3286
+  },
+  "atmospheric_stagnation": {
+    "model_type": "Binary LightGBM Atmospheric Stagnation Classifier",
+    "features_audited": 59,
+    "expected_base_log_odds": -8.3424
+  }
+}

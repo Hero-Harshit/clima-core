@@ -1,0 +1,211 @@
+"""
+Winter Atmospheric Stagnation & Inversion Trapping Model Training Pipeline.
+Trained on 44 years of meteorological records across 50 Indian cities (823,048 rows)
+to forecast next-day atmospheric stagnation and boundary layer trapping conditions.
+"""
+
+from pathlib import Path
+from typing import Dict, Any, List
+import json
+import lightgbm as lgb
+import numpy as np
+import pandas as pd
+from sklearn.metrics import roc_auc_score, average_precision_score, brier_score_loss, accuracy_score
+
+from climacore.common.logging import get_logger
+from climacore.common.provenance import compute_sha256
+from climacore.config.loader import get_project_root
+from climacore.features.temporal import add_temporal_features
+from climacore.features.lags import add_lag_features
+from climacore.features.rolling import add_rolling_features
+
+logger = get_logger("climacore.models.atmospheric_stagnation.train")
+
+
+def prepare_stagnation_dataset() -> pd.DataFrame:
+    """Prepare 44-year historical dataset with Atmospheric Stagnation labels."""
+    root = get_project_root()
+    hist_path = root / "data" / "processed" / "weather_historical_44y_train_ready.parquet"
+
+    logger.info(f"Loading 44-year historical dataset from {hist_path}...")
+    df = pd.read_parquet(hist_path)
+    df["date"] = pd.to_datetime(df["date"])
+    df["month"] = df["date"].dt.month
+    df["day_of_year"] = df["date"].dt.day_of_year
+
+    # Atmospheric Stagnation Ground Truth:
+    # 1. Post-monsoon/winter months: Nov, Dec, Jan, Feb
+    # 2. Calm surface winds: daily max 10m wind speed <= 10.0 km/h (~2.7 m/s)
+    # 3. No precipitation washout: precipitation_sum < 1.0 mm
+    is_winter = df["month"].isin([11, 12, 1, 2])
+    is_calm = df["wind_speed_10m_max"] <= 10.0
+    is_dry = df["precipitation_sum"] < 1.0
+    df["is_stagnant_today"] = (is_winter & is_calm & is_dry).astype(int)
+
+    # Diurnal temperature range (measure of nocturnal inversion strength)
+    df["diurnal_temp_range"] = df["temperature_2m_max"] - df["temperature_2m_min"]
+
+    # Feature Engineering
+    logger.info("Computing time-safe lag and rolling features for stagnation prediction...")
+    df = df.sort_values(by=["city", "date"]).reset_index(drop=True)
+    df = add_temporal_features(df, date_col="date")
+    df["is_winter_season"] = is_winter.astype(int)
+
+    lags = [1, 2, 3, 7]
+    target_cols = [
+        "wind_speed_10m_max",
+        "precipitation_sum",
+        "diurnal_temp_range",
+        "temperature_2m_min",
+        "shortwave_radiation_sum",
+        "is_stagnant_today",
+    ]
+    df = add_lag_features(df, group_col="city", date_col="date", target_cols=target_cols, lags=lags)
+
+    df = add_rolling_features(df, group_col="city", date_col="date", target_cols=["wind_speed_10m_max"], windows=[3, 7])
+    df = add_rolling_features(df, group_col="city", date_col="date", target_cols=["diurnal_temp_range"], windows=[3, 7])
+
+    # Target: Next-day atmospheric stagnation (t+1)
+    df["target_stagnation_next_day"] = df.groupby("city")["is_stagnant_today"].shift(-1)
+    df["city_cat"] = df["city"].astype("category")
+
+    valid_mask = df["target_stagnation_next_day"].notnull() & df["wind_speed_10m_max_lag_7"].notnull()
+    cleaned = df[valid_mask].copy().reset_index(drop=True)
+    logger.info(f"Cleaned Stagnation dataset: {len(cleaned):,} rows across {cleaned['city'].nunique()} cities.")
+    return cleaned
+
+
+def train_atmospheric_stagnation_model() -> Dict[str, Any]:
+    """Train LightGBM classifier for next-day atmospheric stagnation."""
+    root = get_project_root()
+    art_path = root / "artifacts" / "models" / "atmospheric_stagnation" / "v0.1.0"
+    rep_path = root / "reports" / "evaluation"
+    art_path.mkdir(parents=True, exist_ok=True)
+    rep_path.mkdir(parents=True, exist_ok=True)
+
+    df = prepare_stagnation_dataset()
+
+    # Chronological Split:
+    # Train: 1980-01-08 to 2018-12-31 (~39 years, ~708,000 rows)
+    # Val: 2019-01-01 to 2021-12-31 (3 years, ~54,800 rows)
+    # Test: 2022-01-01 to 2024-12-31 (3 years, ~54,800 rows)
+    train_mask = df["date"] < pd.to_datetime("2019-01-01")
+    val_mask = (df["date"] >= pd.to_datetime("2019-01-01")) & (df["date"] < pd.to_datetime("2022-01-01"))
+    test_mask = df["date"] >= pd.to_datetime("2022-01-01")
+
+    train_df = df[train_mask]
+    val_df = df[val_mask]
+    test_df = df[test_mask]
+
+    excluded = {
+        "date", "city", "target_stagnation_next_day", "is_stagnant_today",
+        "wind_speed_10m_max", "precipitation_sum", "diurnal_temp_range",
+        "temperature_2m_max", "temperature_2m_min", "temperature_2m_mean",
+        "sunrise", "sunset"
+    }
+    feature_cols = [c for c in df.columns if c not in excluded]
+
+    X_train, y_train = train_df[feature_cols], train_df["target_stagnation_next_day"].astype(int).to_numpy()
+    X_val, y_val = val_df[feature_cols], val_df["target_stagnation_next_day"].astype(int).to_numpy()
+    X_test, y_test = test_df[feature_cols], test_df["target_stagnation_next_day"].astype(int).to_numpy()
+
+    logger.info("Training Atmospheric Stagnation LightGBM Classifier...")
+    lgb_params = {
+        "objective": "binary",
+        "metric": ["auc", "average_precision"],
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "n_estimators": 600,
+        "max_depth": 6,
+        "num_leaves": 31,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 42,
+        "verbose": -1,
+        "n_jobs": 4,
+    }
+
+    model = lgb.LGBMClassifier(**lgb_params)
+    model.fit(
+        X_train,
+        y_train,
+        eval_set=[(X_val, y_val)],
+        callbacks=[lgb.early_stopping(stopping_rounds=40, verbose=False)],
+    )
+
+    best_iter = int(model.best_iteration_)
+    logger.info(f"Atmospheric Stagnation Model converged at iteration {best_iter}.")
+
+    # Evaluate on untouched 2022-2024 holdout
+    preds_proba = model.predict_proba(X_test)[:, 1]
+    preds_bin = (preds_proba >= 0.5).astype(int)
+
+    roc_auc = round(float(roc_auc_score(y_test, preds_proba)), 4)
+    pr_auc = round(float(average_precision_score(y_test, preds_proba)), 4)
+    brier = round(float(brier_score_loss(y_test, preds_proba)), 4)
+    accuracy = round(float(accuracy_score(y_test, preds_bin)), 4)
+
+    test_pos = np.sum(y_test == 1)
+    detected_pos = np.sum((preds_bin == 1) & (y_test == 1))
+    recall = round(float(detected_pos / max(1, test_pos)), 4)
+    precision = round(float(detected_pos / max(1, np.sum(preds_bin == 1))), 4)
+
+    # Persistence baseline (today stagnant -> tomorrow stagnant)
+    persist_preds = test_df["is_stagnant_today_lag_1"].astype(int).to_numpy()
+    persist_acc = round(float(accuracy_score(y_test, persist_preds)), 4)
+    persist_recall = round(float(np.sum((persist_preds == 1) & (y_test == 1)) / max(1, test_pos)), 4)
+    persist_precision = round(float(np.sum((persist_preds == 1) & (y_test == 1)) / max(1, np.sum(persist_preds == 1))), 4)
+
+    logger.info(f"Stagnation Test (2022-2024, {len(test_df):,} rows, {test_pos} stagnant days):")
+    logger.info(f"  Model: ROC-AUC = {roc_auc}, PR-AUC = {pr_auc}, Accuracy = {accuracy*100:.2f}%, Recall = {recall*100:.2f}%, Precision = {precision*100:.2f}%, Brier = {brier}")
+    logger.info(f"  Persistence Baseline: Accuracy = {persist_acc*100:.2f}%, Recall = {persist_recall*100:.2f}%, Precision = {persist_precision*100:.2f}%")
+
+    # Export Model Artifact
+    model_file = art_path / "model.txt"
+    model.booster_.save_model(str(model_file))
+    sha256 = compute_sha256(model_file)
+
+    # Reload parity check
+    reloaded = lgb.Booster(model_file=str(model_file))
+    parity_diff = float(np.max(np.abs(preds_proba - reloaded.predict(X_test))))
+    logger.info(f"Stagnation parity diff: {parity_diff:.8f}")
+
+    results = {
+        "model_name": "climacore_atmospheric_stagnation",
+        "training_data_rows": len(train_df),
+        "total_cleaned_rows": len(df),
+        "date_span": "1980 to 2024 (44 years)",
+        "cities_count": int(df["city"].nunique()),
+        "best_iteration": best_iter,
+        "test_holdout_period": "2022-01-01 to 2024-12-31 (3 years)",
+        "test_rows": len(test_df),
+        "test_stagnant_days": int(test_pos),
+        "metrics": {
+            "stagnation_classifier": {
+                "roc_auc": roc_auc,
+                "pr_auc": pr_auc,
+                "accuracy": accuracy,
+                "recall": recall,
+                "precision": precision,
+                "brier_score": brier,
+            },
+            "persistence_baseline": {
+                "accuracy": persist_acc,
+                "recall": persist_recall,
+                "precision": persist_precision,
+            },
+        },
+        "feature_count": len(feature_cols),
+        "artifact_file": str(model_file.name),
+        "artifact_sha256": sha256,
+    }
+
+    out_json = rep_path / "atmospheric_stagnation_evaluation_report.json"
+    with open(out_json, "w", encoding="utf-8") as f:
+        json.dump(results, f, indent=2)
+
+    return results
+
+
+if __name__ == "__main__":
+    train_atmospheric_stagnation_model()

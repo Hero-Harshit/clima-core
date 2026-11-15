@@ -113,3 +113,52 @@ def test_apparent_heat_stress_model_artifact():
     feature_names = booster.feature_name()
     assert "apparent_temperature_max_lag_1" in feature_names
 
+
+def test_heatwave_alert_model_artifact():
+    root = get_project_root()
+    model_file = root / "artifacts" / "models" / "heatwave_alert" / "v0.1.0" / "model.txt"
+    assert model_file.exists(), f"Heatwave Alert model artifact missing at {model_file}"
+
+    booster = lgb.Booster(model_file=str(model_file))
+    assert booster.num_trees() > 0
+    feature_names = booster.feature_name()
+    assert "tmax_departure_lag_1" in feature_names or "imd_heatwave_today_lag_1" in feature_names
+
+
+def test_cpcb_multipollutant_models_artifacts():
+    root = get_project_root()
+    pm10_file = root / "artifacts" / "models" / "cpcb_multipollutant" / "v0.1.0" / "pm10_model.txt"
+    no2_file = root / "artifacts" / "models" / "cpcb_multipollutant" / "v0.1.0" / "no2_model.txt"
+    assert pm10_file.exists(), f"PM10 model artifact missing at {pm10_file}"
+    assert no2_file.exists(), f"NO2 model artifact missing at {no2_file}"
+
+    b_pm10 = lgb.Booster(model_file=str(pm10_file))
+    b_no2 = lgb.Booster(model_file=str(no2_file))
+    assert b_pm10.num_trees() > 0
+    assert b_no2.num_trees() > 0
+
+
+def test_atmospheric_stagnation_model_artifact():
+    root = get_project_root()
+    model_file = root / "artifacts" / "models" / "atmospheric_stagnation" / "v0.1.0" / "model.txt"
+    assert model_file.exists(), f"Stagnation model artifact missing at {model_file}"
+
+    booster = lgb.Booster(model_file=str(model_file))
+    assert booster.num_trees() > 0
+    feature_names = booster.feature_name()
+    assert "wind_speed_10m_max_lag_1" in feature_names
+
+
+def test_shap_explainability_artifacts():
+    root = get_project_root()
+    summary_file = root / "artifacts" / "explainability" / "global_importance_summary.json"
+    assert summary_file.exists(), f"SHAP summary missing at {summary_file}"
+
+    import json
+    with open(summary_file, "r") as f:
+        data = json.load(f)
+    assert "heat_risk" in data
+    assert "air_quality" in data
+    assert len(data["heat_risk"]["top_10_global_drivers"]) == 10
+
+
