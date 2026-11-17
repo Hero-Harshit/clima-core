@@ -36,6 +36,25 @@ class PersonaInput(BaseModel):
     wet_bulb_temp_c: Optional[float] = Field(default=None, description="Estimated wet-bulb temperature in °C")
     surface_solar_radiation_w_m2: Optional[float] = Field(default=None, description="Solar surface irradiance in W/m²")
     uhi_temperature_delta_c: Optional[float] = Field(default=None, description="Urban Heat Island temperature anomaly in °C")
+    population_5km: Optional[int] = Field(default=None, description="WorldPop 2024 population within 5km core radius")
+    population_15km: Optional[int] = Field(default=None, description="WorldPop 2024 population within 15km metro radius")
+    population_30km: Optional[int] = Field(default=None, description="WorldPop 2024 population within 30km urban region")
+    dense_cluster_pop_15km: Optional[int] = Field(default=None, description="WorldPop 2024 population in high-density informal/urban clusters (>=75/cell) within 15km")
+    urban_exposure_tier: Optional[str] = Field(default=None, description="Urban Exposure Tier from WorldPop 2024")
+    # OpenStreetMap Critical Infrastructure
+    hospitals_15km: Optional[int] = Field(default=None, description="Count of hospitals within 15km metro radius")
+    clinics_15km: Optional[int] = Field(default=None, description="Count of clinics and primary care within 15km metro radius")
+    total_healthcare_15km: Optional[int] = Field(default=None, description="Total healthcare facilities within 15km metro radius")
+    schools_15km: Optional[int] = Field(default=None, description="Count of educational institutions within 15km metro radius")
+    bridges_15km: Optional[int] = Field(default=None, description="Count of bridges and flyovers within 15km metro radius")
+    drainage_canals_15km: Optional[int] = Field(default=None, description="Count of drainage canals and waterways within 15km metro radius")
+    arterial_roads_15km: Optional[int] = Field(default=None, description="Count of primary/trunk arterial road links within 15km metro radius")
+    industrial_zones_15km: Optional[int] = Field(default=None, description="Count of industrial zones within 15km metro radius")
+    transit_stations_15km: Optional[int] = Field(default=None, description="Count of rail transit stations and airports within 15km metro radius")
+    people_per_hospital_15km: Optional[int] = Field(default=None, description="Ratio of 15km population per hospital facility")
+    people_per_school_15km: Optional[int] = Field(default=None, description="Ratio of 15km population per school facility")
+    critical_infrastructure_density_km2: Optional[float] = Field(default=None, description="Density of critical facilities per km2")
+    drainage_arterial_ratio: Optional[float] = Field(default=None, description="Drainage canals to arterial roads ratio")
 
 
 class PersonaResult(BaseModel):

@@ -58,6 +58,10 @@ def evaluate_city_official_persona(inp: PersonaInput) -> PersonaResult:
         restrictions.append("Enforce ban on non-essential construction and demolition (C&D) activities.")
         restrictions.append("Deploy anti-smog guns and mechanical water sweepers on the top 10 most congested corridors.")
         advisories.append("Open air-conditioned municipal community cooling centers in high-density informal settlement zones.")
+        if inp.dense_cluster_pop_15km and inp.dense_cluster_pop_15km > 100_000:
+            advisories.append(
+                f"Emergency civil protection priority: Dispatch mobile water tankers and hydration shelters to protect {inp.dense_cluster_pop_15km:,} vulnerable residents in dense informal settlement clusters."
+            )
     elif inp.imd_heatwave_alert == 1 or pm25 >= 150.0 or precip >= 35.0:
         tier = "STAGE_2_TARGETED_DEPLOYMENT"
         advisories.append("Enforce strict dust suppression at construction sites and intensify traffic light synchronization.")
@@ -76,21 +80,45 @@ def evaluate_city_official_persona(inp: PersonaInput) -> PersonaResult:
     else:
         status = "NORMAL"
 
+    metrics: Dict[str, Any] = {
+        "power_grid_cooling_stress": f"{grid_stress:.1f} / 100 ({grid_status})",
+        "cooling_degree_days_cdd": f"{cdd:.1f} °C-days",
+        "tropical_night_failure_risk": "ACTIVE (Min Temp >= 28°C)" if is_tropical_night else "INACTIVE",
+        "historical_climate_rarity": rarity_desc,
+        "municipal_action_tier": tier,
+        "forecasted_pm25": f"{pm25:.1f} µg/m³",
+        "forecasted_rain": f"{precip:.1f} mm",
+        "imd_heat_action_plan_tier": ["None", "Yellow Alert", "Orange Alert", "Red Alert"][min(3, inp.imd_heatwave_alert)],
+    }
+
+    if inp.population_15km is not None:
+        metrics["worldpop_population_15km"] = f"{inp.population_15km:,} citizens"
+        metrics["dense_cluster_population_15km"] = f"{(inp.dense_cluster_pop_15km or 0):,} residents (density >= 7,500/km²)"
+        metrics["urban_exposure_tier"] = inp.urban_exposure_tier or "N/A"
+
+    if inp.hospitals_15km is not None:
+        metrics["critical_infrastructure_footprint"] = (
+            f"{inp.hospitals_15km:,} hospitals, {(inp.schools_15km or 0):,} schools, {(inp.bridges_15km or 0):,} bridges (15km)"
+        )
+        if inp.drainage_canals_15km is not None:
+            metrics["drainage_discharge_resilience"] = (
+                f"{inp.drainage_canals_15km:,} mapped canals (ratio {inp.drainage_arterial_ratio or 0.0:.2f} to arterial roads)"
+            )
+        if precip >= 35.0 and inp.bridges_15km and inp.bridges_15km > 50:
+            advisories.append(
+                f"Inundation warning: Inspect low-clearance underpasses across {inp.bridges_15km:,} bridges/flyovers; deploy dewatering pumps along primary arteries."
+            )
+        if tier == "STAGE_3_FULL_EMERGENCY" and inp.schools_15km and inp.schools_15km > 20:
+            advisories.append(
+                f"Emergency civil protection: Pre-designate {inp.schools_15km:,} educational facilities as secondary relief & air-conditioned cooling shelters."
+            )
+
     return PersonaResult(
         persona_id="city_official_infrastructure",
         persona_title="City Official, Municipal Planner & Disaster Management",
         status_level=status,
         impact_score=muni_score,
-        key_metrics={
-            "power_grid_cooling_stress": f"{grid_stress:.1f} / 100 ({grid_status})",
-            "cooling_degree_days_cdd": f"{cdd:.1f} °C-days",
-            "tropical_night_failure_risk": "ACTIVE (Min Temp >= 28°C)" if is_tropical_night else "INACTIVE",
-            "historical_climate_rarity": rarity_desc,
-            "municipal_action_tier": tier,
-            "forecasted_pm25": f"{pm25:.1f} µg/m³",
-            "forecasted_rain": f"{precip:.1f} mm",
-            "imd_heat_action_plan_tier": ["None", "Yellow Alert", "Orange Alert", "Red Alert"][min(3, inp.imd_heatwave_alert)],
-        },
+        key_metrics=metrics,
         advisories=advisories or ["Municipal infrastructure systems operating within standard capacity limits."],
         operational_restrictions=restrictions or ["No civil protection restrictions active."],
     )

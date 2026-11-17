@@ -42,9 +42,11 @@ class LiveForecastEngine:
         self.compound_engine = CompoundRiskEngine()
         self._cyclone_profiles: Optional[Dict[str, Dict[str, Any]]] = None
         self._hap_triggers: Optional[Dict[str, Dict[str, Any]]] = None
+        self._population_profiles: Optional[Dict[str, Dict[str, Any]]] = None
+        self._infrastructure_profiles: Optional[Dict[str, Dict[str, Any]]] = None
 
     def _load_auxiliary_metadata(self) -> None:
-        """Load static city cyclone risk profiles and NDMA HAP thresholds if available."""
+        """Load static city cyclone risk profiles, NDMA HAP thresholds, WorldPop population, and OSM infrastructure."""
         if self._cyclone_profiles is not None:
             return
 
@@ -68,6 +70,26 @@ class LiveForecastEngine:
             except Exception as e:
                 logger.warning(f"Could not load HAP triggers: {e}")
         self._hap_triggers = self._hap_triggers or {}
+
+        pop_file = root / "data" / "processed" / "population" / "city_population_exposure.json"
+        if pop_file.exists():
+            try:
+                with open(pop_file, "r", encoding="utf-8") as f:
+                    pop_list = json.load(f)
+                    self._population_profiles = {c["city"].lower(): c for c in pop_list}
+            except Exception as e:
+                logger.warning(f"Could not load population profiles: {e}")
+        self._population_profiles = self._population_profiles or {}
+
+        infra_file = root / "data" / "processed" / "infrastructure" / "city_infrastructure_exposure.json"
+        if infra_file.exists():
+            try:
+                with open(infra_file, "r", encoding="utf-8") as f:
+                    infra_list = json.load(f)
+                    self._infrastructure_profiles = {c["city"].lower(): c for c in infra_list}
+            except Exception as e:
+                logger.warning(f"Could not load infrastructure profiles: {e}")
+        self._infrastructure_profiles = self._infrastructure_profiles or {}
 
     def get_live_forecast(
         self,
@@ -116,6 +138,8 @@ class LiveForecastEngine:
         # Auxiliary risk context for this city
         cyc_info = self._cyclone_profiles.get(city_lower, {}) if self._cyclone_profiles else {}
         hap_info = self._hap_triggers.get(city_lower, {}) if self._hap_triggers else {}
+        pop_info = self._population_profiles.get(city_lower, {}) if self._population_profiles else {}
+        infra_info = self._infrastructure_profiles.get(city_lower, {}) if self._infrastructure_profiles else {}
 
         daily_predictions: List[LiveDayPrediction] = []
         peak_score = 0.0
@@ -166,6 +190,24 @@ class LiveForecastEngine:
                 cyclone_distance_km=cyc_info.get("min_historic_distance_km"),
                 cyclone_grade=cyc_info.get("closest_storm"),
                 wet_bulb_temp_c=day.wet_bulb_temp_c,
+                population_5km=pop_info.get("population_5km"),
+                population_15km=pop_info.get("population_15km"),
+                population_30km=pop_info.get("population_30km"),
+                dense_cluster_pop_15km=pop_info.get("dense_cluster_pop_15km"),
+                urban_exposure_tier=pop_info.get("urban_exposure_tier"),
+                hospitals_15km=infra_info.get("hospitals_15km"),
+                clinics_15km=infra_info.get("clinics_15km"),
+                total_healthcare_15km=infra_info.get("total_healthcare_15km"),
+                schools_15km=infra_info.get("schools_15km"),
+                bridges_15km=infra_info.get("bridges_15km"),
+                drainage_canals_15km=infra_info.get("drainage_canals_15km"),
+                arterial_roads_15km=infra_info.get("arterial_roads_15km"),
+                industrial_zones_15km=infra_info.get("industrial_zones_15km"),
+                transit_stations_15km=infra_info.get("transit_stations_15km"),
+                people_per_hospital_15km=infra_info.get("people_per_hospital_15km"),
+                people_per_school_15km=infra_info.get("people_per_school_15km"),
+                critical_infrastructure_density_km2=infra_info.get("critical_infrastructure_density_km2"),
+                drainage_arterial_ratio=infra_info.get("drainage_arterial_ratio"),
             )
 
             # 3. Evaluate Selected Persona or All 13 Personas

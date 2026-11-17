@@ -84,21 +84,32 @@ def evaluate_water_persona(inp: PersonaInput) -> PersonaResult:
     else:
         status = "NORMAL"
 
+    metrics: Dict[str, Any] = {
+        "urban_runoff_coefficient": f"{runoff_coeff:.2f}",
+        "soil_saturation_state": sat_status,
+        "stormwater_drain_status": drain_status,
+        "forecasted_rain_volume": f"{rain_mm:.1f} mm",
+        "effective_surface_runoff": f"{effective_runoff_volume:.1f} mm",
+        "reservoir_live_storage": f"{res_pct:.1f} % ({supply_status})",
+        "groundwater_depth_mbgl": f"{gw_depth:.1f} mbgl",
+        "drain_desilting_alert": "MANDATORY_IMMEDIATE_ACTION" if drain_risk >= 60.0 else "ROUTINE_SCHEDULE"
+    }
+
+    if inp.drainage_canals_15km is not None and inp.drainage_canals_15km > 0:
+        metrics["mapped_drainage_channels"] = (
+            f"{inp.drainage_canals_15km:,} canals (ratio {inp.drainage_arterial_ratio or 0.0:.2f} to arterial roads)"
+        )
+        if rain_mm >= 30.0:
+            advisories.append(
+                f"Stormwater operational dispatch: Clear outfall bottlenecks along {inp.drainage_canals_15km:,} mapped natural/engineered canals."
+            )
+
     return PersonaResult(
         persona_id="water_utilities",
         persona_title="Water Utility, Municipal Stormwater & Aquifer Management",
         status_level=status,
         impact_score=score,
-        key_metrics={
-            "urban_runoff_coefficient": f"{runoff_coeff:.2f}",
-            "soil_saturation_state": sat_status,
-            "stormwater_drain_status": drain_status,
-            "forecasted_rain_volume": f"{rain_mm:.1f} mm",
-            "effective_surface_runoff": f"{effective_runoff_volume:.1f} mm",
-            "reservoir_live_storage": f"{res_pct:.1f} % ({supply_status})",
-            "groundwater_depth_mbgl": f"{gw_depth:.1f} mbgl",
-            "drain_desilting_alert": "MANDATORY_IMMEDIATE_ACTION" if drain_risk >= 60.0 else "ROUTINE_SCHEDULE"
-        },
+        key_metrics=metrics,
         advisories=advisories or ["Municipal water reservoirs and drainage systems operating within stable parameters."],
         operational_restrictions=restrictions or ["No water rationing or stormwater emergency diversions active."]
     )

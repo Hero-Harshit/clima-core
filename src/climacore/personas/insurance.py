@@ -92,21 +92,36 @@ def evaluate_insurance_persona(inp: PersonaInput) -> PersonaResult:
     else:
         status = "NORMAL"
 
+    metrics: Dict[str, Any] = {
+        "parametric_drought_status": drought_trigger,
+        "soil_moisture_deficit_index": f"{smdi:.2f}",
+        "parametric_heat_status": heat_trigger,
+        "74y_climate_rarity_percentile": f"{pct:.1f} %",
+        "cyclone_catastrophe_status": cyc_trigger,
+        "pluvial_flood_exposure": flood_trigger,
+        "estimated_portfolio_payout_load": f"{score:.1f} / 100",
+        "claims_processing_mode": "AUTOMATED_PARAMETRIC_EXECUTION" if (score >= 60.0 or cyc_payout_pct >= 100.0 or drought_payout_pct >= 100.0 or heat_payout_pct >= 100.0) else "STANDARD_MANUAL_ADJUSTMENT"
+    }
+
+    if inp.population_15km is not None:
+        pop_15k = inp.population_15km
+        dense_pop = inp.dense_cluster_pop_15km or 0
+        loss_multiplier = 1.0 + min(1.0, (pop_15k / 15_000_000.0) * 0.4 + (dense_pop / 5_000_000.0) * 0.4)
+        metrics["portfolio_population_exposure"] = f"{pop_15k:,} individuals"
+        metrics["informal_settlement_claim_potential"] = f"{dense_pop:,} residents"
+        metrics["urban_concentration_loss_multiplier"] = f"{loss_multiplier:.2f}x"
+
+        if loss_multiplier >= 1.25 and score >= 40.0:
+            advisories.append(
+                f"Catastrophe concentration alert: Urban density loss multiplier {loss_multiplier:.2f}x due to {pop_15k:,} exposed population. Augment secondary reinsurance liquidity reserves."
+            )
+
     return PersonaResult(
         persona_id="insurance_actuarial",
         persona_title="Parametric Climate Insurance, Actuarial Risk & Catastrophe Underwriting",
         status_level=status,
         impact_score=score,
-        key_metrics={
-            "parametric_drought_status": drought_trigger,
-            "soil_moisture_deficit_index": f"{smdi:.2f}",
-            "parametric_heat_status": heat_trigger,
-            "74y_climate_rarity_percentile": f"{pct:.1f} %",
-            "cyclone_catastrophe_status": cyc_trigger,
-            "pluvial_flood_exposure": flood_trigger,
-            "estimated_portfolio_payout_load": f"{score:.1f} / 100",
-            "claims_processing_mode": "AUTOMATED_PARAMETRIC_EXECUTION" if (score >= 60.0 or cyc_payout_pct >= 100.0 or drought_payout_pct >= 100.0 or heat_payout_pct >= 100.0) else "STANDARD_MANUAL_ADJUSTMENT"
-        },
+        key_metrics=metrics,
         advisories=advisories or ["Underwritten portfolio risks operating within standard actuarial variance."],
         operational_restrictions=restrictions or ["No capital reserve calls or catastrophe stop-loss mandates active."]
     )

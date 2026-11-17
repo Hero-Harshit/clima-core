@@ -70,19 +70,30 @@ def evaluate_student_persona(inp: PersonaInput) -> PersonaResult:
         bus_flood_risk = "MODERATE"
         advisories.append("Light to moderate rainfall expected during school commute.")
 
+    metrics: Dict[str, Any] = {
+        "morning_assembly_status": assembly_status,
+        "outdoor_sports_allowed": outdoor_sports_safe,
+        "school_bus_flood_risk": bus_flood_risk,
+        "expected_pm25_exposure": f"{pm25:.1f} µg/m³",
+        "afternoon_perceived_heat": f"{apparent_temp:.1f} °C",
+        "heatwave_warning_tier": ["None", "Yellow", "Orange", "Red"][min(3, inp.imd_heatwave_alert)],
+    }
+
+    if inp.schools_15km is not None and inp.schools_15km > 0:
+        metrics["schools_in_district_zone"] = (
+            f"{inp.schools_15km:,} schools (1 facility per {(inp.people_per_school_15km or 0):,} citizens)"
+        )
+        if status in ["HIGH_ALERT", "CRITICAL"]:
+            restrictions.append(
+                f"District Education Office protocol: Enforce indoor ventilation mandates or class timetable adjustments across {inp.schools_15km:,} schools."
+            )
+
     return PersonaResult(
         persona_id="student_parent",
         persona_title="Student, Parent & School Administration",
         status_level=status,
         impact_score=impact_score,
-        key_metrics={
-            "morning_assembly_status": assembly_status,
-            "outdoor_sports_allowed": outdoor_sports_safe,
-            "school_bus_flood_risk": bus_flood_risk,
-            "expected_pm25_exposure": f"{pm25:.1f} µg/m³",
-            "afternoon_perceived_heat": f"{apparent_temp:.1f} °C",
-            "heatwave_warning_tier": ["None", "Yellow", "Orange", "Red"][min(3, inp.imd_heatwave_alert)],
-        },
+        key_metrics=metrics,
         advisories=advisories or ["Normal school schedule and outdoor activities safe to proceed."],
         operational_restrictions=restrictions or ["No administrative restrictions in effect."],
     )

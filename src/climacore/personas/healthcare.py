@@ -63,20 +63,47 @@ def evaluate_healthcare_persona(inp: PersonaInput) -> PersonaResult:
     if diurnal_range >= 16.0:
         advisories.append(f"Wide diurnal temperature swing ({diurnal_range:.1f}°C) may trigger seasonal bronchial hypersensitivity.")
 
+    metrics: Dict[str, Any] = {
+        "respiratory_toxicity_burden": f"{toxicity_score:.1f} / 100",
+        "cardiovascular_thermal_strain": f"{thermal_strain:.1f} / 100",
+        "safe_outdoor_walk_window": walking_window,
+        "forecasted_pm25": f"{pm25:.1f} µg/m³",
+        "forecasted_no2": f"{no2:.1f} µg/m³",
+        "perceived_heat_index": f"{apparent_temp:.1f} °C",
+        "hospital_surge_alert": "HIGH" if health_score >= 70.0 else ("MODERATE" if health_score >= 45.0 else "LOW"),
+    }
+
+    if inp.population_15km is not None:
+        vulnerable_pool = int(round(inp.population_15km * 0.20))
+        surge_factor = ((health_score / 100.0) ** 1.5) * 0.003
+        projected_triage = max(10, int(round(vulnerable_pool * surge_factor)))
+        metrics["exposed_population_15km"] = f"{inp.population_15km:,} citizens"
+        metrics["vulnerable_demographic_pool"] = f"{vulnerable_pool:,} (pediatric <5 & elderly 65+)"
+        metrics["projected_emergency_triage_demand"] = f"~{projected_triage:,} acute clinical admissions"
+
+        if health_score >= 60.0 and projected_triage >= 500:
+            advisories.append(
+                f"Anticipate acute healthcare surge: ~{projected_triage:,} elderly and asthmatic patients projected to require emergency triage/nebulizer beds within 15km metro radius."
+            )
+
+    if inp.hospitals_15km is not None and inp.hospitals_15km > 0:
+        metrics["hospitals_in_exposure_zone"] = (
+            f"{inp.hospitals_15km:,} hospitals (1 facility per {(inp.people_per_hospital_15km or 0):,} citizens)"
+        )
+        if inp.population_15km is not None:
+            triage_per_hosp = round(projected_triage / max(1, inp.hospitals_15km), 1)
+            metrics["average_surge_load_per_hospital"] = f"~{triage_per_hosp} admissions / hospital"
+            if health_score >= 60.0 and triage_per_hosp >= 2.0:
+                advisories.append(
+                    f"Facility triage notice: Average surge load of ~{triage_per_hosp} incremental acute presentations across {inp.hospitals_15km:,} hospitals."
+                )
+
     return PersonaResult(
         persona_id="healthcare_vulnerable",
         persona_title="Healthcare & High-Risk Vulnerable Population",
         status_level=status,
         impact_score=health_score,
-        key_metrics={
-            "respiratory_toxicity_burden": f"{toxicity_score:.1f} / 100",
-            "cardiovascular_thermal_strain": f"{thermal_strain:.1f} / 100",
-            "safe_outdoor_walk_window": walking_window,
-            "forecasted_pm25": f"{pm25:.1f} µg/m³",
-            "forecasted_no2": f"{no2:.1f} µg/m³",
-            "perceived_heat_index": f"{apparent_temp:.1f} °C",
-            "hospital_surge_alert": "HIGH" if health_score >= 70.0 else ("MODERATE" if health_score >= 45.0 else "LOW"),
-        },
+        key_metrics=metrics,
         advisories=advisories or ["Environmental conditions within acceptable clinical bounds for sensitive groups."],
         operational_restrictions=restrictions or ["No clinical activity restrictions active."],
     )

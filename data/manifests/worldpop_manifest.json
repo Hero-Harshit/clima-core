@@ -1,0 +1,19 @@
+{
+  "source_id": "worldpop_india_2024_100m_constrained",
+  "display_name": "WorldPop India 2024 Constrained 100m Population Grid (R2024B_v1)",
+  "provider": "WorldPop / University of Southampton (CC-BY 4.0)",
+  "raw_file": "ind_pop_2024_CN_100m_R2024B_v1.tif",
+  "spatial_resolution": "0.000833 degrees (~100m)",
+  "crs": "EPSG:4326 (WGS84)",
+  "cities_evaluated": 50,
+  "total_30km_population": 210445335,
+  "sha256_raw": "29b13ce757733d6bffea51e087ee1f4ae90df58cec1996f46e5632911372116e",
+  "sha256_parquet": "b554a8a38b97d90664970d54c1418fd4020b5516feb7472d03584785ffa4f6ef",
+  "sha256_json": "0efe64a7425d8104a925c76f71672b45e944a01bf8312bac9f6d63f1e18ce008",
+  "updated_at_utc": "2026-11-17T22:48:40.326085+00:00",
+  "buffers_analyzed": {
+    "5km": "Inner high-density municipal core",
+    "15km": "Primary metropolitan and peri-urban footprint",
+    "30km": "Greater urban commuting region and district basin"
+  }
+}

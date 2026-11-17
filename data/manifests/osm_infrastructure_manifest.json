@@ -1,0 +1,25 @@
+{
+  "source_id": "openstreetmap_geofabrik_india_infrastructure",
+  "display_name": "OpenStreetMap Geofabrik India Critical Infrastructure Grids",
+  "provider": "OpenStreetMap contributors / Geofabrik GmbH (ODbL 1.0)",
+  "cities_evaluated": 50,
+  "total_hospitals_15km": 13769,
+  "total_schools_15km": 12263,
+  "total_bridges_15km": 34024,
+  "total_drainage_canals_15km": 16666,
+  "raw_zone_checksums": {
+    "central-zone-261116.osm.pbf": "3534cecaa08aa337ef14a2e21fb169015a80bb25d086f6a2090593973eb58c96",
+    "eastern-zone-261116.osm.pbf": "459bfb3f8bb5e0c4af16cad92d8a9f5d8a150d7db6fde40af7724aba67557d61",
+    "north-eastern-zone-261116.osm.pbf": "a5a8b8497bae14d25acee46351d9d9a24a3675eabee23daa01b788eebcc75311",
+    "northern-zone-261116.osm.pbf": "211c0029f3d24db327a24b28943237ce2d42694f8ebfa8810b00b1ff24966771",
+    "southern-zone-261116.osm.pbf": "52c5467087cfc2bfddf9a5e6b75b510694fc9338a960389c0f46ece1d9bccca5",
+    "western-zone-261116.osm.pbf": "9a5a4a430ce92f5205ee140a8d558c3bf25e387dd5c8d8f38305340091ffc58d"
+  },
+  "sha256_parquet": "803f9f1c45581c6a6fb4b1641327d9ae766e6d9002fa2097d87108bffff6d1d8",
+  "sha256_json": "9eb7ac62f6ca2d8b144805ae1bf46aefa3b5dc8eb595a9cee58cbf08d788cee6",
+  "updated_at_utc": "2026-11-17T23:28:33.271921+00:00",
+  "buffers_analyzed": {
+    "5km": "Municipal core critical social and lifeline infrastructure",
+    "15km": "Metropolitan disaster exposure footprint, transit networks, and drainage"
+  }
+}
