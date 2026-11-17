@@ -352,6 +352,68 @@ def cmd_assess(args):
                     print(f"  - {a}")
 
 
+def cmd_live(args):
+    """Fetch live multi-day forecast, run ML risk engine, and dispatch tailored persona intelligence."""
+    from climacore.ingestion import LiveForecastEngine
+
+    engine = LiveForecastEngine()
+    persona_choice = getattr(args, "persona", "all") or "all"
+    days_count = getattr(args, "days", 7)
+    force_refresh = getattr(args, "refresh", False)
+
+    print(f"\nConnecting to real-time atmospheric stream for '{args.city}'...")
+    res = engine.predict(
+        query=args.city,
+        persona=persona_choice,
+        days=days_count,
+        force_refresh=force_refresh
+    )
+
+    state_str = f", {res.state}" if res.state else ""
+    cache_tag = "[CACHED]" if res.is_cached else "[LIVE API]"
+    print(f"\n================================================================================")
+    print(f"  CLIMA-CORE LIVE ENVIRONMENTAL RISK INTELLIGENCE  {cache_tag}")
+    print(f"  Location: {res.city}{state_str} ({res.latitude:.4f}°N, {res.longitude:.4f}°E)")
+    print(f"  Retrieved: {res.retrieved_at_utc[:19].replace('T', ' ')} UTC | Horizon: {res.days_count} Days")
+    print(f"================================================================================")
+
+    # 7-Day Risk Trajectory Table
+    print("\n--- 7-Day Multi-Hazard Risk Trajectory ---")
+    print(f"{'Date':12s} {'Day':10s} {'T_max':8s} {'Rain':8s} {'PM2.5':8s} {'Compound':10s} {'Category':14s} {'Dominant Driver'}")
+    print("-" * 88)
+    for p in res.daily_predictions:
+        m = p.forecast_metrics
+        cr = p.compound_risk
+        t_str = f"{m['temp_max']:.1f}°C"
+        r_str = f"{m['precipitation_mm']:.1f}mm"
+        pm_str = f"{m['pm2_5']:.1f}"
+        score_str = f"{cr['compound_risk_score']:.1f}/100"
+        cat_str = f"[{cr['severity_category']}]"
+        driver = cr['dominant_driver']
+        print(f"{p.date:12s} {p.day_name:10s} {t_str:8s} {r_str:8s} {pm_str:8s} {score_str:10s} {cat_str:14s} {driver}")
+
+    print("-" * 88)
+    print(f"⚡ Peak Weekly Threat: {res.peak_compound_risk:.1f}/100 [{res.peak_risk_category}] on {res.peak_risk_date}")
+
+    # Persona Tailored Intelligence
+    print(f"\n--- Tailored Persona Intelligence: {res.selected_persona.upper()} ---")
+    for p in res.daily_predictions:
+        lead_tag = "TODAY" if p.day_offset == 0 else ("TOMORROW" if p.day_offset == 1 else f"+{p.day_offset}d")
+        print(f"\n>>> [{lead_tag}] {p.day_name}, {p.date} (Risk: {p.compound_risk['compound_risk_score']:.1f}/100 [{p.compound_risk['severity_category']}])")
+
+        for pid, pdata in p.personas.items():
+            print(f"  Sector: {pdata['persona_title']} | Status: {pdata['status_level']} (Impact: {pdata['impact_score']}/100)")
+            for k, v in list(pdata["key_metrics"].items())[:6]:
+                print(f"    • {k}: {v}")
+            # Filter standard boilerplate when no restrictions are active
+            has_restriction = any("No " not in r and "Clear" not in r for r in pdata.get("operational_restrictions", []))
+            if has_restriction:
+                print(f"    ⚠️ RESTRICTIONS:")
+                for r in pdata["operational_restrictions"]:
+                    if not r.startswith("No "):
+                        print(f"      - {r}")
+
+
 def main():
     parser = argparse.ArgumentParser(prog="climacore", description="Clima-Core ML CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -416,6 +478,22 @@ def main():
         help="Generate tailored persona intelligence across 13 economic sectors"
     )
 
+    # live (real-time weather + AQ + persona intelligence)
+    p_live = subparsers.add_parser("live", help="Fetch real-time weather & AQ, compute 7-day risk trajectory and persona advice")
+    p_live.add_argument("--city", default="Delhi", help="City name or 'lat, lon' coordinates")
+    p_live.add_argument(
+        "--persona",
+        default="all",
+        choices=[
+            "student", "farmer", "gig_worker", "commuter", "healthcare", "city_official",
+            "maritime", "industry", "aviation", "water", "insurance", "cold_chain", "tourism",
+            "all"
+        ],
+        help="Target occupation or sector for tailored advisories"
+    )
+    p_live.add_argument("--days", type=int, default=7, choices=range(1, 15), help="Forecast horizon (1-7 days)")
+    p_live.add_argument("--refresh", action="store_true", help="Bypass local cache and force live API pull")
+
     args = parser.parse_args()
     if args.command == "sources":
         cmd_sources(args)
@@ -429,6 +507,8 @@ def main():
         cmd_evaluate(args)
     elif args.command == "assess":
         cmd_assess(args)
+    elif args.command == "live":
+        cmd_live(args)
 
 
 if __name__ == "__main__":

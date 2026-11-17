@@ -1,0 +1,214 @@
+"""
+Master Orchestration Engine for Real-Time Location Forecasts & Persona Risk Dispatches.
+Binds live external data ingestion, physical model feature extraction, compound hazard scoring,
+and 13 domain-specific persona advisory evaluations across a 7-day forecast timeline.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime
+import json
+from pathlib import Path
+from typing import Dict, Any, List, Optional
+import pandas as pd
+
+from climacore.common.logging import get_logger
+from climacore.config.loader import get_project_root
+from climacore.ingestion.geocoding import resolve_location
+from climacore.ingestion.client import LiveIngestionClient
+from climacore.ingestion.normalizer import normalize_live_bundle
+from climacore.ingestion.cache import LiveForecastCache
+from climacore.ingestion.models import (
+    LiveCityForecast,
+    LiveDayForecast,
+    LiveDayPrediction,
+    LivePredictionResult,
+)
+from climacore.models.compound_risk.scoring import CompoundRiskEngine
+from climacore.personas.models import PersonaInput
+from climacore.personas.engine import evaluate_persona, evaluate_all_personas
+
+logger = get_logger("climacore.ingestion.engine")
+
+DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+
+class LiveForecastEngine:
+    """Master orchestrator for on-demand city predictions and 7-day risk trajectories."""
+
+    def __init__(self, cache_ttl_seconds: int = 7200):
+        self.client = LiveIngestionClient()
+        self.cache = LiveForecastCache(default_ttl_seconds=cache_ttl_seconds)
+        self.compound_engine = CompoundRiskEngine()
+        self._cyclone_profiles: Optional[Dict[str, Dict[str, Any]]] = None
+        self._hap_triggers: Optional[Dict[str, Dict[str, Any]]] = None
+
+    def _load_auxiliary_metadata(self) -> None:
+        """Load static city cyclone risk profiles and NDMA HAP thresholds if available."""
+        if self._cyclone_profiles is not None:
+            return
+
+        root = get_project_root()
+        cyc_file = root / "data" / "processed" / "cyclones" / "city_cyclone_risk_profiles.json"
+        if cyc_file.exists():
+            try:
+                with open(cyc_file, "r", encoding="utf-8") as f:
+                    cyc_list = json.load(f)
+                    self._cyclone_profiles = {c["city"].lower(): c for c in cyc_list}
+            except Exception as e:
+                logger.warning(f"Could not load cyclone profiles: {e}")
+        self._cyclone_profiles = self._cyclone_profiles or {}
+
+        hap_file = root / "data" / "processed" / "ndma_hap_triggers.json"
+        if hap_file.exists():
+            try:
+                with open(hap_file, "r", encoding="utf-8") as f:
+                    hap_list = json.load(f)
+                    self._hap_triggers = {c["city"].lower(): c for c in hap_list}
+            except Exception as e:
+                logger.warning(f"Could not load HAP triggers: {e}")
+        self._hap_triggers = self._hap_triggers or {}
+
+    def get_live_forecast(
+        self,
+        query: str,
+        days: int = 7,
+        force_refresh: bool = False
+    ) -> LiveCityForecast:
+        """Fetch and normalize live multi-day forecast for a city, using cache when valid."""
+        loc = resolve_location(query)
+        city_name = loc["city"]
+
+        # 1. Check local cache
+        if not force_refresh:
+            cached_forecast = self.cache.get(city_name)
+            if cached_forecast is not None:
+                return cached_forecast
+
+        # 2. Fetch live from API
+        raw_bundle = self.client.fetch_city_bundle(
+            latitude=loc["latitude"],
+            longitude=loc["longitude"],
+            days=days
+        )
+
+        # 3. Normalize into validated structure
+        forecast = normalize_live_bundle(location_meta=loc, raw_bundle=raw_bundle)
+
+        # 4. Save to cache
+        self.cache.set(city_name, forecast)
+        return forecast
+
+    def predict(
+        self,
+        query: str,
+        persona: str = "all",
+        days: int = 7,
+        force_refresh: bool = False
+    ) -> LivePredictionResult:
+        """Generate comprehensive live 7-day risk trajectory and tailored persona intelligence."""
+        self._load_auxiliary_metadata()
+
+        # Retrieve or fetch normalized live forecast
+        forecast = self.get_live_forecast(query=query, days=days, force_refresh=force_refresh)
+        city_lower = forecast.city.lower()
+
+        # Auxiliary risk context for this city
+        cyc_info = self._cyclone_profiles.get(city_lower, {}) if self._cyclone_profiles else {}
+        hap_info = self._hap_triggers.get(city_lower, {}) if self._hap_triggers else {}
+
+        daily_predictions: List[LiveDayPrediction] = []
+        peak_score = 0.0
+        peak_date = forecast.days[0].date if forecast.days else ""
+        peak_category = "Normal"
+
+        for day in forecast.days[:days]:
+            dt = datetime.strptime(day.date, "%Y-%m-%d")
+            day_name = DAY_NAMES[dt.weekday()]
+
+            # 1. Compound Risk Calculation
+            compound_res = self.compound_engine.calculate_single(
+                pm2_5_pred=day.pm2_5,
+                temp_max_pred=day.temp_max,
+                precip_pred=day.precipitation_mm,
+                city=forecast.city,
+                date=day.date,
+            )
+
+            score = compound_res["compound_risk_score"]
+            if score > peak_score:
+                peak_score = score
+                peak_date = day.date
+                peak_category = compound_res["severity_category"]
+
+            # 2. Build Persona Input Payload
+            p_input = PersonaInput(
+                city=forecast.city,
+                date=day.date,
+                temp_max=day.temp_max,
+                temp_min=day.temp_min,
+                apparent_temp_max=day.apparent_temp_max,
+                precipitation_mm=day.precipitation_mm,
+                rain_probability=day.rain_probability,
+                pm2_5=day.pm2_5,
+                pm10=day.pm10,
+                no2=day.no2,
+                wind_speed_kmh=day.wind_speed_kmh,
+                relative_humidity=day.relative_humidity,
+                solar_radiation=day.solar_radiation,
+                et0_evapotranspiration=day.et0_evapotranspiration,
+                imd_heatwave_alert=day.imd_heatwave_alert,
+                atmospheric_stagnation=day.atmospheric_stagnation,
+                historical_percentile=day.historical_percentile,
+                soil_moisture_deficit_index=day.soil_moisture_deficit_index,
+                flash_drought_alert=day.flash_drought_alert,
+                gale_wind_gust_kmh=day.gale_wind_gust_kmh,
+                cyclone_distance_km=cyc_info.get("min_historic_distance_km"),
+                cyclone_grade=cyc_info.get("closest_storm"),
+                wet_bulb_temp_c=day.wet_bulb_temp_c,
+            )
+
+            # 3. Evaluate Selected Persona or All 13 Personas
+            if str(persona).strip().lower() in ["all", "none", "*", ""]:
+                p_results = evaluate_all_personas(p_input)
+            else:
+                single_res = evaluate_persona(persona, p_input)
+                p_results = {single_res.persona_id: single_res.model_dump()}
+
+            daily_predictions.append(
+                LiveDayPrediction(
+                    date=day.date,
+                    day_offset=day.day_offset,
+                    day_name=day_name,
+                    forecast_metrics={
+                        "temp_max": day.temp_max,
+                        "temp_min": day.temp_min,
+                        "apparent_temp_max": day.apparent_temp_max,
+                        "precipitation_mm": day.precipitation_mm,
+                        "rain_probability": round(day.rain_probability * 100.0, 1),
+                        "wind_speed_kmh": day.wind_speed_kmh,
+                        "gale_wind_gust_kmh": day.gale_wind_gust_kmh,
+                        "relative_humidity": day.relative_humidity,
+                        "pm2_5": day.pm2_5,
+                        "pm10": day.pm10,
+                        "wet_bulb_temp_c": day.wet_bulb_temp_c,
+                    },
+                    compound_risk=compound_res,
+                    personas=p_results,
+                )
+            )
+
+        return LivePredictionResult(
+            city=forecast.city,
+            state=forecast.state,
+            latitude=forecast.latitude,
+            longitude=forecast.longitude,
+            retrieved_at_utc=forecast.retrieved_at_utc,
+            is_cached=forecast.is_cached,
+            selected_persona=persona,
+            days_count=len(daily_predictions),
+            peak_compound_risk=peak_score,
+            peak_risk_date=peak_date,
+            peak_risk_category=peak_category,
+            daily_predictions=daily_predictions,
+        )
