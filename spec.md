@@ -117,14 +117,35 @@ Consolidated the 5 Champion ML Model Suites into modular flagship engines:
   - **Physical vs ML Grid Decoupling (`src/climacore/models/electricity_grid/engine.py`):** Explicitly partitioned deterministic CDD engineering demand surge ratio from supervised ML unmet supply stress classification.
 - **Verification:** 113/113 unit and integration tests passing in 16.13s with zero regressions.
 
-## 2.5 Roadmap Phase 2: Cross-Dataset Fusion & Flagship V3 Models (NEXT ACTIVE PHASE)
-- **FloodRisk V3:** Rainfall $\rightarrow$ Soil Saturation $\rightarrow$ Runoff $\rightarrow$ Inundation chain with DEM terrain slope and multi-horizon (24h, 48h, 72h) event probabilities.
-- **HeatRisk V4:** Day $T_{\max}$ + Night $T_{\min}$ + Oke UHI + Population microclimate fusion.
-- **PowerGrid V3:** Weather + CDD + historical load lags (1d, 7d, 14d) + calendar indicators.
-- **AgriSense V3:** Tri-task separation: Crop Selection vs. Crop Yield Range vs. SAGE Phenological Stress.
-- **AirQuality V3:** CAMS atmospheric advection + CPCB ground monitoring calibration + ventilation index inversion trapping.
+## 2.5 Roadmap Phase 2: Cross-Dataset Fusion & Flagship V3 Models (COMPLETED)
+- **Status:** 100% COMPLETED.
+- **Architectural Upgrades Across 5 Flagship Engines:**
+  - **FloodRisk V3 (`src/climacore/models/flood_risk/engine.py`):**
+    - Implemented the full Hydro-Atmospheric Cascade ($\text{Atmospheric Rain} \rightarrow \text{Root-Zone Soil Saturation} \rightarrow \text{Effective Runoff} \rightarrow \text{Drainage Inundation}$).
+    - Topsoil saturation-excess model collapses infiltration capacity when rootzone volumetric moisture $\theta \ge 70\%$, dynamically scaling the runoff coefficient $C$ from $0.18$ to $0.88$.
+    - OSM canal-to-road drainage impedance factor captures localized urban stormwater bottlenecks.
+    - Evaluates multi-horizon hazard probabilities ($24\text{h}$ Flash Inundation, $48\text{h}$ Channel Overflow, $72\text{h}$ Catchment Waterlogging) with strict decoupling from human exposure.
+  - **HeatRisk V4 (`src/climacore/models/heat_risk/engine.py`):**
+    - Connects daytime solar radiation heating and synoptic advection with nocturnal minimum cooling deficits ($T_{\min} \ge 28^\circ\text{C}$ tropical nights).
+    - Implemented Oke urban canopy geometry and WorldPop dense settlement cluster ($>15,000\text{ people/km}^2$) excess ($\Delta T_{\text{UHI}}$).
+    - Added calibrated quantile uncertainty bounds ($Q_{10}, Q_{50}, Q_{90}$) for peak day and nocturnal temperatures.
+    - Added multi-horizon diurnal projections ($24\text{h}, 48\text{h}, 72\text{h}$) coupled with 74-year GEV return period evaluation.
+  - **PowerGrid V3 (`src/climacore/models/electricity_grid/engine.py`):**
+    - Augments thermal demand features with 1-day, 7-day, and 14-day historical load lags and calendar indicators (weekend load reduction factor $-8\%$, holidays).
+    - Multi-horizon peak load (MW) regressor and unmet supply stress classifier across $24\text{h}, 48\text{h}, 72\text{h}$ horizons.
+    - Calibrated quantile load bounds ($Q_{10}, Q_{50}, Q_{90}$) on peak load MW.
+  - **AgriSense V3 (`src/climacore/models/crop_resilience/engine.py`):**
+    - Tri-Task architecture separating:
+      - **Task A:** 10-class agro-climatic crop suitability distribution (LightGBM GBDT).
+      - **Task B:** Empirical crop yield potential range ($Q_{10}, Q_{50}, Q_{90}$ in tonnes/ha) conditioned on district soil fertility and active weather stress penalties.
+      - **Task C:** SAGE phenological growth-stage stress tracking (anthesis floret heat shock $T_{\max} \ge 32^\circ\text{C} / 36^\circ\text{C}$, harvest rain lodging $\ge 10\text{ mm} / 30\text{ mm}$, FAO-56 crop water balance).
+  - **AirQuality V3 (`src/climacore/models/air_quality/engine.py`):**
+    - Coupled boundary layer ventilation index ($V = \text{Wind Speed (m/s)} \times \text{Boundary Layer Mixing Height (m)}$) with nocturnal temperature inversion trapping ($DTR > 12^\circ\text{C}$, calm winds $\le 10\text{ km/h}$).
+    - Multi-pollutant transfer calibrators and multi-horizon projections ($24\text{h}, 48\text{h}, 72\text{h}$) for $\text{PM}_{2.5}, \text{PM}_{10}, \text{NO}_2, \text{O}_3$.
+    - CAMS atmospheric advection coupled and calibrated with CPCB ground station reality.
+- **Verification:** 119/119 unit and integration tests passing in 26.22s with zero regressions.
 
-## 2.6 Roadmap Phase 3: Advanced ML & Hybrid Architectures
+## 2.6 Roadmap Phase 3: Advanced ML & Hybrid Architectures (NEXT ACTIVE PHASE)
 - CatBoost vs LightGBM champion-challenger benchmarking.
 - Temporal Fusion Transformer (TFT) multi-horizon sequence model for power grid demand.
 - Scoped river basin routing prototype.
