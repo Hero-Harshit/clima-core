@@ -38,14 +38,24 @@ def evaluate_insurance_persona(inp: PersonaInput) -> PersonaResult:
         drought_trigger = "NO_DROUGHT_CLAIM_BREACH"
         drought_payout_pct = 0.0
 
-    # 2. Parametric Extreme Heat Policy Trigger
-    # Trigger based on 74-year return period percentile (>= 98th percentile or Tmax >= 44.5°C)
-    if pct >= 98.5 or t_max >= 45.0:
-        heat_trigger = "PARAMETRIC_HEAT_STRIKE (Full Policy Trigger)"
+    # 2. Extreme Value Theory (EVT) Parametric Heat & Rainfall Policy Triggers
+    try:
+        from climacore.analytics.extreme_value import evaluate_return_period
+        evt_t = evaluate_return_period(inp.city, t_max, hazard_type="temperature")
+        evt_r = evaluate_return_period(inp.city, rain_mm, hazard_type="rainfall")
+        t_ret_heat = evt_t.get("estimated_return_period_years") or 1.0
+        t_ret_rain = evt_r.get("estimated_return_period_years") or 1.0
+    except Exception:
+        t_ret_heat = 1.0
+        t_ret_rain = 1.0
+
+    # Parametric Heat Trigger (Grounded in 74-Year IMD Return Levels)
+    if t_ret_heat >= 10.0 or pct >= 98.5 or t_max >= 45.0:
+        heat_trigger = f"PARAMETRIC_HEAT_STRIKE (>= 1-in-10 Year Extreme, T={t_ret_heat:.1f}yr)"
         heat_payout_pct = 100.0
         restrictions.append("Commercial Property & Business Interruption: Activate heatwave parametric payout protocol.")
-    elif pct >= 95.0 or t_max >= 43.0:
-        heat_trigger = "ELEVATED_HEAT_RISK (Watchlist)"
+    elif t_ret_heat >= 5.0 or pct >= 95.0 or t_max >= 43.0:
+        heat_trigger = f"ELEVATED_HEAT_RISK (1-in-5 Year Watchlist, T={t_ret_heat:.1f}yr)"
         heat_payout_pct = 25.0
     else:
         heat_trigger = "NORMAL_THERMAL_RISK"
@@ -66,10 +76,15 @@ def evaluate_insurance_persona(inp: PersonaInput) -> PersonaResult:
     else:
         cyc_trigger = "NO_ACTIVE_CYCLONE_THREAT"
 
-    # 4. Pluvial Flood Claim Index
-    if rain_mm >= 65.0:
-        flood_trigger = f"EXTREME_DOWNPOUR_EXPOSURE ({rain_mm:.1f} mm >= 99th Percentile)"
-        flood_payout_pct = 75.0
+    # 4. Parametric Pluvial Flood Trigger (Grounded in 46-Year IMD Return Levels)
+    if t_ret_rain >= 10.0 or rain_mm >= 115.0:
+        flood_trigger = f"PARAMETRIC_FLOOD_STRIKE (>= 1-in-10 Year Pluvial Extreme, T={t_ret_rain:.1f}yr)"
+        flood_payout_pct = 100.0
+        restrictions.append("Underwriters: Trigger automated municipal inundation parametric policy settlements.")
+        advisories.append("Severe pluvial flood return period breached; loss-adjustment fast-track protocol active.")
+    elif t_ret_rain >= 5.0 or rain_mm >= 65.0:
+        flood_trigger = f"ELEVATED_FLOOD_RISK (1-in-5 Year Watchlist, T={t_ret_rain:.1f}yr)"
+        flood_payout_pct = 40.0
         advisories.append("Anticipate high loss-adjustment claim frequency for basement flooding and motor vehicle hydrolock.")
     else:
         flood_trigger = "BELOW_FLOOD_INDEX_THRESHOLD"
@@ -96,6 +111,8 @@ def evaluate_insurance_persona(inp: PersonaInput) -> PersonaResult:
         "parametric_drought_status": drought_trigger,
         "soil_moisture_deficit_index": f"{smdi:.2f}",
         "parametric_heat_status": heat_trigger,
+        "evt_temperature_return_period": f"{t_ret_heat:.1f} Years",
+        "evt_rainfall_return_period": f"{t_ret_rain:.1f} Years",
         "74y_climate_rarity_percentile": f"{pct:.1f} %",
         "cyclone_catastrophe_status": cyc_trigger,
         "pluvial_flood_exposure": flood_trigger,

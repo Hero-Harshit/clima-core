@@ -34,8 +34,10 @@ def evaluate_industry_persona(inp: PersonaInput) -> PersonaResult:
     stagnation = inp.atmospheric_stagnation
     pm25 = inp.pm2_5
 
-    # 1. Psychrometric Wet-Bulb Cooling Tower Performance
-    twb = inp.wet_bulb_temp_c if inp.wet_bulb_temp_c is not None else estimate_stull_wet_bulb(t_max, rh)
+    # 1. Elevation and Pressure-Aware Psychrometric Wet-Bulb Cooling Tower Performance
+    from climacore.analytics.psychrometrics import calculate_elevation_aware_wet_bulb
+    tw_res = calculate_elevation_aware_wet_bulb(t_max, rh, city=inp.city)
+    twb = inp.wet_bulb_temp_c if inp.wet_bulb_temp_c is not None else tw_res["wet_bulb_temp_c"]
     
     # Cooling Tower Approach: Thermal rejection limit is severely degraded above 28°C
     if twb >= 30.0:
@@ -112,6 +114,7 @@ def evaluate_industry_persona(inp: PersonaInput) -> PersonaResult:
 
     metrics: Dict[str, Any] = {
         "wet_bulb_temperature": f"{twb:.1f} °C",
+        "station_pressure": f"{tw_res['station_pressure_hpa']} hPa (Elev: {tw_res['elevation_m']:.0f}m)",
         "cooling_tower_status": cooling_status,
         "estimated_cooling_efficiency_loss": f"{cooling_loss_pct:.1f} %",
         "stack_plume_dispersion": dispersion_status,

@@ -1,0 +1,17 @@
+{
+  "dataset_name": "Clima-Core Extreme Value Theory (EVT) Return Periods",
+  "methodology": "Generalized Extreme Value (GEV) fitted to Annual Maximum Series (AMS)",
+  "temperature_source": "IMD Pune 1.0\u00b0 Daily Temperature Grids (1951-2024, 74 years)",
+  "rainfall_source": "IMD Pune 0.25\u00b0 Daily Rainfall Grids (1980-2025, 46 years)",
+  "total_cities": 50,
+  "return_periods": [
+    2,
+    5,
+    10,
+    25,
+    50,
+    100
+  ],
+  "output_file": "D:\\Proper Codebases\\Clima Core\\data\\processed\\analytics\\city_gev_return_periods.parquet",
+  "sha256": "56cae25609598571007cbb7c4e0151ca58c22d2856e98d3a817d5866e9199882"
+}

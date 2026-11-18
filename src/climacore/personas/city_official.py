@@ -48,19 +48,31 @@ def evaluate_city_official_persona(inp: PersonaInput) -> PersonaResult:
     else:
         grid_status = "STABLE"
 
-    # 2. 44-Year Statistical Rarity & Return Period Declaration
-    # Translates empirical historical percentile into civil defense language
-    pct = inp.historical_percentile
-    if pct >= 99.5:
-        rarity_desc = "UNPRECEDENTED_HISTORICAL_EVENT (>= 1-in-25 Year Extreme)"
-        restrictions.append("Activate District Disaster Management Authority (DDMA) Emergency Operations Center.")
-    elif pct >= 98.0:
-        rarity_desc = "SEVERE_CLIMATE_ANOMALY (>= 1-in-10 Year Extreme)"
-        advisories.append("Mobilize quick-response civil defense and municipal pumping teams.")
-    elif pct >= 90.0:
-        rarity_desc = "TOP_DECIMAL_ANOMALY (1-in-2 to 1-in-5 Year)"
-    else:
-        rarity_desc = "TYPICAL_SEASONAL_VARIABILITY"
+    # 2. Extreme Value Theory (EVT) GEV Statistical Rarity & Return Period Declaration
+    # Grounded in 74 years of IMD Temperature (1951-2024) and 46 years of IMD Rainfall (1980-2025)
+    t_years = 1.0
+    try:
+        from climacore.analytics.extreme_value import evaluate_return_period
+        evt_t = evaluate_return_period(inp.city, t_max, hazard_type="temperature")
+        evt_r = evaluate_return_period(inp.city, precip, hazard_type="rainfall")
+        t_years = max(evt_t.get("estimated_return_period_years") or 1.0, evt_r.get("estimated_return_period_years") or 1.0)
+        dominant_evt = evt_t if (evt_t.get("estimated_return_period_years") or 1.0) >= (evt_r.get("estimated_return_period_years") or 1.0) else evt_r
+        rarity_desc = dominant_evt["rarity_category"]
+    except Exception:
+        pct = inp.historical_percentile
+        if pct >= 99.5:
+            rarity_desc = "UNPRECEDENTED_HISTORICAL_EVENT (>= 1-in-25 Year Extreme)"
+        elif pct >= 98.0:
+            rarity_desc = "SEVERE_CLIMATE_ANOMALY (>= 1-in-10 Year Extreme)"
+        elif pct >= 90.0:
+            rarity_desc = "TOP_DECIMAL_ANOMALY (1-in-2 to 1-in-5 Year)"
+        else:
+            rarity_desc = "TYPICAL_SEASONAL_VARIABILITY"
+
+    if t_years >= 25.0 or (inp.historical_percentile >= 99.5):
+        restrictions.append(f"EVT Climate Extreme ({rarity_desc}): Activate District Disaster Management Authority (DDMA) Emergency Operations Center.")
+    elif t_years >= 10.0 or (inp.historical_percentile >= 98.0):
+        advisories.append(f"EVT Severe Return Period ({rarity_desc}): Mobilize quick-response civil defense and municipal dewatering pumping teams.")
 
     # 3. Municipal Emergency Response Deployment Tier
     if inp.imd_heatwave_alert >= 2 or pm25 >= 250.0 or precip >= 65.0:
@@ -95,6 +107,7 @@ def evaluate_city_official_persona(inp: PersonaInput) -> PersonaResult:
         "cooling_degree_days_cdd": f"{cdd:.1f} °C-days",
         "tropical_night_failure_risk": "ACTIVE (Min Temp >= 28°C)" if is_tropical_night else "INACTIVE",
         "historical_climate_rarity": rarity_desc,
+        "extreme_value_gev_return_period": f"{t_years:.1f} Years ({rarity_desc})",
         "municipal_action_tier": tier,
         "forecasted_pm25": f"{pm25:.1f} µg/m³",
         "forecasted_rain": f"{precip:.1f} mm",

@@ -255,6 +255,11 @@ class LiveForecastEngine:
             raw_deficit_prob = max(0.03, (grid_stress_ratio - 1.0) * 1.6 + (0.22 if is_trop_night else 0.0) + (0.25 if day.temp_max >= 42.0 else 0.0))
             grid_deficit_prob = round(float(min(0.96, raw_deficit_prob)), 3)
 
+            # Elevation-aware psychrometric wet-bulb
+            from climacore.analytics.psychrometrics import calculate_elevation_aware_wet_bulb
+            elev_wb = calculate_elevation_aware_wet_bulb(day.temp_max, day.relative_humidity, city=forecast.city)
+            effective_wet_bulb = day.wet_bulb_temp_c if day.wet_bulb_temp_c is not None else elev_wb["wet_bulb_temp_c"]
+
             p_input = PersonaInput(
                 city=forecast.city,
                 date=day.date,
@@ -278,7 +283,7 @@ class LiveForecastEngine:
                 gale_wind_gust_kmh=day.gale_wind_gust_kmh,
                 cyclone_distance_km=cyc_info.get("min_historic_distance_km"),
                 cyclone_grade=cyc_info.get("closest_storm"),
-                wet_bulb_temp_c=day.wet_bulb_temp_c,
+                wet_bulb_temp_c=effective_wet_bulb,
                 population_5km=pop_info.get("population_5km"),
                 population_15km=pop_info.get("population_15km"),
                 population_30km=pop_info.get("population_30km"),

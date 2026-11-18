@@ -73,7 +73,20 @@ class CompoundRiskEngine:
         compound_score = min(100.0, base_score * multiplier)
         severity_category = classify_compound_risk_category(compound_score)
 
-        # 4. Factor Attribution (% contribution to base score)
+        # 4. Empirical Multi-Hazard Joint Tail Exceedance Probability
+        # Decouples pure marginal probabilities and quantifies bivariate / trivariate co-occurrence
+        p_aq = float(np.clip(aq_score / 100.0, 0.0, 1.0))
+        p_heat = float(np.clip(heat_score / 100.0, 0.0, 1.0))
+        p_rain = float(np.clip(rain_score / 100.0, 0.0, 1.0))
+
+        bivariate_joint_probs = {
+            "heat_and_air_pollution": round(p_heat * p_aq, 4),
+            "heat_and_severe_rain": round(p_heat * p_rain, 4),
+            "air_pollution_and_rain": round(p_aq * p_rain, 4),
+        }
+        trivariate_joint_prob = round(p_heat * p_aq * p_rain, 5)
+
+        # 5. Factor Attribution (% contribution to base score)
         total_unweighted = aq_score + heat_score + rain_score
         if total_unweighted > 0:
             aq_contrib = round(float((w_aq * aq_score) / max(1e-5, base_score) * 100.0), 1)
@@ -109,6 +122,11 @@ class CompoundRiskEngine:
             "is_compounded_event": is_compounded,
             "compound_multiplier": round(float(multiplier), 3),
             "dominant_driver": dominant_driver,
+            "joint_tail_exceedance": {
+                "bivariate_probabilities": bivariate_joint_probs,
+                "trivariate_probability": trivariate_joint_prob,
+                "compounding_active": is_compounded,
+            },
             "sub_hazards": {
                 "air_quality": {
                     "raw_value": round(float(pm2_5_pred), 1),
