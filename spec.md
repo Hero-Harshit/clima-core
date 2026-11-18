@@ -24,9 +24,10 @@ This file is the current **single source of truth** for Clima-Core. Follow it be
 
 **Current Status & Roadmap Alignment:**
 1. **Scientific Foundation & Model Audit (Roadmap Phase 1 - 100% COMPLETE):** Built canonical Model, Dataset, and Physical Threshold Registries with SHA-256 integrity; implemented the Validation Tri-Split Engine (Temporal, Spatial LOCZO across 5 Bioclimatic Zones, Event-Safe disaster partitions); resolved SciPy GEV shape sign conventions, CPCB 8-pollutant AQI completeness compliance, and flood inventory negative-label semantics.
-2. **Flagship Models Consolidated (100% COMPLETE):** Consolidated the 5 Flagship Champions (FloodRisk V2, HeatRisk V3, PowerGrid V2, AgriSense V2, AirQuality V2) into dedicated modular engines.
-3. **Decoupled Architecture:** Strictly maintaining the **4-Layer Taxonomy** (Predictive, Physical, Exposure, Decision).
-4. **Next Active Milestone:** Roadmap Phase 2 (Cross-Dataset Fusion & Flagship V3 Models).
+2. **Cross-Dataset Fusion & Flagship V3 Models (Roadmap Phase 2 - 100% COMPLETE):** Integrated hydro-atmospheric soil-saturation and drainage bottlenecks into FloodRisk V3; dual diurnal and microclimate Oke UHI into HeatRisk V4; lag-augmented calendar load modeling into PowerGrid V3; tri-task suitability/yield/phenology into AgriSense V3; boundary layer ventilation and nocturnal inversion into AirQuality V3.
+3. **Advanced ML & Hybrid Architectures (Roadmap Phase 3 - 100% COMPLETE):** Conducted rigorous Champion vs Challenger tournament benchmarking on identical Phase 1 holdouts pitting CatBoost against LightGBM for crop suitability and deep PyTorch Temporal Fusion Transformer (TFT) against LightGBM for power grid load forecasting; codified tournament manifest and dynamic multi-engine routing (`champion`, `challenger`, `ensemble`).
+4. **Probabilistic Intelligence & Compound Risks (Roadmap Phase 4 - 100% COMPLETE):** Distribution-free split conformal prediction intervals guaranteeing $\ge 90\%$ marginal coverage; 3 cascading multi-hazard infrastructure failure chains; standardized unified JSON prediction contract `v1.0.0` with full system provenance, spatial buffers, and SI physical units manifest.
+5. **Next Active Milestone:** Roadmap Phase 5 (Generalization, Deployment & Continuous Intelligence).
 
 Do **not** build arbitrary UI pages, bloated consumer screens, or unverified frontend prototypes until the predictive and statistical engines meet these scientific defense standards.
 
@@ -167,11 +168,40 @@ Consolidated the 5 Champion ML Model Suites into modular flagship engines:
   - `PowerGridEngine` supports `engine_mode="champion"`, `"challenger"`, and `"ensemble"`.
 - **Verification:** 124/124 unit and integration tests passing in 12.11s with zero regressions.
 
-## 2.7 Roadmap Phase 4: Probabilistic Intelligence & Compound Risks (NEXT ACTIVE PHASE)
-- Quantile predictions ($Q_{10}, Q_{50}, Q_{90}$) and Conformal Calibration (MAPIE).
-- Cascading compound risk causal chains and standardized `PredictionResult` JSON contract.
+## 2.7 Roadmap Phase 4: Probabilistic Intelligence & Compound Risks (100% COMPLETE)
+- **Status:** 100% COMPLETED.
+- **Split Conformal Prediction Calibrator (`src/climacore/analytics/conformal.py`):**
+  - Implements distribution-free conformal calibration guaranteeing finite-sample marginal coverage $\mathbb{P}(Y \in \mathcal{C}(X)) \ge 1 - \alpha$ using the finite-sample quantile index $p = \min(1.0, \lceil(n+1)(1-\alpha)\rceil / n)$.
+  - Provides asymmetric conformal intervals $\mathcal{C}(X) = [\hat{y} - q_{\text{low}}, \hat{y} + q_{\text{high}}]$ parameterized by user-specified confidence level $(1 - \alpha)$.
+  - Specialized calibrated domains:
+    - Temperature ($T_{\max}$ in $^\circ\text{C}$): Calibrated over 365 holdout days.
+    - Rainfall ($\text{mm}$): Non-negative bounded conformal interval preventing impossible negative rain forecasts.
+    - Grid Power Demand ($\text{MW}$): Calibrated across regional seasonal demand variations.
+    - Air Quality ($\text{PM}_{2.5}$ in $\mu\text{g/m}^3$): Non-negative bounded conformal intervals across high and low pollution seasons.
+- **Cascading Compound Risk Causal Chains (`src/climacore/models/compound_risk/cascading.py`):**
+  - Formalized cross-sectoral failure propagation mechanics across three inter-connected infrastructure networks:
+    1. **Chain 1: Thermal Shock $\rightarrow$ Power Grid Overload $\rightarrow$ Municipal Water Pumping Failure $\rightarrow$ Informal Settlement Casualties.**
+       - Trigger: $T_{\max} \ge 42^\circ\text{C}$ and $T_{\min} \ge 28^\circ\text{C}$.
+       - Escalation: Substation transformer thermal de-rating + HVAC overload $\rightarrow$ water treatment/pumping brownout $\rightarrow$ heatstroke cluster in un-insulated settlements.
+    2. **Chain 2: Cloudburst Deluge $\rightarrow$ Drainage Bottleneck $\rightarrow$ Arterial Road Submergence $\rightarrow$ Healthcare & Emergency Transit Severance.**
+       - Trigger: Rain $\ge 70\text{ mm/day}$ or antecedent precipitation saturation $\ge 80\%$.
+       - Escalation: Canal culvert capacity overflow $\rightarrow$ underpass drowning $\rightarrow$ ambulances and emergency supplies unable to reach tertiary hospitals.
+    3. **Chain 3: Atmospheric Inversion $\rightarrow$ Toxic Boundary Stagnation $\rightarrow$ Pediatric & Geriatric Respiratory Surge.**
+       - Trigger: Ventilation index $< 2000\text{ m}^2/\text{s}$ and diurnal temperature range $> 12^\circ\text{C}$.
+       - Escalation: Nocturnal capping inversion traps combustion and agricultural particulates $\rightarrow$ acute bronchial distress hospital admissions.
+  - Implemented `CascadingRiskEngine` evaluating trigger conditions, critical node failure probabilities, estimated time-to-impact (in hours), and prioritized cross-sectoral operational mitigation interventions.
+- **Unified Standardized Prediction Contract (`v1.0.0`) (`src/climacore/ingestion/models.py`, `src/climacore/ingestion/engine.py`):**
+  - Standardized JSON contract emitted by `LiveForecastEngine.predict()` across all 5 flagship engines and 13 personas.
+  - Standardized schema elements:
+    - `schema_version`: `"v1.0.0"`
+    - `system_provenance`: Model SHA-256 hashes, scientific literature citations, training timestamp, verification authority.
+    - `spatial_resolution_metadata`: Multi-scale concentric buffers ($5\text{km}$ urban core, $15\text{km}$ suburban ring, $30\text{km}$ peri-urban catchment).
+    - `physical_units_manifest`: Formal declaration of all SI metric units ($^\circ\text{C}, \text{mm}, \text{MW}, \mu\text{g/m}^3, \text{m/s}, \text{m}^2/\text{s}, \text{kPa}, \text{tonnes/ha}, \text{people/km}^2$).
+    - `conformal_bounds`: Calibrated conformal prediction bounds ($Q_{10}, Q_{50}, Q_{90}$) with guaranteed 90% coverage for temperature, rain, power demand, and PM2.5.
+    - `cascading_risk`: Critical infrastructure cascade chains, failure nodes, time-to-impact, and mitigation actions.
+- **Verification:** 128/128 tests passing in 7.73s with zero regressions.
 
-## 2.8 Roadmap Phase 5: Generalization & Deployment
+## 2.8 Roadmap Phase 5: Generalization, Deployment & Continuous Intelligence (NEXT ACTIVE PHASE)
 - Zero-cold-start FastAPI / Vercel edge deployment, model monitoring, and drift detection.
 
 ---

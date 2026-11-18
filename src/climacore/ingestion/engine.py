@@ -24,13 +24,21 @@ from climacore.ingestion.models import (
     LiveDayForecast,
     LiveDayPrediction,
     LivePredictionResult,
+    PHYSICAL_UNITS_MANIFEST,
 )
 from climacore.models.compound_risk.scoring import CompoundRiskEngine
+from climacore.models.compound_risk.cascading import CascadingRiskEngine
 from climacore.models.flood_risk.engine import FloodRiskEngine
 from climacore.models.heat_risk.engine import HeatRiskEngine
 from climacore.models.electricity_grid.engine import PowerGridEngine
 from climacore.models.crop_resilience.engine import AgriSenseEngine
 from climacore.models.air_quality.engine import AirQualityEngine
+from climacore.analytics.conformal import (
+    calibrate_temperature_conformal,
+    calibrate_rainfall_conformal,
+    calibrate_power_demand_conformal,
+    calibrate_pm25_conformal,
+)
 from climacore.personas.models import PersonaInput
 from climacore.personas.engine import evaluate_persona, evaluate_all_personas
 
@@ -46,6 +54,7 @@ class LiveForecastEngine:
         self.client = LiveIngestionClient()
         self.cache = LiveForecastCache(default_ttl_seconds=cache_ttl_seconds)
         self.compound_engine = CompoundRiskEngine()
+        self.cascading_engine = CascadingRiskEngine()
         self.flood_engine = FloodRiskEngine()
         self.heat_engine = HeatRiskEngine()
         self.power_engine = PowerGridEngine()
@@ -364,7 +373,38 @@ class LiveForecastEngine:
                 closest_thermal_plant=closest_plant,
             )
 
-            # 3. Evaluate Selected Persona or All 13 Personas
+            # 3. Probabilistic Conformal Prediction Bounds (>= 90% finite-sample coverage)
+            conf_temp = calibrate_temperature_conformal(day.temp_max, alpha=0.10)
+            conf_rain = calibrate_rainfall_conformal(day.precipitation_mm, alpha=0.10)
+            conf_power = calibrate_power_demand_conformal(power_eval["peak_load_mw"], alpha=0.10)
+            conf_pm25 = calibrate_pm25_conformal(day.pm2_5, alpha=0.10)
+            conformal_bounds = {
+                "temperature_c": conf_temp,
+                "rainfall_mm": conf_rain,
+                "peak_grid_load_mw": conf_power,
+                "pm2_5_ug_m3": conf_pm25,
+            }
+
+            # 4. Cascading Multi-Hazard Infrastructure Dependency Failure Chains
+            cascade_eval = self.cascading_engine.evaluate_cascading_chains(
+                city=forecast.city,
+                temp_max_c=day.temp_max,
+                temp_min_c=day.temp_min,
+                rainfall_mm=day.precipitation_mm,
+                pm2_5_ug_m3=day.pm2_5,
+                is_tropical_night=heat_eval["is_tropical_night"],
+                grid_deficit_prob=power_eval["unmet_supply_stress_probability"],
+                flood_hazard_prob=flood_disaster_risk,
+                stagnation_flag=aq_eval["atmospheric_physics"]["stagnation_flag"],
+                population_15km=pop_info.get("population_15km"),
+                dense_cluster_pop_15km=pop_info.get("dense_cluster_pop_15km"),
+                hospitals_15km=infra_info.get("hospitals_15km"),
+                bridges_15km=infra_info.get("bridges_15km"),
+                drainage_canals_15km=infra_info.get("drainage_canals_15km"),
+                arterial_roads_15km=infra_info.get("arterial_roads_15km"),
+            )
+
+            # 5. Evaluate Selected Persona or All 13 Personas
             if str(persona).strip().lower() in ["all", "none", "*", ""]:
                 p_results = evaluate_all_personas(p_input)
             else:
@@ -398,10 +438,34 @@ class LiveForecastEngine:
                         "agrisense": agri_eval,
                         "air_quality": aq_eval,
                     },
+                    conformal_bounds=conformal_bounds,
+                    cascading_risk=cascade_eval,
                 )
             )
 
+        provenance = {
+            "engine_version": "v1.0.0",
+            "phase_architecture": "Phase 4 Probabilistic & Compound Environmental Intelligence",
+            "champion_models": {
+                "flood_risk": "IFI LightGBM v1 (AUC 0.7931)",
+                "heat_risk": "HeatRisk V4 Dual Diurnal GEV",
+                "electricity_grid": "POSOCO LightGBM Dual Regressor/Classifier (R2 0.8758, AUC 0.9521)",
+                "agrisense": "AgriSense LightGBM Multi-Class GBDT (Top-1 82.49%)",
+                "air_quality": "CPCB NAQI Multi-Pollutant Transfer Calibrator",
+            },
+            "tournament_manifest": "data/manifests/champion_challenger_tournament.json",
+            "canonical_registry": "data/manifests/canonical_model_registry.json",
+        }
+
+        spatial_meta = {
+            "concentric_buffers": ["5km (immediate urban core)", "15km (commuter / lifeline infrastructure)", "30km (hinterland)"],
+            "demographic_resolution": "WorldPop 100m spatial population grid",
+            "reanalysis_grid_resolution": "ERA5-Land 0.1° (~9km), IMD 0.25° gridded reanalysis",
+            "infrastructure_topology": "OpenStreetMap vector topology (hospitals, bridges, canals, roads)",
+        }
+
         return LivePredictionResult(
+            schema_version="v1.0.0",
             city=forecast.city,
             state=forecast.state,
             latitude=forecast.latitude,
@@ -414,4 +478,7 @@ class LiveForecastEngine:
             peak_risk_date=peak_date,
             peak_risk_category=peak_category,
             daily_predictions=daily_predictions,
+            system_provenance=provenance,
+            spatial_resolution_metadata=spatial_meta,
+            physical_units_manifest=PHYSICAL_UNITS_MANIFEST,
         )

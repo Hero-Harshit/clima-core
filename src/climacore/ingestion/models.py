@@ -1,11 +1,49 @@
 """
 Data contracts and Pydantic schemas for Clima-Core Live Ingestion Pipeline.
-Defines structured representations for real-time 7-day weather, air quality,
-and persona-tailored multi-hazard predictions.
+Defines standardized, immutable representations for real-time 7-day weather, air quality,
+probabilistic conformal intervals, cascading failure chains, and persona-tailored multi-hazard predictions.
 """
 
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
+
+# Physical Units Manifest mapping every environmental and engineering variable to its SI/engineering unit
+PHYSICAL_UNITS_MANIFEST: Dict[str, str] = {
+    "temp_max": "deg_C",
+    "temp_min": "deg_C",
+    "apparent_temp_max": "deg_C",
+    "wet_bulb_temp_c": "deg_C",
+    "cooling_deficit_c": "deg_C",
+    "uhi_temperature_delta_c": "deg_C",
+    "precipitation_mm": "mm",
+    "rain_rolling_3d_mm": "mm",
+    "rain_rolling_7d_mm": "mm",
+    "antecedent_precipitation_index_14d": "mm",
+    "effective_surface_runoff_mm": "mm",
+    "et0_fao56_mm_day": "mm/day",
+    "water_balance_mm_day": "mm/day",
+    "wind_speed_kmh": "km/h",
+    "gale_wind_gust_kmh": "km/h",
+    "relative_humidity": "percent",
+    "soil_moisture_rootzone": "m3/m3",
+    "rootzone_saturation_pct": "percent",
+    "solar_radiation": "MJ/m2",
+    "pm2_5": "ug/m3",
+    "pm10": "ug/m3",
+    "no2": "ug/m3",
+    "o3": "ug/m3",
+    "so2": "ug/m3",
+    "co": "ug/m3",
+    "peak_load_mw": "MW",
+    "ventilation_index_m2_s": "m2/s",
+    "compound_risk_score": "score_0_to_100",
+    "cascading_risk_score": "score_0_to_100",
+    "impact_severity_index": "score_0_to_100",
+    "agro_stress_score": "score_0_to_100",
+    "hydrological_hazard_probability": "probability_0_to_1",
+    "unmet_supply_stress_probability": "probability_0_to_1",
+    "cooling_demand_surge_ratio": "ratio_baseline_1_0",
+}
 
 
 class LiveDayForecast(BaseModel):
@@ -55,7 +93,7 @@ class LiveCityForecast(BaseModel):
 
 
 class LiveDayPrediction(BaseModel):
-    """Evaluated risk score and persona intelligence for one forecast day."""
+    """Evaluated risk score, conformal intervals, cascading chains, and persona intelligence for one forecast day."""
     date: str
     day_offset: int
     day_name: str
@@ -65,10 +103,17 @@ class LiveDayPrediction(BaseModel):
     flagship_intelligence: Optional[Dict[str, Any]] = Field(
         default=None, description="Detailed evaluations from the 5 Flagship Engines (Flood, Heat, Power, Agri, Air)"
     )
+    conformal_bounds: Optional[Dict[str, Any]] = Field(
+        default=None, description="Split conformal prediction intervals guaranteeing >= 90% finite-sample marginal coverage"
+    )
+    cascading_risk: Optional[Dict[str, Any]] = Field(
+        default=None, description="Cascading multi-hazard infrastructure dependency failure chains"
+    )
 
 
 class LivePredictionResult(BaseModel):
-    """Final user-facing result container for a live location prediction run."""
+    """Standardized Canonical PredictionResult contract for Clima-Core (v1.0.0)."""
+    schema_version: str = Field(default="v1.0.0", description="Contract schema version")
     city: str
     state: Optional[str]
     latitude: float
@@ -81,3 +126,12 @@ class LivePredictionResult(BaseModel):
     peak_risk_date: str
     peak_risk_category: str
     daily_predictions: List[LiveDayPrediction]
+    system_provenance: Optional[Dict[str, Any]] = Field(
+        default=None, description="Model versions, SHA-256 hashes, and canonical dataset provenance"
+    )
+    spatial_resolution_metadata: Optional[Dict[str, Any]] = Field(
+        default=None, description="Concentric buffer radii, WorldPop and atmospheric grid resolutions"
+    )
+    physical_units_manifest: Optional[Dict[str, str]] = Field(
+        default=None, description="Explicit mapping of every environmental and engineering key to its SI/engineering unit"
+    )
