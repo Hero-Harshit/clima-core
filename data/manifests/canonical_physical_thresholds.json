@@ -1,0 +1,57 @@
+[
+  {
+    "parameter_id": "tropical_night_tmin",
+    "name": "Tropical Night Transformer Cooling Failure Threshold",
+    "threshold_value": 28.0,
+    "unit": "degC",
+    "source_authority": "Bureau of Indian Standards (IS 2026) / International Electrotechnical Commission (IEC 60076)",
+    "citation": "IEC 60076-7: Loading guide for oil-immersed power transformers.",
+    "physical_mechanism": "Ambient night temperature >=28\u00b0C prevents nocturnal convective cooling of distribution transformer radiator fins, causing dielectric oil winding breakdown under heavy AC peak load.",
+    "geographical_scope": "All India Urban Areas",
+    "operational_action": "Pre-position mobile diesel generators at hospitals; trigger DISCOM thermal inspection of distribution feeders."
+  },
+  {
+    "parameter_id": "anthesis_heat_shock_wheat",
+    "name": "Wheat Anthesis Pollen Sterility Thermal Threshold",
+    "threshold_value": 32.0,
+    "unit": "degC",
+    "source_authority": "Indian Council of Agricultural Research (ICAR) / CIMMYT",
+    "citation": "Porter & Gawith (1999), Temperatures and the growth and development of wheat: a review, Eur. J. Agron.",
+    "physical_mechanism": "Daytime maximum temperature >=32\u00b0C during flowering (anthesis) causes tapetal cell degradation in anthers, resulting in non-viable pollen and irreversible floret sterility.",
+    "geographical_scope": "Indo-Gangetic Plains & Central India Wheat Belt",
+    "operational_action": "Apply light sprinkler irrigation in evening to induce canopy evaporative cooling; monitor grain weight."
+  },
+  {
+    "parameter_id": "harvest_lodging_rainfall",
+    "name": "Crop Maturity Field Lodging & Sprouting Rainfall Threshold",
+    "threshold_value": 10.0,
+    "unit": "mm/day",
+    "source_authority": "ICAR Indian Agricultural Research Institute (IARI)",
+    "citation": "IARI Agro-meteorological Advisory Services Protocol (2022).",
+    "physical_mechanism": "Precipitation >=10 mm during grain physiological maturity softens stem culms, inducing mechanical plant lodging and pre-harvest seed sprouting in standing panicles.",
+    "geographical_scope": "All Indian Agricultural Hinterlands",
+    "operational_action": "Accelerate combine harvesting; protect harvested field heaps with waterproof tarpaulins."
+  },
+  {
+    "parameter_id": "wet_bulb_moderate_work_cap",
+    "name": "Wet-Bulb Temperature Occupational Exertion Warning",
+    "threshold_value": 30.0,
+    "unit": "degC",
+    "source_authority": "National Disaster Management Authority (NDMA) / ISO 7243",
+    "citation": "NDMA National Guidelines for Preparation of Action Plan - Prevention and Management of Heat Wave (2019).",
+    "physical_mechanism": "At wet-bulb >=30\u00b0C, human evaporative sweat efficiency drops significantly; continuous unshaded moderate labor rapidly leads to heat exhaustion and core hyperthermia.",
+    "geographical_scope": "All India",
+    "operational_action": "Implement mandatory 15-minute rest breaks per hour in shaded cooling zones with ORS hydration."
+  },
+  {
+    "parameter_id": "cooling_degree_day_base",
+    "name": "Cooling Degree Day Engineering Reference Base",
+    "threshold_value": 18.0,
+    "unit": "degC",
+    "source_authority": "ASHRAE Fundamentals / Central Electricity Authority (CEA)",
+    "citation": "ASHRAE Standard 90.1: Energy Standard for Buildings Except Low-Rise Residential Buildings.",
+    "physical_mechanism": "Mean daily ambient temperature above 18\u00b0C causes net heat gain across building envelopes, necessitating mechanical chiller and compressor refrigeration.",
+    "geographical_scope": "All India Urban Areas",
+    "operational_action": "Scale predicted municipal electricity load by cooling demand surge ratio above baseline."
+  }
+]

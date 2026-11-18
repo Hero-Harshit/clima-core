@@ -1,0 +1,314 @@
+[
+  {
+    "model_id": "flood_risk_v2",
+    "name": "FloodRisk V2 Pure Hydrological Hazard Classifier",
+    "version": "2.0.0",
+    "flagship_suite": "FloodRisk",
+    "task_type": "binary_classification",
+    "algorithm": "LightGBM GBDT",
+    "target": "flood_disaster_event",
+    "target_description": "Declared district-level flood disaster occurrence (IFI v3)",
+    "training_period": "1980-2015",
+    "validation_period": "2016-2019",
+    "test_period": "2020-2023",
+    "validation_strategy": "event_safe_and_chronological",
+    "features": [
+      "rainfall_mm",
+      "rain_rolling_3d",
+      "rain_rolling_7d",
+      "rain_rolling_14d",
+      "rain_rolling_30d",
+      "rain_max_3d",
+      "api_14d",
+      "precipitation_hours",
+      "et0_fao_evapotranspiration",
+      "wind_gusts_10m_max",
+      "soil_moisture_0_to_7cm_mean",
+      "soil_moisture_7_to_28cm_mean",
+      "topsoil_moisture_anomaly",
+      "rootzone_moisture_anomaly",
+      "soil_moisture_deficit_index",
+      "drainage_canals_15km",
+      "bridges_15km",
+      "transit_stations_15km"
+    ],
+    "features_count": 18,
+    "source_datasets": [
+      "IIT Delhi IFI v3",
+      "IMD Gridded Rainfall",
+      "ERA5-Land",
+      "OSM"
+    ],
+    "metrics": {
+      "roc_auc": 0.8942,
+      "brier_score": 0.0124,
+      "precision_at_p35": 0.7812,
+      "recall_at_p35": 0.842
+    },
+    "baseline_metrics": {
+      "persistence_pr_auc": 0.412,
+      "seasonal_climatology_auc": 0.584
+    },
+    "artifact_path": "artifacts/models/flood_risk/v0.1.0/flood_risk_v1.booster",
+    "artifact_sha256": "731d228d805ee17460900a1e371de9f5f20a5cc56e7ced8ebc798ee096ede9b8",
+    "known_limitations": [
+      "Disaster inventories under-report localized micro-urban waterlogging (<4 hours duration).",
+      "Pure hazard probability does not account for temporary municipal pump deployments."
+    ],
+    "operational_status": "CHAMPION"
+  },
+  {
+    "model_id": "heat_risk_v3",
+    "name": "HeatRisk V3 Dual Diurnal Temperature Model",
+    "version": "3.0.0",
+    "flagship_suite": "HeatRisk",
+    "task_type": "regression",
+    "algorithm": "LightGBM GBDT",
+    "target": "temperature_2m_max",
+    "target_description": "Daily maximum 2m air temperature in urban core (\u00b0C)",
+    "training_period": "1980-2015",
+    "validation_period": "2016-2019",
+    "test_period": "2020-2023",
+    "validation_strategy": "chronological",
+    "features": [
+      "temp_max_lag_1",
+      "temp_max_lag_2",
+      "temp_max_lag_3",
+      "temp_max_lag_7",
+      "temp_min_lag_1",
+      "relative_humidity_lag_1",
+      "shortwave_radiation_lag_1",
+      "day_of_year",
+      "sin_doy",
+      "cos_doy",
+      "elevation_m",
+      "latitude",
+      "longitude"
+    ],
+    "features_count": 13,
+    "source_datasets": [
+      "ERA5-Land Climate Master",
+      "IMD 74-Year Gridded Temperature"
+    ],
+    "metrics": {
+      "test_mae_c": 1.412,
+      "test_rmse_c": 1.984,
+      "test_r2": 0.912,
+      "mean_bias_c": -0.042
+    },
+    "baseline_metrics": {
+      "persistence_mae_c": 2.14,
+      "seasonal_climatology_mae_c": 3.65
+    },
+    "artifact_path": "artifacts/models/heat_risk/v0.1.0/model.txt",
+    "artifact_sha256": "92843a9d316b1a3a6420cdfd46fca44629c22c753fdb180373b99478d94ada1a",
+    "known_limitations": [
+      "Model predicts ~9km grid-mean temperature; localized street canyon microclimates require Oke UHI delta.",
+      "Surface stations with poor vegetation shading can measure 1-2\u00b0C higher than model grid cell."
+    ],
+    "operational_status": "CHAMPION"
+  },
+  {
+    "model_id": "power_grid_v2_reg",
+    "name": "PowerGrid V2 Peak Load Demand Regressor",
+    "version": "2.0.0",
+    "flagship_suite": "PowerGrid",
+    "task_type": "regression",
+    "algorithm": "LightGBM GBDT",
+    "target": "peak_met_mw",
+    "target_description": "State-level peak electricity load met in Megawatts (MW)",
+    "training_period": "2013-2017",
+    "validation_period": "2018",
+    "test_period": "2019-2020",
+    "validation_strategy": "chronological",
+    "features": [
+      "temp_min_c",
+      "temp_mean_c",
+      "temp_max_c",
+      "dewpoint_mean_c",
+      "cooling_degree_days",
+      "is_tropical_night",
+      "diurnal_temp_range",
+      "solar_radiation_mj",
+      "day_of_week",
+      "is_weekend",
+      "month",
+      "population_15km"
+    ],
+    "features_count": 12,
+    "source_datasets": [
+      "POSOCO / CEA Telemetry",
+      "ERA5-Land"
+    ],
+    "metrics": {
+      "test_r2": 0.8758,
+      "test_mae_mw": 512.4,
+      "test_rmse_mw": 784.6,
+      "test_mape_pct": 6.84
+    },
+    "baseline_metrics": {
+      "persistence_r2": 0.742,
+      "rolling_7d_r2": 0.781
+    },
+    "artifact_path": "artifacts/models/electricity_grid/v0.1.0/peak_grid_load_v1.booster",
+    "artifact_sha256": "ac7e052acac3b40e9bce20612cd295a1d613a25891e0381d08eac231ed0df3b0",
+    "known_limitations": [
+      "Aggregated at state level; intra-city feeder loading cannot be observed directly without DISCOM SCADA.",
+      "Unscheduled industrial power outages can artificially depress peak load met."
+    ],
+    "operational_status": "CHAMPION"
+  },
+  {
+    "model_id": "power_grid_v2_clf",
+    "name": "PowerGrid V2 Unmet Supply Stress Classifier",
+    "version": "2.0.0",
+    "flagship_suite": "PowerGrid",
+    "task_type": "binary_classification",
+    "algorithm": "LightGBM Binary Classifier",
+    "target": "is_grid_deficit_day",
+    "target_description": "Occurrence of unmet power demand / generation deficit (>50 MW unserved load)",
+    "training_period": "2013-2017",
+    "validation_period": "2018",
+    "test_period": "2019-2020",
+    "validation_strategy": "chronological",
+    "features": [
+      "temp_max_c",
+      "cooling_degree_days",
+      "is_tropical_night",
+      "diurnal_temp_range",
+      "solar_radiation_mj",
+      "day_of_week",
+      "month",
+      "population_15km"
+    ],
+    "features_count": 8,
+    "source_datasets": [
+      "POSOCO / CEA Telemetry",
+      "ERA5-Land"
+    ],
+    "metrics": {
+      "test_roc_auc": 0.9521,
+      "test_recall": 0.9641,
+      "test_precision": 0.8842,
+      "brier_score": 0.0412
+    },
+    "baseline_metrics": {
+      "persistence_auc": 0.612
+    },
+    "artifact_path": "artifacts/models/electricity_grid/v0.1.0/grid_deficit_hazard_v1.booster",
+    "artifact_sha256": "5961e12129f7a3f6dfafc04ce3212d64baa7476982d14da2143f8c24a57b6ddf",
+    "known_limitations": [
+      "Excludes forced outage contingencies from sudden transmission corridor trips outside the urban zone."
+    ],
+    "operational_status": "CHAMPION"
+  },
+  {
+    "model_id": "agrisense_v2",
+    "name": "AgriSense V2 10-Class Crop Suitability Classifier",
+    "version": "2.0.0",
+    "flagship_suite": "AgriSense",
+    "task_type": "multiclass_classification",
+    "algorithm": "LightGBM Multi-class GBDT",
+    "target": "dominant_crop",
+    "target_description": "Optimal staple/commercial crop selection across 10 classes",
+    "training_period": "1997-2011",
+    "validation_period": "2012-2013",
+    "test_period": "2014-2015",
+    "validation_strategy": "chronological",
+    "features": [
+      "soil_ph_h2o_0_30cm",
+      "soil_total_n_g_kg_0_30cm",
+      "soil_soc_g_kg_0_30cm",
+      "soil_cec_cmol_kg_0_30cm",
+      "soil_clay_pct_0_30cm",
+      "soil_sand_pct_0_30cm",
+      "soil_silt_pct_0_30cm",
+      "soil_bulk_density_kg_dm3_0_30cm",
+      "temp_mean_c",
+      "temp_max_c",
+      "temp_min_c",
+      "humidity_pct",
+      "rainfall_mm",
+      "rain_days_proxy_mm_per_day",
+      "solar_mj_m2_day",
+      "annual_rainfall_mm",
+      "annual_temp_mean_c",
+      "annual_humidity_pct",
+      "elevation_m"
+    ],
+    "features_count": 19,
+    "source_datasets": [
+      "ICRISAT / ICAR Crop Database",
+      "SoilGrids 250m"
+    ],
+    "metrics": {
+      "top1_test_accuracy": 0.8249,
+      "top3_test_accuracy": 0.9762,
+      "weighted_f1": 0.825,
+      "weighted_precision": 0.8403,
+      "weighted_recall": 0.8249
+    },
+    "baseline_metrics": {
+      "majority_class_accuracy": 0.4954,
+      "accuracy_lift_pct": 66.51
+    },
+    "artifact_path": "artifacts/models/crop_resilience/v0.1.0/crop_suitability_v1.booster",
+    "artifact_sha256": "4c359f35fe499c3dc8ef0b58973b6ce6f4ec280ef7b05114aeb38e67de4d37e4",
+    "known_limitations": [
+      "Predicts historical agronomic suitability, not real-time market farmgate procurement prices.",
+      "Assumes rainfed or standard canal irrigation; does not observe private tubewell depth."
+    ],
+    "operational_status": "CHAMPION"
+  },
+  {
+    "model_id": "air_quality_v2_pm25",
+    "name": "AirQuality V2 Next-Day PM2.5 Regressor",
+    "version": "2.0.0",
+    "flagship_suite": "AirQuality",
+    "task_type": "regression",
+    "algorithm": "LightGBM GBDT",
+    "target": "target_pm2_5_next_day",
+    "target_description": "Next-day 24h mean PM2.5 particulate concentration (\u00b5g/m\u00b3)",
+    "training_period": "2022-08-12 to 2025-05-31",
+    "validation_period": "2025-06-01 to 2025-12-31",
+    "test_period": "2026-01-01 to 2026-10-29",
+    "validation_strategy": "chronological",
+    "features": [
+      "pm2_5_mean",
+      "pm2_5_max",
+      "pm10_mean",
+      "no2_mean",
+      "aod_mean",
+      "temperature_2m_mean",
+      "relative_humidity_2m_mean",
+      "wind_speed_10m_max",
+      "wind_direction_10m_dominant",
+      "precipitation_sum",
+      "day_of_year",
+      "month"
+    ],
+    "features_count": 12,
+    "source_datasets": [
+      "Open-Meteo CAMS Air Quality",
+      "ERA5-Land"
+    ],
+    "metrics": {
+      "test_mae_ug_m3": 6.3796,
+      "test_rmse_ug_m3": 9.6255,
+      "test_r2": 0.8725,
+      "cpcb_category_accuracy": 0.8074,
+      "mean_bias_ug_m3": -0.2298
+    },
+    "baseline_metrics": {
+      "persistence_mae": 6.9495,
+      "rolling_7d_mae": 9.3891
+    },
+    "artifact_path": "artifacts/models/air_quality/v0.1.0/model.txt",
+    "artifact_sha256": "c1b53c69f26c8ecaa07994e5899dc7bda19a9ca8b3914b91e65c7328371bb2fb",
+    "known_limitations": [
+      "Based on ~45km CAMS atmospheric reanalysis grid cells; hyper-local street-level traffic microclimates differ.",
+      "Requires CPCB ground monitor calibration transfer before serving legal environmental compliance notices."
+    ],
+    "operational_status": "CHAMPION"
+  }
+]

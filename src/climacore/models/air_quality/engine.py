@@ -165,6 +165,11 @@ class AirQualityEngine:
         pm2_5_ug_m3: float,
         pm10_ug_m3: Optional[float] = None,
         no2_ug_m3: Optional[float] = None,
+        so2_ug_m3: Optional[float] = None,
+        co_mg_m3: Optional[float] = None,
+        o3_ug_m3: Optional[float] = None,
+        nh3_ug_m3: Optional[float] = None,
+        pb_ug_m3: Optional[float] = None,
         wind_speed_kmh: float = 12.0,
         temp_max_c: float = 30.0,
         temp_min_c: float = 20.0,
@@ -174,15 +179,36 @@ class AirQualityEngine:
         population_15km: Optional[int] = None,
         schools_15km: Optional[int] = None,
         hospitals_15km: Optional[int] = None,
+        **kwargs: Any,
     ) -> Dict[str, Any]:
         """
         Evaluate comprehensive air quality conditions:
           - Calibrated concentrations for PM2.5, PM10, and NO2
           - CPCB sub-indices and composite NAQI
+          - CPCB 8-pollutant compliance check (min 3 pollutants including PM)
           - Inversion/stagnation physics
           - Transboundary smoke risk (IGP airshed in Oct-Nov)
           - Exposure and health advisories
         """
+        # Track explicitly provided vs estimated pollutants for CPCB compliance audit
+        explicitly_provided = []
+        if pm2_5_ug_m3 is not None:
+            explicitly_provided.append("PM2.5")
+        if pm10_ug_m3 is not None:
+            explicitly_provided.append("PM10")
+        if no2_ug_m3 is not None:
+            explicitly_provided.append("NO2")
+        if so2_ug_m3 is not None:
+            explicitly_provided.append("SO2")
+        if co_mg_m3 is not None:
+            explicitly_provided.append("CO")
+        if o3_ug_m3 is not None:
+            explicitly_provided.append("O3")
+        if nh3_ug_m3 is not None:
+            explicitly_provided.append("NH3")
+        if pb_ug_m3 is not None:
+            explicitly_provided.append("Pb")
+
         # 1. Estimate missing pollutants if not provided via physical stoichiometric ratios
         # Typical urban Indian ratios: PM10 ~ 1.7 * PM2.5, NO2 ~ 0.45 * PM2.5 + 15
         calibrated_pm25 = max(1.0, float(pm2_5_ug_m3))
@@ -193,6 +219,18 @@ class AirQualityEngine:
         sub_pm25 = compute_sub_index(calibrated_pm25, PM25_BREAKPOINTS)
         sub_pm10 = compute_sub_index(calibrated_pm10, PM10_BREAKPOINTS)
         sub_no2 = compute_sub_index(calibrated_no2, NO2_BREAKPOINTS)
+
+        # CPCB Official Rule: Overall AQI requires at least 3 measured pollutants,
+        # with at least one being PM2.5 or PM10.
+        has_particulate = "PM2.5" in explicitly_provided or "PM10" in explicitly_provided
+        is_cpcb_compliant = len(explicitly_provided) >= 3 and has_particulate
+        data_quality_flags = []
+        if not is_cpcb_compliant:
+            data_quality_flags.append("PROVISIONAL_PARTICULATE_PROXY")
+            if len(explicitly_provided) < 3:
+                data_quality_flags.append(f"INSUFFICIENT_POLLUTANTS_FOR_OFFICIAL_AQI ({len(explicitly_provided)}/3 required)")
+            if not has_particulate:
+                data_quality_flags.append("MISSING_MANDATORY_PM_COMPONENT")
 
         # Composite NAQI is max of sub-indices
         naqi_candidates = [
@@ -299,6 +337,23 @@ class AirQualityEngine:
                 "smoke_severity": smoke_severity,
             },
             "exposure_context": exposure_summary,
+            "cpcb_compliance": {
+                "is_cpcb_compliant": is_cpcb_compliant,
+                "explicitly_monitored_pollutants": explicitly_provided,
+                "monitored_count": len(explicitly_provided),
+                "has_mandatory_pm": has_particulate,
+                "data_quality_flags": data_quality_flags,
+                "averaging_protocols": {
+                    "pm2_5": "24-hour mean",
+                    "pm10": "24-hour mean",
+                    "no2": "24-hour mean",
+                    "so2": "24-hour mean",
+                    "nh3": "24-hour mean",
+                    "pb": "24-hour mean",
+                    "co": "8-hour maximum",
+                    "o3": "8-hour maximum",
+                },
+            },
             "advisories": advisories,
             "restrictions": restrictions,
         }

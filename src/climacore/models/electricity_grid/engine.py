@@ -130,6 +130,18 @@ class PowerGridEngine:
             "cooling_degree_days_18c": round(cdd, 1),
             "cooling_degree_days_cdd": round(cdd, 1),
             "tropical_night_failure_risk": trop_night,
+            "physical_engineering_indicators": {
+                "cooling_demand_surge_ratio": stress_ratio,
+                "cooling_degree_days_18c": round(cdd, 1),
+                "tropical_night_failure_risk": trop_night,
+                "derivation_type": "DETERMINISTIC_ENGINEERING_HEURISTIC",
+            },
+            "calibrated_ml_predictions": {
+                "projected_peak_grid_load_mw": peak_load_mw,
+                "unmet_supply_stress_probability": deficit_prob,
+                "model_reference": "POSOCO LightGBM Dual Regressor/Classifier (AUC 0.9521)",
+                "derivation_type": "SUPERVISED_ML_INFERENCE",
+            },
             "discom_advisory": {
                 "status": grid_status,
                 "spinning_reserves_required": deficit_prob >= 0.20,

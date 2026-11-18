@@ -20,13 +20,13 @@ This file is the current **single source of truth** for Clima-Core. Follow it be
 - 14 high-edge meteorological, hydrological, agricultural, grid, and infrastructure datasets are fully ingested into `data/processed/` with cryptographic SHA-256 manifests.
 - 28 supervised and calibrated machine learning models/boosters have been trained with zero lookahead data leakage ($\Delta_{\max} = 0.00000000$ reload parity).
 - All 13 specialized persona adapters are implemented with comprehensive operational advisories and civil defense restrictions.
-- 87 automated unit tests are passing in `tests/`.
+- 113 automated unit and integration tests are passing in `tests/` (100% parity across all models, registries, and physics engines).
 
-**The current active focus is Phase 4: Unified Prediction Contract & FastAPI Inference Service:**
-1. **Scientific Rigor & EVT (Phase 2):** Completed. 74-year IMD GEV return periods, elevation-aware psychrometrics, and transparent joint exceedance compound risk are fully implemented.
-2. **Flagship Model Consolidation (Phase 3):** Completed. Consolidated the 5 Flagship Champions (FloodRisk V2, HeatRisk V3, PowerGrid V2, AgriSense V2, AirQuality V2) into dedicated modular engines with 101/101 test pass parity.
+**Current Status & Roadmap Alignment:**
+1. **Scientific Foundation & Model Audit (Roadmap Phase 1 - 100% COMPLETE):** Built canonical Model, Dataset, and Physical Threshold Registries with SHA-256 integrity; implemented the Validation Tri-Split Engine (Temporal, Spatial LOCZO across 5 Bioclimatic Zones, Event-Safe disaster partitions); resolved SciPy GEV shape sign conventions, CPCB 8-pollutant AQI completeness compliance, and flood inventory negative-label semantics.
+2. **Flagship Models Consolidated (100% COMPLETE):** Consolidated the 5 Flagship Champions (FloodRisk V2, HeatRisk V3, PowerGrid V2, AgriSense V2, AirQuality V2) into dedicated modular engines.
 3. **Decoupled Architecture:** Strictly maintaining the **4-Layer Taxonomy** (Predictive, Physical, Exposure, Decision).
-4. **Standardized Decision Contract (Phase 4):** Standardizing the JSON payload emitted by the forecast engine so that every persona, FastAPI endpoint, and future LLM/RAG interface consumes the exact same structured data with explicit uncertainty flags.
+4. **Next Active Milestone:** Roadmap Phase 2 (Cross-Dataset Fusion & Flagship V3 Models).
 
 Do **not** build arbitrary UI pages, bloated consumer screens, or unverified frontend prototypes until the predictive and statistical engines meet these scientific defense standards.
 
@@ -101,14 +101,40 @@ Consolidated the 5 Champion ML Model Suites into modular flagship engines:
 5. **AirQuality V2 (`src/climacore/models/air_quality/engine.py`):** Next-day multi-pollutant prediction ($\text{PM}_{2.5}, \text{PM}_{10}, \text{NO}_2$), official CPCB 6-tier NAQI sub-indices, boundary layer atmospheric stagnation/nocturnal inversion classifier, and Indo-Gangetic Plain transboundary smoke advection model.
 6. **Live Forecast Integration:** Integrated all 5 flagship engines directly into `LiveForecastEngine` (`src/climacore/ingestion/engine.py`), adding structured `flagship_intelligence` to daily predictions. Verified with 101/101 passing unit and integration tests.
 
-## 2.4 Phase 4: Unified Contract & Inference Service
-- Standardized `PredictionResult` contract emitted by `LiveForecastEngine`.
-- Python FastAPI microservice with TTL disk caching and sub-100ms response time.
-- Structured LLM/RAG integration enabling conversational querying of grounded model metrics.
+## 2.4 Roadmap Phase 1: Scientific Foundation & Model Audit (100% COMPLETE)
+- **Canonical Model & Dataset Registries (`src/climacore/registry/`):**
+  - Built unified, auditable registry system exporting `canonical_model_registry.json`, `canonical_dataset_registry.json`, and `canonical_physical_thresholds.json`.
+  - Every model tracks unique ID, SemVer, ordered features, chronological/event splits, audited metrics, artifact SHA-256 hash, and explicit operational limitations.
+  - Every physical threshold (tropical nights 28°C, anthesis heat shock 32°C/35°C, harvest lodging 10mm, wet-bulb 30°C/32°C work limits, CDD 18°C base) is formally sourced to standard authorities (IS 2026/IEC 60076, ICAR/CIMMYT, NDMA, ASHRAE).
+- **Validation Tri-Split Engine (`src/climacore/evaluation/splits.py`):**
+  - **Temporal Validation:** Chronological train/val/test partitioning with optional purge embargo to eliminate boundary lag leakage.
+  - **Spatial Validation (LOCZO):** Leave-One-Climate-Zone-Out cross-validation across 5 canonical Indian Bioclimatic Zones (Indo-Gangetic Plains, Deccan Plateau, Western Coastal, Eastern Coastal, Himalayan/Hill/NE) mapping all 50 cities deterministically.
+  - **Event-Safe Validation:** Atomically partitions complete disaster episodes (IFI floods, IMD cyclone tracks) so zero events straddle train and evaluation sets.
+- **Scientific Detail Audits & Enhancements:**
+  - **EVT GEV Convention (`src/climacore/analytics/extreme_value.py`):** Explicitly exposes SciPy shape parameter $c_{\text{SciPy}}$ alongside classical hydrological EVT shape $\xi = -c_{\text{SciPy}}$, tail classification (Weibull vs Fréchet vs Gumbel), 95% bootstrap confidence intervals for all return periods ($T_5, T_{10}, T_{25}, T_{50}$), and extrapolation uncertainty flags.
+  - **CPCB AQI Completeness (`src/climacore/models/air_quality/engine.py`):** Implemented official CPCB compliance check requiring $\ge 3$ monitored pollutants with at least one particulate ($\text{PM}_{2.5}$ or $\text{PM}_{10}$), flagging incomplete proxy estimates.
+  - **Disaster Negative-Label Semantics (`src/climacore/models/flood_risk/engine.py`):** Added explicit inventory reporting certainty tier and documented that historical catalog absence signifies no declared district emergency rather than zero localized waterlogging.
+  - **Physical vs ML Grid Decoupling (`src/climacore/models/electricity_grid/engine.py`):** Explicitly partitioned deterministic CDD engineering demand surge ratio from supervised ML unmet supply stress classification.
+- **Verification:** 113/113 unit and integration tests passing in 16.13s with zero regressions.
 
-## 2.5 Phase 5: Interactive MapLibre Decision Portal
-- Next.js + React frontend with MapLibre GL JS and OpenFreeMap vector tiles.
-- Toggleable hazard, population density, critical infrastructure, and persona layers.
+## 2.5 Roadmap Phase 2: Cross-Dataset Fusion & Flagship V3 Models (NEXT ACTIVE PHASE)
+- **FloodRisk V3:** Rainfall $\rightarrow$ Soil Saturation $\rightarrow$ Runoff $\rightarrow$ Inundation chain with DEM terrain slope and multi-horizon (24h, 48h, 72h) event probabilities.
+- **HeatRisk V4:** Day $T_{\max}$ + Night $T_{\min}$ + Oke UHI + Population microclimate fusion.
+- **PowerGrid V3:** Weather + CDD + historical load lags (1d, 7d, 14d) + calendar indicators.
+- **AgriSense V3:** Tri-task separation: Crop Selection vs. Crop Yield Range vs. SAGE Phenological Stress.
+- **AirQuality V3:** CAMS atmospheric advection + CPCB ground monitoring calibration + ventilation index inversion trapping.
+
+## 2.6 Roadmap Phase 3: Advanced ML & Hybrid Architectures
+- CatBoost vs LightGBM champion-challenger benchmarking.
+- Temporal Fusion Transformer (TFT) multi-horizon sequence model for power grid demand.
+- Scoped river basin routing prototype.
+
+## 2.7 Roadmap Phase 4: Probabilistic Intelligence & Compound Risks
+- Quantile predictions ($Q_{10}, Q_{50}, Q_{90}$) and Conformal Calibration (MAPIE).
+- Cascading compound risk causal chains and standardized `PredictionResult` JSON contract.
+
+## 2.8 Roadmap Phase 5: Generalization & Deployment
+- Zero-cold-start FastAPI / Vercel edge deployment, model monitoring, and drift detection.
 
 ---
 

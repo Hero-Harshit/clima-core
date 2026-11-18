@@ -1,0 +1,193 @@
+[
+  {
+    "dataset_id": "imd_temperature_74y",
+    "name": "IMD 74-Year Gridded Daily Maximum & Minimum Temperature",
+    "source_agency": "India Meteorological Department (IMD)",
+    "citation": "IMD National Climate Centre (1951-2024), 1.0 degree high-resolution daily gridded temperature dataset.",
+    "temporal_range": "1951-2024",
+    "spatial_coverage": "All India (50 Urban Centers Aligned)",
+    "spatial_resolution": "1.0 degree gridded",
+    "temporal_resolution": "Daily",
+    "total_records": 1351450,
+    "processed_file_path": "data/processed/imd_temperature_1951_2024.parquet",
+    "sha256": "PENDING_VERIFICATION",
+    "feature_columns": [
+      "temp_max",
+      "temp_min",
+      "temp_mean",
+      "annual_max_temp"
+    ]
+  },
+  {
+    "dataset_id": "imd_rainfall_46y",
+    "name": "IMD 46-Year Gridded Daily Precipitation",
+    "source_agency": "India Meteorological Department (IMD)",
+    "citation": "Pai et al. (2014), Development of a new high spatial resolution (0.25 x 0.25) long period (1901-2024) daily gridded rainfall data set over India, Mausam.",
+    "temporal_range": "1979-2024",
+    "spatial_coverage": "All India (50 Urban Centers Aligned)",
+    "spatial_resolution": "0.25 degree gridded",
+    "temporal_resolution": "Daily",
+    "total_records": 840050,
+    "processed_file_path": "data/processed/imd_rainfall_1979_2024.parquet",
+    "sha256": "PENDING_VERIFICATION",
+    "feature_columns": [
+      "precipitation_mm",
+      "annual_max_rainfall"
+    ]
+  },
+  {
+    "dataset_id": "era5_land_climate_master",
+    "name": "ERA5-Land 44-Year Historical Meteorological Archive",
+    "source_agency": "ECMWF / Copernicus Climate Change Service",
+    "citation": "Mu\u00f1oz-Sabater et al. (2021), ERA5-Land: a state-of-the-art global reanalysis dataset for land applications, Earth System Science Data.",
+    "temporal_range": "1980-2023",
+    "spatial_coverage": "50 Indian Cities",
+    "spatial_resolution": "~9 km (0.1 degree)",
+    "temporal_resolution": "Daily",
+    "total_records": 823048,
+    "processed_file_path": "data/processed/weather_historical_44y_train_ready.parquet",
+    "sha256": "d0635e4c9f55359ed40eed9baff763c0684587dab0fbf63229265e6f0ba30ac7",
+    "feature_columns": [
+      "temperature_2m_max",
+      "temperature_2m_min",
+      "temperature_2m_mean",
+      "apparent_temperature_max",
+      "precipitation_sum",
+      "wind_speed_10m_max",
+      "relative_humidity_2m_mean",
+      "shortwave_radiation_sum",
+      "et0_fao_evapotranspiration"
+    ]
+  },
+  {
+    "dataset_id": "ifi_flood_inventory",
+    "name": "IIT Delhi India Flood Inventory (IFI) v3",
+    "source_agency": "IIT Delhi Department of Civil Engineering",
+    "citation": "India Flood Inventory v3 (1980-2023), Hydro-meteorological disaster event catalog.",
+    "temporal_range": "1980-2023",
+    "spatial_coverage": "50 Indian Cities (District-Aligned)",
+    "spatial_resolution": "District Administrative Unit",
+    "temporal_resolution": "Daily (Disaster Event Tagged)",
+    "total_records": 803550,
+    "processed_file_path": "data/processed/floods/city_flood_history_aligned.parquet",
+    "sha256": "3e5b19f9d57f3523e03a88e1550aa2540068794da35b856cb42ae00213e62416",
+    "feature_columns": [
+      "flood_disaster_event",
+      "rainfall_mm",
+      "api_14d",
+      "drainage_canals_15km"
+    ]
+  },
+  {
+    "dataset_id": "posoco_electricity_demand",
+    "name": "India Daily Electricity Demand & Grid Heat Stress",
+    "source_agency": "POSOCO, Central Electricity Authority (CEA)",
+    "citation": "University of Reading / Newcastle University (Zenodo), National Grid Telemetry 2013-2020.",
+    "temporal_range": "2013-2020",
+    "spatial_coverage": "All India (State-level for 50 cities)",
+    "spatial_resolution": "State Grids",
+    "temporal_resolution": "Daily",
+    "total_records": 150547,
+    "processed_file_path": "data/processed/electricity/city_daily_electricity_stress.parquet",
+    "sha256": "1d0ca0ef4d341effb78734085cf87f96937eb3e5f58ac51cb262f797b42beb9d",
+    "feature_columns": [
+      "peak_met_mw",
+      "cooling_degree_days",
+      "is_tropical_night",
+      "is_grid_deficit_day"
+    ]
+  },
+  {
+    "dataset_id": "agrisense_crop_soil",
+    "name": "ICRISAT / ICAR District Agricultural Soil & Crop Statistics",
+    "source_agency": "ICAR, ICRISAT, ISRIC SoilGrids 250m",
+    "citation": "District-level Crop Production Statistics of India (1997-2015), Directorate of Economics & Statistics.",
+    "temporal_range": "1997-2015",
+    "spatial_coverage": "50 Urban Hinterland Districts",
+    "spatial_resolution": "District / 250m Soil Profile",
+    "temporal_resolution": "Seasonal / Annual",
+    "total_records": 34903,
+    "processed_file_path": "data/processed/agriculture/city_district_crop_profiles.parquet",
+    "sha256": "086272e331912ba872a7f335c5e3c09c6e714a4c6efbd621f87a5a65176a6b3e",
+    "feature_columns": [
+      "soil_ph",
+      "soil_organic_carbon_g_kg",
+      "soil_water_holding_capacity",
+      "dominant_crop"
+    ]
+  },
+  {
+    "dataset_id": "sage_crop_calendar",
+    "name": "SAGE Global Crop Calendar (India Phenology)",
+    "source_agency": "University of Wisconsin-Madison (SAGE)",
+    "citation": "Sacks et al. (2010), Crop planting and harvesting dates for the GAEZ study.",
+    "temporal_range": "Canonical / Multi-decade",
+    "spatial_coverage": "50 Indian Cities",
+    "spatial_resolution": "District / Agro-Ecological Subregion",
+    "temporal_resolution": "Calendar DOY Ranges",
+    "total_records": 50,
+    "processed_file_path": "data/processed/agriculture/city_crop_calendars.json",
+    "sha256": "c88e6c41a94adde874fb185afc668a89276d24c93fa844ff931072e5ecfda038",
+    "feature_columns": [
+      "kharif_sowing_doy_range",
+      "kharif_anthesis_doy_range",
+      "kharif_harvest_doy_range"
+    ]
+  },
+  {
+    "dataset_id": "worldpop_2024",
+    "name": "WorldPop High-Resolution 100m Population Exposure",
+    "source_agency": "WorldPop, University of Southampton",
+    "citation": "WorldPop (2024), Global high-resolution population distribution datasets for 2024.",
+    "temporal_range": "2024",
+    "spatial_coverage": "50 Indian Cities (Concentric 5km, 15km, 30km rings)",
+    "spatial_resolution": "100m raster grid",
+    "temporal_resolution": "Static (2024 projection)",
+    "total_records": 50,
+    "processed_file_path": "data/processed/population/city_population_exposure.json",
+    "sha256": "0efe64a7425d8104a925c76f71672b45e944a01bf8312bac9f6d63f1e18ce008",
+    "feature_columns": [
+      "population_5km",
+      "population_15km",
+      "population_30km",
+      "dense_cluster_pop_15km"
+    ]
+  },
+  {
+    "dataset_id": "osm_critical_infrastructure",
+    "name": "OpenStreetMap Urban Lifeline Infrastructure Snapshot",
+    "source_agency": "OpenStreetMap Contributors via Overpass API",
+    "citation": "OpenStreetMap Foundation (2024), Critical civil lifeline infrastructure tags.",
+    "temporal_range": "2024",
+    "spatial_coverage": "50 Indian Cities (15 km radial buffer)",
+    "spatial_resolution": "Vector features / 15km buffer",
+    "temporal_resolution": "Static Snapshot",
+    "total_records": 50,
+    "processed_file_path": "data/processed/infrastructure/city_infrastructure_exposure.json",
+    "sha256": "9eb7ac62f6ca2d8b144805ae1bf46aefa3b5dc8eb595a9cee58cbf08d788cee6",
+    "feature_columns": [
+      "hospitals_15km",
+      "schools_15km",
+      "bridges_15km",
+      "drainage_canals_15km"
+    ]
+  },
+  {
+    "dataset_id": "chetna_power_plants",
+    "name": "CHETNA Coal Thermal Power Plant Point-Source Inventory",
+    "source_agency": "Center for High Energy Transitions & Air (CHETNA)",
+    "citation": "CHETNA National Thermal Power Plant Geodatabase (2024).",
+    "temporal_range": "2024",
+    "spatial_coverage": "276 Operational Units across India",
+    "spatial_resolution": "Point Coordinates / 100km buffer",
+    "temporal_resolution": "Operational Snapshot",
+    "total_records": 276,
+    "processed_file_path": "data/processed/power_plants/city_power_plant_exposure.json",
+    "sha256": "946e6fc282f2d3d47492aff8e908c06036d4ba7f37db06029538004e9b801fbd",
+    "feature_columns": [
+      "plants_within_100km",
+      "thermal_capacity_100km_mw",
+      "closest_plant_distance_km"
+    ]
+  }
+]

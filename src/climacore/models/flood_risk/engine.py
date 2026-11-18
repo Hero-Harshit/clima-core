@@ -134,6 +134,14 @@ class FloodRiskEngine:
             if dense_pop > 100_000:
                 advisories.append(f"Vulnerable Settlements Priority: Pre-position mobile pumping and rescue teams near {dense_pop:,} informal settlement residents.")
 
+        # 6. Disaster Inventory Reporting Context (Phase 1 Audit)
+        reporting_certainty = "HIGH_CONFIDENCE_EVENT" if hazard_prob >= 0.35 else "STANDARD_OPERATIONAL_CONFIDENCE"
+        negative_label_note = (
+            "Historical IFI v3 catalog captures declared district flood emergencies. "
+            "Absence of an official disaster declaration indicates no declared emergency, "
+            "but does not preclude hyper-local micro-urban waterlogging (<4 hours duration)."
+        )
+
         return {
             "city": city,
             "hazard_probability": hazard_prob,
@@ -148,6 +156,11 @@ class FloodRiskEngine:
                 "soil_moisture_rootzone": soil_moisture_rootzone,
             },
             "exposure_footprint": exposure,
+            "inventory_reporting_context": {
+                "source_catalog": "IIT Delhi India Flood Inventory (IFI) v3",
+                "reporting_certainty": reporting_certainty,
+                "negative_label_uncertainty_note": negative_label_note,
+            },
             "advisories": advisories or ["Hydrological systems operating within design drainage capacity."],
         }
 

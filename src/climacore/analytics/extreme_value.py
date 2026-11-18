@@ -286,6 +286,11 @@ def evaluate_return_period(
         rarity_desc = "TYPICAL_SEASONAL_VARIABILITY (< 1-in-2 Year Event)"
         risk_level = "NORMAL"
 
+    # Extrapolation uncertainty check: return period exceeds observational history
+    # 74 years for IMD temperature, 46 years for IMD rainfall
+    obs_years = 74 if hazard_type.lower() == "temperature" else 46
+    is_extrapolated = bool(t_years > obs_years)
+
     return {
         "city": prof["city"],
         "hazard_type": hazard_type,
@@ -293,12 +298,19 @@ def evaluate_return_period(
         "estimated_return_period_years": t_years,
         "rarity_category": rarity_desc,
         "risk_level": risk_level,
+        "c_scipy": round(float(c), 4),
+        "xi_evt": round(float(-c), 4),
+        "tail_behavior": params.get("distribution_type", "GEV"),
+        "extrapolation_uncertainty_flag": is_extrapolated,
+        "observational_history_years": obs_years,
         "gev_exceedance_probability": round(exceedance_prob, 4),
         "t_5yr_level": ret_levels["T_5yr"],
         "t_10yr_level": ret_levels["T_10yr"],
         "t_25yr_level": ret_levels["T_25yr"],
         "t_50yr_level": ret_levels["T_50yr"],
-        "ci_95_t25yr": [sub_gev["ci_95_lower"]["T_25yr"], sub_gev["ci_95_upper"]["T_25yr"]],
+        "ci_95_t10yr": [sub_gev["ci_95_lower"].get("T_10yr"), sub_gev["ci_95_upper"].get("T_10yr")],
+        "ci_95_t25yr": [sub_gev["ci_95_lower"].get("T_25yr"), sub_gev["ci_95_upper"].get("T_25yr")],
+        "ci_95_t50yr": [sub_gev["ci_95_lower"].get("T_50yr"), sub_gev["ci_95_upper"].get("T_50yr")],
     }
 
 
