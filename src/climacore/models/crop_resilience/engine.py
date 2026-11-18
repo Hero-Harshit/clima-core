@@ -133,6 +133,17 @@ class AgriSenseEngine:
     def __init__(self):
         self.booster = get_crop_booster()
         self.profiles, self.calendars = load_agricultural_metadata()
+        self._challenger_engine = None
+
+    @property
+    def challenger_engine(self):
+        if self._challenger_engine is None:
+            try:
+                from climacore.models.crop_resilience.challenger_catboost import CatBoostCropSuitabilityEngine
+                self._challenger_engine = CatBoostCropSuitabilityEngine()
+            except Exception as e:
+                logger.warning(f"Could not load CatBoost challenger engine: {e}")
+        return self._challenger_engine
 
     def evaluate_phenology(
         self,
@@ -253,8 +264,19 @@ class AgriSenseEngine:
     def predict_suitability(
         self,
         features: Dict[str, float],
+        engine_mode: str = "champion",
     ) -> List[Dict[str, Any]]:
-        """Predict top-k crop suitability probabilities using the LightGBM model."""
+        """
+        Predict top-k crop suitability probabilities.
+        Supports:
+          - 'champion': LightGBM Champion (82.49% Top-1 Accuracy)
+          - 'challenger': CatBoost Challenger (80.18% Top-1 Accuracy, symmetric trees)
+          - 'ensemble': 60% LightGBM + 40% CatBoost blended probabilities
+        """
+        mode = str(engine_mode).lower().strip()
+        if mode == "challenger" and self.challenger_engine and self.challenger_engine.model:
+            return self.challenger_engine.predict_suitability(features)
+
         if self.booster is None:
             return [
                 {"crop": TARGET_CROPS[0], "probability": 0.45, "rank": 1},
@@ -265,7 +287,14 @@ class AgriSenseEngine:
         row = [features.get(f, 0.0) for f in CROP_SOIL_FEATURES]
         X = np.array([row], dtype=np.float32)
 
-        raw_probs = self.booster.predict(X)[0]
+        raw_lgb = self.booster.predict(X)[0]
+
+        if mode == "ensemble" and self.challenger_engine and self.challenger_engine.model:
+            raw_cat = self.challenger_engine.model.predict_proba(X)[0]
+            raw_probs = 0.60 * raw_lgb + 0.40 * raw_cat
+        else:
+            raw_probs = raw_lgb
+
         ranked_indices = np.argsort(raw_probs)[::-1]
 
         results = []
@@ -331,11 +360,12 @@ class AgriSenseEngine:
         elevation_m: float = 100.0,
         smdi: Optional[float] = None,
         flash_drought_alert: int = 0,
+        engine_mode: str = "champion",
         **kwargs: Any,
     ) -> Dict[str, Any]:
         """
         Run end-to-end AgriSense V3 tri-task assessment:
-          - Task A: Multi-crop suitability predictions (LightGBM GBDT)
+          - Task A: Multi-crop suitability predictions (LightGBM GBDT / CatBoost / Ensemble)
           - Task B: Crop yield potential range (Q10, Q50, Q90 tonnes/ha)
           - Task C: SAGE crop phenology growth-stage stress tracking
         """
@@ -381,7 +411,7 @@ class AgriSenseEngine:
             "elevation_m": elevation_m,
         }
 
-        suitability = self.predict_suitability(feat_dict)
+        suitability = self.predict_suitability(feat_dict, engine_mode=engine_mode)
         water_balance = round(float(rainfall_mm - et0_evapotranspiration), 2)
 
         # Phenological Stress Alerts
@@ -511,6 +541,7 @@ class AgriSenseEngine:
             "agro_stress_score": stress_score,
             "agro_stress_category": stress_category,
             "multi_horizon_agro_stress": multi_horizon,
+            "engine_mode": engine_mode,
             "advisories": advisories,
             "restrictions": restrictions,
         }

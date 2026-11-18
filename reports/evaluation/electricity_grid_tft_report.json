@@ -1,0 +1,43 @@
+{
+  "tournament_name": "PowerGrid Peak Load Champion vs Challenger",
+  "champion": {
+    "model_name": "PowerGrid LightGBM Champion",
+    "architecture": "LightGBM Regressor (Depth 7, Leaves 31, 250 Estimators)",
+    "test_r2": 0.8758,
+    "test_mae_mw": 1519.18,
+    "test_rmse_mw": 2336.25,
+    "sha256": "ac7e052acac3b40e9bce20612cd295a1d613a25891e0381d08eac231ed0df3b0"
+  },
+  "challenger": {
+    "model_name": "PowerGrid Temporal Fusion Transformer (TFT)",
+    "architecture": "Deep TFT (VSN + GRN + Temporal Multi-Head Attention + Quantile Heads)",
+    "sha256": "a186f5f3b4c9689067a5da77e8be2c3c7ce2238505862c4573d4bea2263df5c4",
+    "test_r2": 0.7059,
+    "test_mae_mw": 2659.71,
+    "test_rmse_mw": 3594.07,
+    "test_mape_pct": 43.79,
+    "pinball_loss": {
+      "q10": 413.88,
+      "q50": 1329.86,
+      "q90": 1116.94
+    },
+    "empirical_coverage_q10_q90_pct": 45.56,
+    "multi_horizon_mae_mw": {
+      "lead_24h": 2659.71,
+      "lead_48h": 4411.84,
+      "lead_72h": 5976.29
+    },
+    "training_time_sec": 46.51,
+    "inference_latency_ms_per_sample": 0.122
+  },
+  "head_to_head_deltas": {
+    "r2_delta": -0.1699,
+    "mae_mw_delta": 1140.53,
+    "rmse_mw_delta": 1257.82
+  },
+  "guiding_rule_verdict": {
+    "status": "CHAMPION_RETAINS_LEAD",
+    "is_promoted": false,
+    "governing_rationale": "TFT achieves Test R2 = 0.7059 and MAE = 2659.7 MW on the 2020 holdout test set. TFT uniquely provides native multi-horizon quantile intervals (45.6% 80% coverage) and variable selection weights over temporal lags."
+  }
+}

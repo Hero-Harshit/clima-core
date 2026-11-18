@@ -66,6 +66,17 @@ class PowerGridEngine:
 
     def __init__(self):
         self.reg_booster, self.clf_booster = get_electricity_boosters()
+        self._tft_engine = None
+
+    @property
+    def tft_engine(self):
+        if self._tft_engine is None:
+            try:
+                from climacore.models.electricity_grid.challenger_tft import TFTGridStressEngine
+                self._tft_engine = TFTGridStressEngine()
+            except Exception as e:
+                logger.warning(f"Could not load TFT challenger engine: {e}")
+        return self._tft_engine
 
     def evaluate_grid_stress(
         self,
@@ -85,10 +96,15 @@ class PowerGridEngine:
         is_weekend: bool = False,
         is_holiday: bool = False,
         forecast_horizon_hours: int = 24,
+        engine_mode: str = "champion",
         **kwargs: Any,
     ) -> Dict[str, Any]:
         """
         Evaluate peak grid load demand surge and unmet supply stress probability with lag augmentation.
+        Supports:
+          - 'champion': LightGBM Regressor (R2 = 0.8758)
+          - 'challenger': Temporal Fusion Transformer (TFT Multi-Horizon Quantile sequence model)
+          - 'ensemble': Blended 65% LightGBM + 35% TFT
         """
         t_max = float(temp_max_c)
         t_min = float(temp_min_c)
@@ -122,6 +138,36 @@ class PowerGridEngine:
             "q50": peak_load_mw,
             "q90": round(peak_load_mw + 1.28 * load_sigma, 1),
         }
+
+        # Optional TFT sequence modeling integration
+        tft_preds = None
+        mode = str(engine_mode).lower().strip()
+        if mode in ["challenger", "ensemble"] and self.tft_engine:
+            try:
+                tft_feat = {
+                    "temp_min_c": t_min,
+                    "temp_mean_c": t_mean,
+                    "temp_max_c": t_max,
+                    "cooling_degree_days": cdd,
+                    "is_tropical_night": 1.0 if trop_night else 0.0,
+                    "population_15km": pop,
+                    "dense_cluster_pop_15km": pop * 0.15,
+                    "day_of_week": 5 if is_weekend else 2,
+                    "is_weekend": 1.0 if is_weekend else 0.0,
+                }
+                tft_preds = self.tft_engine.predict_peak_load_quantiles(city=city, features=tft_feat)
+                if mode == "challenger":
+                    peak_load_mw = tft_preds["h24"]["q50"]
+                    quantiles_load = tft_preds["h24"]
+                elif mode == "ensemble":
+                    peak_load_mw = round(0.65 * peak_load_mw + 0.35 * tft_preds["h24"]["q50"], 1)
+                    quantiles_load = {
+                        "q10": round(0.65 * quantiles_load["q10"] + 0.35 * tft_preds["h24"]["q10"], 1),
+                        "q50": peak_load_mw,
+                        "q90": round(0.65 * quantiles_load["q90"] + 0.35 * tft_preds["h24"]["q90"], 1),
+                    }
+            except Exception as e:
+                logger.warning(f"TFT challenger inference fallback: {e}")
 
         # 4. Unmet Supply Stress / Load Shedding Probability (0.0 to 1.0)
         raw_prob = max(0.02, (stress_ratio - 1.0) * 1.6 + (0.22 if trop_night else 0.0) + (0.25 if t_max >= 42.0 else 0.0))
@@ -205,6 +251,8 @@ class PowerGridEngine:
                 "status": grid_status,
                 "spinning_reserves_required": deficit_prob >= 0.20,
             },
+            "engine_mode": engine_mode,
+            "tft_sequence_quantiles": tft_preds,
             "advisories": advisories or ["Regional grid operating within standard dispatch reserves."],
             "operational_restrictions": restrictions or ["No grid-mandated load shedding active."],
         }
@@ -226,6 +274,7 @@ class PowerGridEngine:
         is_weekend: bool = False,
         is_holiday: bool = False,
         forecast_horizon_hours: int = 24,
+        engine_mode: str = "champion",
         **kwargs: Any,
     ) -> Dict[str, Any]:
         """Alias for evaluate_grid_stress with positional/named parameter flexibility."""
@@ -245,5 +294,6 @@ class PowerGridEngine:
             is_weekend=is_weekend,
             is_holiday=is_holiday,
             forecast_horizon_hours=forecast_horizon_hours,
+            engine_mode=engine_mode,
             **kwargs,
         )

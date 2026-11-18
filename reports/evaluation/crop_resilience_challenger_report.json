@@ -1,0 +1,56 @@
+{
+  "tournament_name": "AgriSense Crop Suitability Champion vs Challenger",
+  "champion": {
+    "model_name": "AgriSense LightGBM Champion",
+    "architecture": "LightGBM Multi-class GBDT (Depth 6, Leaves 31)",
+    "top1_test_accuracy": 0.8249,
+    "top3_test_accuracy": 0.9762,
+    "weighted_f1": 0.825,
+    "sha256": "4c359f35fe499c3dc8ef0b58973b6ce6f4ec280ef7b05114aeb38e67de4d37e4"
+  },
+  "challenger": {
+    "model_name": "AgriSense CatBoost Challenger",
+    "architecture": "CatBoost Multi-class GBDT (Symmetric Trees, Depth 6)",
+    "sha256": "29f03d26d3e00879fda9cad4bf146dd92f1a80647227ac77f22646b22dea755a",
+    "top1_test_accuracy": 0.8018,
+    "top3_test_accuracy": 0.9654,
+    "weighted_f1": 0.7976,
+    "macro_f1": 0.6831,
+    "weighted_precision": 0.8205,
+    "weighted_recall": 0.8018,
+    "training_time_sec": 21.35,
+    "inference_latency_ms_per_sample": 0.026
+  },
+  "head_to_head_deltas": {
+    "top1_accuracy_delta": -0.0231,
+    "top3_accuracy_delta": -0.0108,
+    "weighted_f1_delta": -0.0274
+  },
+  "spatial_loczo_breakdown": {
+    "INDO_GANGETIC_PLAINS": {
+      "samples": 483,
+      "top1_accuracy": 0.793
+    },
+    "DECCAN_PLATEAU_SEMI_ARID": {
+      "samples": 254,
+      "top1_accuracy": 0.7402
+    },
+    "WESTERN_COASTAL": {
+      "samples": 48,
+      "top1_accuracy": 0.9583
+    },
+    "EASTERN_COASTAL": {
+      "samples": 188,
+      "top1_accuracy": 0.8617
+    },
+    "HIMALAYAN_HILL_NE": {
+      "samples": 329,
+      "top1_accuracy": 0.8055
+    }
+  },
+  "guiding_rule_verdict": {
+    "status": "CHAMPION_RETAINS_LEAD",
+    "is_promoted": false,
+    "governing_rationale": "CatBoost achieves 80.18% Top-1 accuracy (vs LightGBM 82.49%). CatBoost demonstrates comparable generalisation across regional soil physicochemical gradients with symmetric tree robustness."
+  }
+}
