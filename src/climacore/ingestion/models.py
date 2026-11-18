@@ -62,6 +62,9 @@ class LiveDayPrediction(BaseModel):
     forecast_metrics: Dict[str, Any]
     compound_risk: Dict[str, Any]
     personas: Dict[str, Any]
+    flagship_intelligence: Optional[Dict[str, Any]] = Field(
+        default=None, description="Detailed evaluations from the 5 Flagship Engines (Flood, Heat, Power, Agri, Air)"
+    )
 
 
 class LivePredictionResult(BaseModel):

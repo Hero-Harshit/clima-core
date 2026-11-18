@@ -26,6 +26,11 @@ from climacore.ingestion.models import (
     LivePredictionResult,
 )
 from climacore.models.compound_risk.scoring import CompoundRiskEngine
+from climacore.models.flood_risk.engine import FloodRiskEngine
+from climacore.models.heat_risk.engine import HeatRiskEngine
+from climacore.models.electricity_grid.engine import PowerGridEngine
+from climacore.models.crop_resilience.engine import AgriSenseEngine
+from climacore.models.air_quality.engine import AirQualityEngine
 from climacore.personas.models import PersonaInput
 from climacore.personas.engine import evaluate_persona, evaluate_all_personas
 
@@ -41,6 +46,11 @@ class LiveForecastEngine:
         self.client = LiveIngestionClient()
         self.cache = LiveForecastCache(default_ttl_seconds=cache_ttl_seconds)
         self.compound_engine = CompoundRiskEngine()
+        self.flood_engine = FloodRiskEngine()
+        self.heat_engine = HeatRiskEngine()
+        self.power_engine = PowerGridEngine()
+        self.agri_engine = AgriSenseEngine()
+        self.aq_engine = AirQualityEngine()
         self._cyclone_profiles: Optional[Dict[str, Dict[str, Any]]] = None
         self._hap_triggers: Optional[Dict[str, Dict[str, Any]]] = None
         self._population_profiles: Optional[Dict[str, Dict[str, Any]]] = None
@@ -210,54 +220,84 @@ class LiveForecastEngine:
                 peak_date = day.date
                 peak_category = compound_res["severity_category"]
 
-            # 2. Build Persona Input Payload
-            # Calibrated IFI Flood Disaster Probability
-            rain_val = day.precipitation_mm
-            smdi_val = day.soil_moisture_deficit_index if day.soil_moisture_deficit_index is not None else 0.0
-            drain_canals = infra_info.get("drainage_canals_15km", 50) or 50
-            base_p = min(1.0, (rain_val / 80.0) * 0.60 + max(0.0, smdi_val * 0.15))
-            if drain_canals < 20 and rain_val > 30.0:
-                base_p = min(1.0, base_p + 0.15)
-            flood_disaster_risk = round(float(base_p), 3)
+            # 2. Flagship Models Execution (Phase 3 Architecture)
+            # Flagship 1: FloodRisk V2
+            flood_eval = self.flood_engine.evaluate_flood_risk(
+                city=forecast.city,
+                rainfall_mm=day.precipitation_mm,
+                rain_rolling_3d=round(day.precipitation_mm * 1.5, 1),
+                smdi=day.soil_moisture_deficit_index,
+                drainage_canals_15km=infra_info.get("drainage_canals_15km"),
+                arterial_roads_15km=infra_info.get("arterial_roads_15km"),
+                bridges_15km=infra_info.get("bridges_15km"),
+                population_15km=pop_info.get("population_15km"),
+                dense_cluster_pop_15km=pop_info.get("dense_cluster_pop_15km"),
+                hospitals_15km=infra_info.get("hospitals_15km"),
+                schools_15km=infra_info.get("schools_15km"),
+            )
+            flood_disaster_risk = flood_eval["hydrological_hazard_probability"]
 
-            # SAGE Crop Growth Stage calculation
-            active_crop_stage = "Vegetative / Active Growing Season"
-            if cal_info:
-                ks = cal_info.get("kharif_sowing_doy_range")
-                ka = cal_info.get("kharif_anthesis_doy_range")
-                kh = cal_info.get("kharif_harvest_doy_range")
-                rs = cal_info.get("rabi_sowing_doy_range")
-                ra = cal_info.get("rabi_anthesis_doy_range")
-                rh = cal_info.get("rabi_harvest_doy_range")
-                k_crop = cal_info.get("kharif_crop", "Kharif Crop")
-                r_crop = cal_info.get("rabi_crop", "Rabi Crop")
+            # Flagship 2: HeatRisk V3
+            heat_eval = self.heat_engine.evaluate_heat_risk(
+                city=forecast.city,
+                temp_max_c=day.temp_max,
+                temp_min_c=day.temp_min,
+                relative_humidity=day.relative_humidity,
+                dense_cluster_pop=pop_info.get("dense_cluster_pop_15km"),
+            )
 
-                if ks and ks[0] <= doy <= ks[1]:
-                    active_crop_stage = f"Kharif {k_crop}: Sowing Window"
-                elif ka and ka[0] <= doy <= ka[1]:
-                    active_crop_stage = f"Kharif {k_crop}: Anthesis / Flowering"
-                elif kh and kh[0] <= doy <= kh[1]:
-                    active_crop_stage = f"Kharif {k_crop}: Harvesting Window"
-                elif rs and rs[0] <= doy <= rs[1]:
-                    active_crop_stage = f"Rabi {r_crop}: Sowing Window"
-                elif ra and ra[0] <= doy <= ra[1]:
-                    active_crop_stage = f"Rabi {r_crop}: Anthesis / Flowering"
-                elif rh and rh[0] <= doy <= rh[1]:
-                    active_crop_stage = f"Rabi {r_crop}: Harvesting Window"
+            # Flagship 3: PowerGrid V2
+            power_eval = self.power_engine.evaluate_power_grid_risk(
+                temp_max_c=day.temp_max,
+                temp_min_c=day.temp_min,
+                state=forecast.state,
+                population_15km=pop_info.get("population_15km"),
+                thermal_plants_within_100km=t_plants,
+                thermal_capacity_100km_mw=t_cap_mw,
+            )
+            grid_stress_ratio = power_eval["cooling_demand_surge_ratio"]
+            peak_grid_load = power_eval["peak_load_mw"]
+            grid_deficit_prob = power_eval["unmet_supply_stress_probability"]
 
-            # Heat-to-Electricity Grid Stress calculation
+            # Flagship 4: AgriSense V2
             t_mean = (day.temp_max + day.temp_min) / 2.0
-            cdd = max(0.0, t_mean - 18.0)
-            is_trop_night = day.temp_min >= 28.0
-            grid_stress_ratio = round(1.0 + max(0.0, (day.temp_max - 30.0) * 0.02) + (0.12 if is_trop_night else 0.0), 3)
-            base_pop = pop_info.get("population_15km", 3_500_000) or 3_500_000
-            peak_grid_load = round(float(np.clip(base_pop * 0.0018 * grid_stress_ratio, 1500.0, 28000.0)), 1)
-            raw_deficit_prob = max(0.03, (grid_stress_ratio - 1.0) * 1.6 + (0.22 if is_trop_night else 0.0) + (0.25 if day.temp_max >= 42.0 else 0.0))
-            grid_deficit_prob = round(float(min(0.96, raw_deficit_prob)), 3)
+            agri_eval = self.agri_engine.evaluate_agrisense(
+                city=forecast.city,
+                doy=doy,
+                temp_max_c=day.temp_max,
+                temp_min_c=day.temp_min,
+                temp_mean_c=t_mean,
+                rainfall_mm=day.precipitation_mm,
+                humidity_pct=day.relative_humidity,
+                solar_mj_m2_day=day.solar_radiation,
+                et0_evapotranspiration=day.et0_evapotranspiration,
+                elevation_m=forecast.latitude,
+                smdi=day.soil_moisture_deficit_index,
+                flash_drought_alert=day.flash_drought_alert or 0,
+            )
+            active_crop_stage = agri_eval["phenology"]["growth_stage"]
+
+            # Flagship 5: AirQuality V2
+            aq_eval = self.aq_engine.evaluate_air_quality(
+                city=forecast.city,
+                pm2_5_ug_m3=day.pm2_5,
+                pm10_ug_m3=day.pm10,
+                no2_ug_m3=day.no2,
+                wind_speed_kmh=day.wind_speed_kmh,
+                temp_max_c=day.temp_max,
+                temp_min_c=day.temp_min,
+                precipitation_mm=day.precipitation_mm,
+                month=dt.month,
+                day_of_year=doy,
+                population_15km=pop_info.get("population_15km"),
+                schools_15km=infra_info.get("schools_15km"),
+                hospitals_15km=infra_info.get("hospitals_15km"),
+            )
 
             # Elevation-aware psychrometric wet-bulb
             from climacore.analytics.psychrometrics import calculate_elevation_aware_wet_bulb
             elev_wb = calculate_elevation_aware_wet_bulb(day.temp_max, day.relative_humidity, city=forecast.city)
+            effective_wet_bulb = day.wet_bulb_temp_c if day.wet_bulb_temp_c is not None else elev_wb["wet_bulb_temp_c"]
             effective_wet_bulb = day.wet_bulb_temp_c if day.wet_bulb_temp_c is not None else elev_wb["wet_bulb_temp_c"]
 
             p_input = PersonaInput(
@@ -303,7 +343,7 @@ class LiveForecastEngine:
                 critical_infrastructure_density_km2=infra_info.get("critical_infrastructure_density_km2"),
                 drainage_arterial_ratio=infra_info.get("drainage_arterial_ratio"),
                 flood_disaster_risk_prob=flood_disaster_risk,
-                antecedent_rain_3d_mm=round(rain_val * 1.5, 1),
+                antecedent_rain_3d_mm=round(day.precipitation_mm * 1.5, 1),
                 agricultural_district=crop_info.get("agricultural_district"),
                 dominant_kharif_crop=crop_info.get("dominant_kharif_crop"),
                 dominant_rabi_crop=crop_info.get("dominant_rabi_crop"),
@@ -351,6 +391,13 @@ class LiveForecastEngine:
                     },
                     compound_risk=compound_res,
                     personas=p_results,
+                    flagship_intelligence={
+                        "flood_risk": flood_eval,
+                        "heat_risk": heat_eval,
+                        "power_grid": power_eval,
+                        "agrisense": agri_eval,
+                        "air_quality": aq_eval,
+                    },
                 )
             )
 
