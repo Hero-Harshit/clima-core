@@ -68,7 +68,14 @@ def evaluate_water_persona(inp: PersonaInput) -> PersonaResult:
     if rain_mm >= 60.0:
         restrictions.append("STP Operators: Prepare storm diversion bypass gates to protect biological secondary aeration basins.")
 
-    # 5. Composite Water Utility Risk Score (0 to 100)
+    # 5. India Flood Inventory (IFI) Calibrated Flood Disaster Model
+    flood_prob = inp.flood_disaster_risk_prob
+    if flood_prob is not None and flood_prob >= 0.35:
+        drain_risk = max(drain_risk, 92.0)
+        restrictions.append(f"IFI DISASTER ALERT: District flood disaster probability elevated to {flood_prob:.1%}. Pre-deploy emergency de-watering pump sets to low-lying drainage basins.")
+        advisories.append("Hydrological saturation warning: Multi-day antecedent precipitation and drainage canal constraints indicate severe inundation vulnerability.")
+
+    # 6. Composite Water Utility Risk Score (0 to 100)
     score = round(float(
         0.50 * drain_risk +
         0.30 * supply_risk +
@@ -92,7 +99,8 @@ def evaluate_water_persona(inp: PersonaInput) -> PersonaResult:
         "effective_surface_runoff": f"{effective_runoff_volume:.1f} mm",
         "reservoir_live_storage": f"{res_pct:.1f} % ({supply_status})",
         "groundwater_depth_mbgl": f"{gw_depth:.1f} mbgl",
-        "drain_desilting_alert": "MANDATORY_IMMEDIATE_ACTION" if drain_risk >= 60.0 else "ROUTINE_SCHEDULE"
+        "drain_desilting_alert": "MANDATORY_IMMEDIATE_ACTION" if drain_risk >= 60.0 else "ROUTINE_SCHEDULE",
+        "ifi_flood_disaster_risk": f"{flood_prob:.1%}" if flood_prob is not None else "N/A",
     }
 
     if inp.drainage_canals_15km is not None and inp.drainage_canals_15km > 0:

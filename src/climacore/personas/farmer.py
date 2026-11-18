@@ -68,6 +68,20 @@ def evaluate_farmer_persona(inp: PersonaInput) -> PersonaResult:
         advisories.append(f"Mild soil moisture stress (SMDI: {smdi:+.2f}). Monitor soil drying rate.")
         drought_stress_score = 40.0
 
+    # 6. AgriSense District Soil & Crop-Specific Advisory
+    if inp.dominant_rabi_crop and "wheat" in inp.dominant_rabi_crop.lower() and inp.temp_max >= 32.0:
+        dist_name = inp.agricultural_district or inp.city
+        advisories.append(f"AgriSense Wheat Alert: Daytime temperature ({inp.temp_max:.1f}°C) in {dist_name} hinterland exceeds optimal grain-filling threshold. Apply evening sprinkler irrigation to mitigate terminal heat shock.")
+    elif inp.dominant_kharif_crop and "rice" in inp.dominant_kharif_crop.lower() and water_balance <= -4.0:
+        dist_name = inp.agricultural_district or inp.city
+        advisories.append(f"AgriSense Paddy Alert: Deficit of {abs(water_balance):.1f} mm/day in {dist_name} kharif belt requires maintaining 2-3 cm standing water depth in nursery/puddled fields.")
+
+    if inp.soil_water_holding_capacity is not None and inp.soil_water_holding_capacity < 18.0 and water_balance < -2.0:
+        advisories.append(f"Soil Texture Warning: Porous soil profile (WHC: {inp.soil_water_holding_capacity:.1f}) causes accelerated root-zone moisture depletion. Prioritize mulch and micro-irrigation.")
+
+    if inp.soil_ph is not None and (inp.soil_ph > 8.0 or inp.soil_ph < 6.0):
+        advisories.append(f"Soil Chemistry Note: District soil pH is {inp.soil_ph:.1f}. Monitor micronutrient bioavailability (zinc/iron) during moisture stress.")
+
     # Compute Overall Agro Impact Score (0 to 100)
     # High score means severe agro-climatic stress (drought, extreme storm, or heat shock)
     deficit_score = min(100.0, max(0.0, (-water_balance / 8.0) * 100.0)) if water_balance < 0 else min(100.0, (water_balance / 40.0) * 100.0)
@@ -105,6 +119,10 @@ def evaluate_farmer_persona(inp: PersonaInput) -> PersonaResult:
             "terminal_heat_shock": terminal_heat_shock,
             "evapotranspiration_et0": f"{et0:.1f} mm/day",
             "forecasted_rain": f"{rain:.1f} mm",
+            "agricultural_hinterland": f"{inp.agricultural_district or inp.city} ({inp.dominant_crop_overall or 'Dominant'})",
+            "dominant_cropping_pattern": f"Kharif: {inp.dominant_kharif_crop or 'Rice'} | Rabi: {inp.dominant_rabi_crop or 'Wheat'}",
+            "soil_fertility_and_whc": f"Fertility: {inp.soil_fertility_index or 'N/A'}/100 | WHC: {inp.soil_water_holding_capacity or 'N/A'}",
+            "soil_ph": f"{inp.soil_ph:.1f}" if inp.soil_ph is not None else "N/A",
         },
         advisories=advisories or ["Normal agro-meteorological conditions. Standard farm operations may proceed."],
         operational_restrictions=restrictions or ["No farming restrictions active."],

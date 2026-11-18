@@ -113,6 +113,13 @@ def evaluate_city_official_persona(inp: PersonaInput) -> PersonaResult:
                 f"Emergency civil protection: Pre-designate {inp.schools_15km:,} educational facilities as secondary relief & air-conditioned cooling shelters."
             )
 
+    if inp.flood_disaster_risk_prob is not None:
+        metrics["ifi_flood_disaster_probability"] = f"{inp.flood_disaster_risk_prob:.1%}"
+        if inp.flood_disaster_risk_prob >= 0.35:
+            advisories.append(
+                f"IFI Flood Disaster Intelligence: Calibrated disaster risk elevated to {inp.flood_disaster_risk_prob:.1%}. Activate DDMA flood control cells across low-lying riverine and stormwater basins."
+            )
+
     return PersonaResult(
         persona_id="city_official_infrastructure",
         persona_title="City Official, Municipal Planner & Disaster Management",

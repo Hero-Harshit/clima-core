@@ -1,0 +1,60 @@
+{
+  "dataset_name": "AgriSense District Soil & Crop Profiles (50 Cities)",
+  "source": "India District Crop Dataset 1997-2015, SoilGrids 250m, ICAR / ICRISAT",
+  "output_parquet": "D:\\Proper Codebases\\Clima Core\\data\\processed\\agriculture\\city_district_crop_profiles.parquet",
+  "output_json": "D:\\Proper Codebases\\Clima Core\\data\\processed\\agriculture\\city_district_crop_profiles.json",
+  "sha256": "086272e331912ba872a7f335c5e3c09c6e714a4c6efbd621f87a5a65176a6b3e",
+  "total_cities": 50,
+  "columns": [
+    "city",
+    "agricultural_district",
+    "agricultural_state",
+    "distance_to_hinterland_km",
+    "match_type",
+    "soil_ph",
+    "soil_total_nitrogen_g_kg",
+    "soil_organic_carbon_g_kg",
+    "soil_cec_cmol_kg",
+    "soil_clay_pct",
+    "soil_sand_pct",
+    "soil_silt_pct",
+    "soil_bulk_density_kg_dm3",
+    "soil_water_holding_capacity",
+    "soil_fertility_index",
+    "dominant_kharif_crop",
+    "dominant_rabi_crop",
+    "dominant_crop_overall",
+    "top_crops",
+    "district_normal_annual_rainfall_mm",
+    "district_normal_annual_temp_c"
+  ],
+  "summary": {
+    "top_kharif_crops": {
+      "Rice": 27,
+      "Maize": 5,
+      "Bajra": 5,
+      "Soyabean": 3,
+      "Jute": 2,
+      "Cotton(lint)": 2,
+      "Ragi": 1,
+      "Arhar/Tur": 1,
+      "Jowar": 1,
+      "Groundnut": 1,
+      "Sesamum": 1,
+      "Small millets": 1
+    },
+    "top_rabi_crops": {
+      "Wheat": 26,
+      "Rapeseed &Mustard": 8,
+      "Gram": 5,
+      "Rice": 4,
+      "Horse-gram": 3,
+      "Jowar": 1,
+      "Khesari": 1,
+      "Urad": 1,
+      "Black pepper": 1
+    },
+    "mean_fertility_index": 74.59,
+    "mean_water_holding_capacity": 22.87
+  }
+}

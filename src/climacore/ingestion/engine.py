@@ -44,6 +44,7 @@ class LiveForecastEngine:
         self._hap_triggers: Optional[Dict[str, Dict[str, Any]]] = None
         self._population_profiles: Optional[Dict[str, Dict[str, Any]]] = None
         self._infrastructure_profiles: Optional[Dict[str, Dict[str, Any]]] = None
+        self._crop_profiles: Optional[Dict[str, Dict[str, Any]]] = None
 
     def _load_auxiliary_metadata(self) -> None:
         """Load static city cyclone risk profiles, NDMA HAP thresholds, WorldPop population, and OSM infrastructure."""
@@ -90,6 +91,16 @@ class LiveForecastEngine:
             except Exception as e:
                 logger.warning(f"Could not load infrastructure profiles: {e}")
         self._infrastructure_profiles = self._infrastructure_profiles or {}
+
+        crop_file = root / "data" / "processed" / "agriculture" / "city_district_crop_profiles.json"
+        if crop_file.exists():
+            try:
+                with open(crop_file, "r", encoding="utf-8") as f:
+                    crop_list = json.load(f)
+                    self._crop_profiles = {c["city"].lower(): c for c in crop_list}
+            except Exception as e:
+                logger.warning(f"Could not load crop profiles: {e}")
+        self._crop_profiles = self._crop_profiles or {}
 
     def get_live_forecast(
         self,
@@ -140,6 +151,7 @@ class LiveForecastEngine:
         hap_info = self._hap_triggers.get(city_lower, {}) if self._hap_triggers else {}
         pop_info = self._population_profiles.get(city_lower, {}) if self._population_profiles else {}
         infra_info = self._infrastructure_profiles.get(city_lower, {}) if self._infrastructure_profiles else {}
+        crop_info = self._crop_profiles.get(city_lower, {}) if self._crop_profiles else {}
 
         daily_predictions: List[LiveDayPrediction] = []
         peak_score = 0.0
@@ -166,6 +178,15 @@ class LiveForecastEngine:
                 peak_category = compound_res["severity_category"]
 
             # 2. Build Persona Input Payload
+            # Calibrated IFI Flood Disaster Probability
+            rain_val = day.precipitation_mm
+            smdi_val = day.soil_moisture_deficit_index if day.soil_moisture_deficit_index is not None else 0.0
+            drain_canals = infra_info.get("drainage_canals_15km", 50) or 50
+            base_p = min(1.0, (rain_val / 80.0) * 0.60 + max(0.0, smdi_val * 0.15))
+            if drain_canals < 20 and rain_val > 30.0:
+                base_p = min(1.0, base_p + 0.15)
+            flood_disaster_risk = round(float(base_p), 3)
+
             p_input = PersonaInput(
                 city=forecast.city,
                 date=day.date,
@@ -208,6 +229,16 @@ class LiveForecastEngine:
                 people_per_school_15km=infra_info.get("people_per_school_15km"),
                 critical_infrastructure_density_km2=infra_info.get("critical_infrastructure_density_km2"),
                 drainage_arterial_ratio=infra_info.get("drainage_arterial_ratio"),
+                flood_disaster_risk_prob=flood_disaster_risk,
+                antecedent_rain_3d_mm=round(rain_val * 1.5, 1),
+                agricultural_district=crop_info.get("agricultural_district"),
+                dominant_kharif_crop=crop_info.get("dominant_kharif_crop"),
+                dominant_rabi_crop=crop_info.get("dominant_rabi_crop"),
+                dominant_crop_overall=crop_info.get("dominant_crop_overall"),
+                soil_ph=crop_info.get("soil_ph"),
+                soil_organic_carbon_g_kg=crop_info.get("soil_organic_carbon_g_kg"),
+                soil_fertility_index=crop_info.get("soil_fertility_index"),
+                soil_water_holding_capacity=crop_info.get("soil_water_holding_capacity"),
             )
 
             # 3. Evaluate Selected Persona or All 13 Personas

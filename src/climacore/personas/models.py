@@ -55,6 +55,19 @@ class PersonaInput(BaseModel):
     people_per_school_15km: Optional[int] = Field(default=None, description="Ratio of 15km population per school facility")
     critical_infrastructure_density_km2: Optional[float] = Field(default=None, description="Density of critical facilities per km2")
     drainage_arterial_ratio: Optional[float] = Field(default=None, description="Drainage canals to arterial roads ratio")
+    # India Flood Inventory (IFI) Supervised Risk
+    flood_disaster_risk_prob: Optional[float] = Field(default=None, description="Calibrated probability of district flood disaster from IFI model (0.0 to 1.0)")
+    antecedent_rain_3d_mm: Optional[float] = Field(default=None, description="Rolling 3-day accumulated precipitation in mm")
+    antecedent_rain_7d_mm: Optional[float] = Field(default=None, description="Rolling 7-day accumulated precipitation in mm")
+    # AgriSense District Crop & Soil Resilience
+    agricultural_district: Optional[str] = Field(default=None, description="Matched agricultural hinterland district")
+    dominant_kharif_crop: Optional[str] = Field(default=None, description="Dominant Kharif season crop")
+    dominant_rabi_crop: Optional[str] = Field(default=None, description="Dominant Rabi season crop")
+    dominant_crop_overall: Optional[str] = Field(default=None, description="Overall dominant crop in the agricultural hinterland")
+    soil_ph: Optional[float] = Field(default=None, description="Soil pH in 0-30cm root zone")
+    soil_organic_carbon_g_kg: Optional[float] = Field(default=None, description="Soil organic carbon in g/kg")
+    soil_fertility_index: Optional[float] = Field(default=None, description="Composite soil fertility score (0-100)")
+    soil_water_holding_capacity: Optional[float] = Field(default=None, description="Estimated soil water holding capacity index")
 
 
 class PersonaResult(BaseModel):
