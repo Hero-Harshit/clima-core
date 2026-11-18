@@ -1,0 +1,39 @@
+{
+  "dataset_name": "India Daily Electricity Demand & Grid Heat Stress (2013-2020)",
+  "source": "University of Reading / Newcastle University (Zenodo), POSOCO, CEA, ERA5-Land",
+  "output_file": "D:\\Proper Codebases\\Clima Core\\data\\processed\\electricity\\city_daily_electricity_stress.parquet",
+  "sha256": "1d0ca0ef4d341effb78734085cf87f96937eb3e5f58ac51cb262f797b42beb9d",
+  "total_records": 150547,
+  "total_cities": 49,
+  "date_range": [
+    "2013-01-01 00:00:00",
+    "2020-12-31 00:00:00"
+  ],
+  "mean_energy_met_mu": 160.1,
+  "mean_peak_met_mw": 7586.21,
+  "total_deficit_days": 38467,
+  "features": [
+    "temp_min_c",
+    "temp_mean_c",
+    "temp_max_c",
+    "dewpoint_mean_c",
+    "utci_mean_c",
+    "utci_max_c",
+    "cooling_degree_days",
+    "heating_degree_days",
+    "is_tropical_night",
+    "diurnal_temp_range",
+    "solar_radiation_mj",
+    "cloud_cover_pct",
+    "day_of_week",
+    "is_weekend",
+    "month",
+    "population_15km",
+    "dense_cluster_pop_15km"
+  ],
+  "targets": [
+    "grid_stress_ratio",
+    "peak_met_mw",
+    "is_grid_deficit_day"
+  ]
+}

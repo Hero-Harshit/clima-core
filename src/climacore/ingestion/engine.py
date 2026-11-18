@@ -10,6 +10,7 @@ from datetime import datetime
 import json
 from pathlib import Path
 from typing import Dict, Any, List, Optional
+import numpy as np
 import pandas as pd
 
 from climacore.common.logging import get_logger
@@ -45,6 +46,8 @@ class LiveForecastEngine:
         self._population_profiles: Optional[Dict[str, Dict[str, Any]]] = None
         self._infrastructure_profiles: Optional[Dict[str, Dict[str, Any]]] = None
         self._crop_profiles: Optional[Dict[str, Dict[str, Any]]] = None
+        self._crop_calendars: Optional[Dict[str, Dict[str, Any]]] = None
+        self._power_plant_profiles: Optional[Dict[str, Dict[str, Any]]] = None
 
     def _load_auxiliary_metadata(self) -> None:
         """Load static city cyclone risk profiles, NDMA HAP thresholds, WorldPop population, and OSM infrastructure."""
@@ -102,6 +105,26 @@ class LiveForecastEngine:
                 logger.warning(f"Could not load crop profiles: {e}")
         self._crop_profiles = self._crop_profiles or {}
 
+        cal_file = root / "data" / "processed" / "agriculture" / "city_crop_calendars.json"
+        if cal_file.exists():
+            try:
+                with open(cal_file, "r", encoding="utf-8") as f:
+                    cal_list = json.load(f)
+                    self._crop_calendars = {c["city"].lower(): c for c in cal_list}
+            except Exception as e:
+                logger.warning(f"Could not load crop calendar profiles: {e}")
+        self._crop_calendars = self._crop_calendars or {}
+
+        pp_file = root / "data" / "processed" / "power_plants" / "city_power_plant_exposure.json"
+        if pp_file.exists():
+            try:
+                with open(pp_file, "r", encoding="utf-8") as f:
+                    pp_list = json.load(f)
+                    self._power_plant_profiles = {c["city"].lower(): c for c in pp_list}
+            except Exception as e:
+                logger.warning(f"Could not load power plant profiles: {e}")
+        self._power_plant_profiles = self._power_plant_profiles or {}
+
     def get_live_forecast(
         self,
         query: str,
@@ -152,6 +175,15 @@ class LiveForecastEngine:
         pop_info = self._population_profiles.get(city_lower, {}) if self._population_profiles else {}
         infra_info = self._infrastructure_profiles.get(city_lower, {}) if self._infrastructure_profiles else {}
         crop_info = self._crop_profiles.get(city_lower, {}) if self._crop_profiles else {}
+        cal_info = self._crop_calendars.get(city_lower, {}) if self._crop_calendars else {}
+        pp_info = self._power_plant_profiles.get(city_lower, {}) if self._power_plant_profiles else {}
+
+        # CHETNA Power Plant Exposure
+        t_plants = pp_info.get("plants_within_100km")
+        t_cap_mw = pp_info.get("thermal_capacity_100km_mw")
+        closest_plant = None
+        if pp_info.get("closest_plant_name"):
+            closest_plant = f"{pp_info['closest_plant_name']} ({pp_info.get('closest_plant_capacity_mw', 0):,.0f} MW, {pp_info.get('closest_plant_distance_km', 0):.1f}km {pp_info.get('closest_plant_direction', '')})"
 
         daily_predictions: List[LiveDayPrediction] = []
         peak_score = 0.0
@@ -161,6 +193,7 @@ class LiveForecastEngine:
         for day in forecast.days[:days]:
             dt = datetime.strptime(day.date, "%Y-%m-%d")
             day_name = DAY_NAMES[dt.weekday()]
+            doy = dt.timetuple().tm_yday
 
             # 1. Compound Risk Calculation
             compound_res = self.compound_engine.calculate_single(
@@ -186,6 +219,41 @@ class LiveForecastEngine:
             if drain_canals < 20 and rain_val > 30.0:
                 base_p = min(1.0, base_p + 0.15)
             flood_disaster_risk = round(float(base_p), 3)
+
+            # SAGE Crop Growth Stage calculation
+            active_crop_stage = "Vegetative / Active Growing Season"
+            if cal_info:
+                ks = cal_info.get("kharif_sowing_doy_range")
+                ka = cal_info.get("kharif_anthesis_doy_range")
+                kh = cal_info.get("kharif_harvest_doy_range")
+                rs = cal_info.get("rabi_sowing_doy_range")
+                ra = cal_info.get("rabi_anthesis_doy_range")
+                rh = cal_info.get("rabi_harvest_doy_range")
+                k_crop = cal_info.get("kharif_crop", "Kharif Crop")
+                r_crop = cal_info.get("rabi_crop", "Rabi Crop")
+
+                if ks and ks[0] <= doy <= ks[1]:
+                    active_crop_stage = f"Kharif {k_crop}: Sowing Window"
+                elif ka and ka[0] <= doy <= ka[1]:
+                    active_crop_stage = f"Kharif {k_crop}: Anthesis / Flowering"
+                elif kh and kh[0] <= doy <= kh[1]:
+                    active_crop_stage = f"Kharif {k_crop}: Harvesting Window"
+                elif rs and rs[0] <= doy <= rs[1]:
+                    active_crop_stage = f"Rabi {r_crop}: Sowing Window"
+                elif ra and ra[0] <= doy <= ra[1]:
+                    active_crop_stage = f"Rabi {r_crop}: Anthesis / Flowering"
+                elif rh and rh[0] <= doy <= rh[1]:
+                    active_crop_stage = f"Rabi {r_crop}: Harvesting Window"
+
+            # Heat-to-Electricity Grid Stress calculation
+            t_mean = (day.temp_max + day.temp_min) / 2.0
+            cdd = max(0.0, t_mean - 18.0)
+            is_trop_night = day.temp_min >= 28.0
+            grid_stress_ratio = round(1.0 + max(0.0, (day.temp_max - 30.0) * 0.02) + (0.12 if is_trop_night else 0.0), 3)
+            base_pop = pop_info.get("population_15km", 3_500_000) or 3_500_000
+            peak_grid_load = round(float(np.clip(base_pop * 0.0018 * grid_stress_ratio, 1500.0, 28000.0)), 1)
+            raw_deficit_prob = max(0.03, (grid_stress_ratio - 1.0) * 1.6 + (0.22 if is_trop_night else 0.0) + (0.25 if day.temp_max >= 42.0 else 0.0))
+            grid_deficit_prob = round(float(min(0.96, raw_deficit_prob)), 3)
 
             p_input = PersonaInput(
                 city=forecast.city,
@@ -239,6 +307,16 @@ class LiveForecastEngine:
                 soil_organic_carbon_g_kg=crop_info.get("soil_organic_carbon_g_kg"),
                 soil_fertility_index=crop_info.get("soil_fertility_index"),
                 soil_water_holding_capacity=crop_info.get("soil_water_holding_capacity"),
+                electricity_grid_stress_ratio=grid_stress_ratio,
+                peak_grid_load_mw=peak_grid_load,
+                grid_blackout_hazard_prob=grid_deficit_prob,
+                crop_growth_stage=active_crop_stage,
+                crop_sowing_dates=cal_info.get("kharif_sowing_dates") or cal_info.get("rabi_sowing_dates"),
+                crop_anthesis_dates=cal_info.get("kharif_anthesis_dates") or cal_info.get("rabi_anthesis_dates"),
+                crop_harvest_dates=cal_info.get("kharif_harvest_dates") or cal_info.get("rabi_harvest_dates"),
+                thermal_plants_within_100km=t_plants,
+                thermal_capacity_100km_mw=t_cap_mw,
+                closest_thermal_plant=closest_plant,
             )
 
             # 3. Evaluate Selected Persona or All 13 Personas

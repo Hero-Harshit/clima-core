@@ -76,6 +76,14 @@ def evaluate_farmer_persona(inp: PersonaInput) -> PersonaResult:
         dist_name = inp.agricultural_district or inp.city
         advisories.append(f"AgriSense Paddy Alert: Deficit of {abs(water_balance):.1f} mm/day in {dist_name} kharif belt requires maintaining 2-3 cm standing water depth in nursery/puddled fields.")
 
+    # 7. SAGE Phenological Growth-Stage Specific Alerts
+    if inp.crop_growth_stage:
+        stage_lower = inp.crop_growth_stage.lower()
+        if ("anthesis" in stage_lower or "flowering" in stage_lower) and inp.temp_max >= 32.0:
+            advisories.append(f"PHENOLOGICAL ANTHESIS ALERT: Crop is in sensitive Flowering/Anthesis window ({inp.crop_anthesis_dates or 'Active Stage'}). Thermal exposure ({inp.temp_max:.1f}°C) increases floret abortion risk.")
+        elif ("harvest" in stage_lower or "maturity" in stage_lower) and rain >= 10.0:
+            restrictions.append("HARVEST LODGING WARNING: In-field crop maturity overlaps with rainfall. Accelerate combine harvesting to prevent field lodging and mold.")
+
     if inp.soil_water_holding_capacity is not None and inp.soil_water_holding_capacity < 18.0 and water_balance < -2.0:
         advisories.append(f"Soil Texture Warning: Porous soil profile (WHC: {inp.soil_water_holding_capacity:.1f}) causes accelerated root-zone moisture depletion. Prioritize mulch and micro-irrigation.")
 

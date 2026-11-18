@@ -27,14 +27,24 @@ def evaluate_city_official_persona(inp: PersonaInput) -> PersonaResult:
 
     # Grid Stress Score (0 to 100)
     grid_stress = min(100.0, (cdd / 16.0) * 70.0 + (30.0 if is_tropical_night else 0.0))
+    if inp.grid_blackout_hazard_prob is not None:
+        grid_stress = max(grid_stress, float(inp.grid_blackout_hazard_prob * 100.0))
 
-    if grid_stress >= 75.0 or (is_tropical_night and t_max >= 43.0):
+    if grid_stress >= 75.0 or (is_tropical_night and t_max >= 43.0) or (inp.grid_blackout_hazard_prob is not None and inp.grid_blackout_hazard_prob >= 0.40):
         grid_status = "CRITICAL_BLACKOUT_RISK"
         restrictions.append("State DISCOMs: mandate spinning reserve power buffers; schedule non-emergency industrial load shedding.")
         advisories.append("Pre-position mobile diesel generator units at major government hospitals and water pump stations.")
-    elif grid_stress >= 50.0:
+        if inp.grid_blackout_hazard_prob is not None and inp.peak_grid_load_mw is not None:
+            advisories.append(
+                f"Peak Grid Stress Alert: Deficit hazard is {inp.grid_blackout_hazard_prob:.1%} with state peak load projected at {inp.peak_grid_load_mw:,.0f} MW."
+            )
+    elif grid_stress >= 50.0 or (inp.grid_blackout_hazard_prob is not None and inp.grid_blackout_hazard_prob >= 0.20):
         grid_status = "ELEVATED_COOLING_SURGE"
         advisories.append("Peak residential air conditioning surge anticipated between 1:30 PM - 5:00 PM and 10:00 PM - 2:00 AM.")
+        if inp.peak_grid_load_mw is not None:
+            advisories.append(
+                f"State peak electricity load projected at {inp.peak_grid_load_mw:,.0f} MW (surge ratio: {inp.electricity_grid_stress_ratio or 1.0:.2f}x baseline)."
+            )
     else:
         grid_status = "STABLE"
 
@@ -71,7 +81,7 @@ def evaluate_city_official_persona(inp: PersonaInput) -> PersonaResult:
     # Overall Municipal Risk Score (0 to 100)
     muni_score = round(float(0.40 * grid_stress + 0.35 * min(100.0, (pm25 / 200.0) * 100.0) + 0.25 * min(100.0, (precip / 50.0) * 100.0)), 1)
 
-    if muni_score >= 75.0 or tier == "STAGE_3_FULL_EMERGENCY":
+    if muni_score >= 75.0 or tier == "STAGE_3_FULL_EMERGENCY" or grid_status == "CRITICAL_BLACKOUT_RISK":
         status = "CRITICAL"
     elif muni_score >= 50.0 or tier == "STAGE_2_TARGETED_DEPLOYMENT":
         status = "HIGH_ALERT"
@@ -118,6 +128,22 @@ def evaluate_city_official_persona(inp: PersonaInput) -> PersonaResult:
         if inp.flood_disaster_risk_prob >= 0.35:
             advisories.append(
                 f"IFI Flood Disaster Intelligence: Calibrated disaster risk elevated to {inp.flood_disaster_risk_prob:.1%}. Activate DDMA flood control cells across low-lying riverine and stormwater basins."
+            )
+
+    if inp.peak_grid_load_mw is not None:
+        metrics["projected_peak_grid_load_mw"] = f"{inp.peak_grid_load_mw:,.0f} MW"
+    if inp.electricity_grid_stress_ratio is not None:
+        metrics["grid_stress_demand_ratio"] = f"{inp.electricity_grid_stress_ratio:.2f}x"
+    if inp.grid_blackout_hazard_prob is not None:
+        metrics["grid_deficit_hazard_probability"] = f"{inp.grid_blackout_hazard_prob:.1%}"
+
+    if inp.thermal_capacity_100km_mw is not None:
+        metrics["regional_thermal_power_capacity_100km"] = f"{inp.thermal_capacity_100km_mw:,.0f} MW ({inp.thermal_plants_within_100km or 0} plants)"
+        if inp.closest_thermal_plant:
+            metrics["closest_thermal_plant"] = inp.closest_thermal_plant
+        if inp.thermal_capacity_100km_mw >= 10000.0 and pm25 >= 150.0:
+            advisories.append(
+                f"Regional Airshed Alert: Dense thermal generation ({inp.thermal_capacity_100km_mw:,.0f} MW within 100km) under elevated particulate load requires intensified flue-gas desulfurization (FGD) verification."
             )
 
     return PersonaResult(

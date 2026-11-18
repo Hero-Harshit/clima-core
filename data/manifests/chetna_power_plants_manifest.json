@@ -1,0 +1,62 @@
+{
+  "dataset_name": "CHETNA Thermal Power Plant Industrial Exposure (50 Cities)",
+  "source": "IIT Bombay & LSCE, CEA, Global Energy Monitor",
+  "output_parquet": "D:\\Proper Codebases\\Clima Core\\data\\processed\\power_plants\\city_power_plant_exposure.parquet",
+  "output_json": "D:\\Proper Codebases\\Clima Core\\data\\processed\\power_plants\\city_power_plant_exposure.json",
+  "sha256": "6b585f43ab944f733cce7ab6a2f09dddd8c123f0ed85f86ec77618720fc61173",
+  "total_cities": 50,
+  "total_power_plants_cataloged": 769,
+  "total_generating_capacity_mw": 634253.0,
+  "summary": {
+    "top_airshed_capacities_100km": [
+      {
+        "city": "Nagpur",
+        "thermal_capacity_100km_mw": 29092.0,
+        "plants_within_100km": 20,
+        "annual_co2_100km_million_tons": 64.755
+      },
+      {
+        "city": "Delhi",
+        "thermal_capacity_100km_mw": 18470.0,
+        "plants_within_100km": 20,
+        "annual_co2_100km_million_tons": 34.174
+      },
+      {
+        "city": "Ranchi",
+        "thermal_capacity_100km_mw": 17260.0,
+        "plants_within_100km": 18,
+        "annual_co2_100km_million_tons": 21.843
+      },
+      {
+        "city": "Shimla",
+        "thermal_capacity_100km_mw": 14254.0,
+        "plants_within_100km": 26,
+        "annual_co2_100km_million_tons": 17.245
+      },
+      {
+        "city": "Varanasi",
+        "thermal_capacity_100km_mw": 13111.0,
+        "plants_within_100km": 9,
+        "annual_co2_100km_million_tons": 7.46
+      },
+      {
+        "city": "Surat",
+        "thermal_capacity_100km_mw": 13080.0,
+        "plants_within_100km": 18,
+        "annual_co2_100km_million_tons": 15.648
+      },
+      {
+        "city": "Puducherry",
+        "thermal_capacity_100km_mw": 12749.0,
+        "plants_within_100km": 24,
+        "annual_co2_100km_million_tons": 39.482
+      },
+      {
+        "city": "Vijayawada",
+        "thermal_capacity_100km_mw": 12202.0,
+        "plants_within_100km": 8,
+        "annual_co2_100km_million_tons": 15.183
+      }
+    ]
+  }
+}

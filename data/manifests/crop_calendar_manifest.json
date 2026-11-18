@@ -1,0 +1,38 @@
+{
+  "dataset_name": "SAGE India Crop Calendar & Phenology Schedule (50 Cities)",
+  "source": "SAGE Research Group / University of Wisconsin",
+  "output_parquet": "D:\\Proper Codebases\\Clima Core\\data\\processed\\agriculture\\city_crop_calendars.parquet",
+  "output_json": "D:\\Proper Codebases\\Clima Core\\data\\processed\\agriculture\\city_crop_calendars.json",
+  "sha256": "41600f49ff7de586d40ea01b36a5784735a260a13929923fe4d9beb878a9a160",
+  "total_cities": 50,
+  "columns": [
+    "city",
+    "agro_calendar_state",
+    "kharif_crop",
+    "kharif_sowing_doy_range",
+    "kharif_sowing_dates",
+    "kharif_anthesis_doy_range",
+    "kharif_anthesis_dates",
+    "kharif_harvest_doy_range",
+    "kharif_harvest_dates",
+    "kharif_duration_days",
+    "rabi_crop",
+    "rabi_sowing_doy_range",
+    "rabi_sowing_dates",
+    "rabi_anthesis_doy_range",
+    "rabi_anthesis_dates",
+    "rabi_harvest_doy_range",
+    "rabi_harvest_dates",
+    "rabi_duration_days"
+  ],
+  "summary": {
+    "cities_evaluated": 50,
+    "sample_wheat_anthesis_dates": {
+      "Agartala": "Nov 28 - Dec 20",
+      "Agra": "Jan 04 - Feb 03",
+      "Ahmedabad": "Dec 30 - Jan 30",
+      "Amritsar": "Jan 04 - Feb 03",
+      "Bengaluru": "Dec 12 - Jan 14"
+    }
+  }
+}

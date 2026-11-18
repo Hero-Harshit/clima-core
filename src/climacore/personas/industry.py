@@ -81,12 +81,24 @@ def evaluate_industry_persona(inp: PersonaInput) -> PersonaResult:
         tank_status = "SAFE_THERMAL_RANGE"
         tank_risk = 10.0
 
-    # 4. Composite Industrial Operational Risk Score (0 to 100)
+    # 4. Regional Power Plant Airshed & Grid Stability Hazards
+    if inp.grid_blackout_hazard_prob is not None and inp.grid_blackout_hazard_prob >= 0.30:
+        advisories.append(
+            f"Regional Grid Stability Warning: DISCOM deficit hazard {inp.grid_blackout_hazard_prob:.1%}. Ensure captive co-generation synchronized and prepare for emergency frequency/voltage drops."
+        )
+    if inp.thermal_capacity_100km_mw is not None and inp.thermal_capacity_100km_mw >= 10000.0 and dispersion_risk >= 80.0:
+        advisories.append(
+            f"Point-Source Emission Confluence: Regional thermal capacity ({inp.thermal_capacity_100km_mw:,.0f} MW within 100km) combined with severe inversion mandates proactive flue-gas throttling."
+        )
+
+    # 5. Composite Industrial Operational Risk Score (0 to 100)
     score = round(float(
         0.40 * (cooling_loss_pct * 2.5) +
         0.35 * dispersion_risk +
         0.25 * tank_risk
     ), 1)
+    if inp.grid_blackout_hazard_prob is not None:
+        score = max(score, round(float(inp.grid_blackout_hazard_prob * 100.0 * 0.8), 1))
     score = min(100.0, score)
 
     if score >= 70.0 or twb >= 30.5:
@@ -98,21 +110,28 @@ def evaluate_industry_persona(inp: PersonaInput) -> PersonaResult:
     else:
         status = "NORMAL"
 
+    metrics: Dict[str, Any] = {
+        "wet_bulb_temperature": f"{twb:.1f} °C",
+        "cooling_tower_status": cooling_status,
+        "estimated_cooling_efficiency_loss": f"{cooling_loss_pct:.1f} %",
+        "stack_plume_dispersion": dispersion_status,
+        "chemical_tank_farm_hazard": tank_status,
+        "cpcb_cems_regulatory_risk": "HIGH_VIOLATION_PROBABILITY" if dispersion_risk >= 80.0 else "STANDARD_MONITORING",
+        "ambient_tmax": f"{t_max:.1f} °C",
+        "surface_wind_speed": f"{wind_kmh:.1f} km/h"
+    }
+
+    if inp.thermal_capacity_100km_mw is not None:
+        metrics["regional_thermal_capacity_100km"] = f"{inp.thermal_capacity_100km_mw:,.0f} MW ({inp.thermal_plants_within_100km or 0} plants)"
+        if inp.closest_thermal_plant:
+            metrics["closest_thermal_plant"] = inp.closest_thermal_plant
+
     return PersonaResult(
         persona_id="industry_manufacturing",
         persona_title="Heavy Industry, Manufacturing & Thermal Power Generation",
         status_level=status,
         impact_score=score,
-        key_metrics={
-            "wet_bulb_temperature": f"{twb:.1f} °C",
-            "cooling_tower_status": cooling_status,
-            "estimated_cooling_efficiency_loss": f"{cooling_loss_pct:.1f} %",
-            "stack_plume_dispersion": dispersion_status,
-            "chemical_tank_farm_hazard": tank_status,
-            "cpcb_cems_regulatory_risk": "HIGH_VIOLATION_PROBABILITY" if dispersion_risk >= 80.0 else "STANDARD_MONITORING",
-            "ambient_tmax": f"{t_max:.1f} °C",
-            "surface_wind_speed": f"{wind_kmh:.1f} km/h"
-        },
+        key_metrics=metrics,
         advisories=advisories or ["Industrial plant thermodynamic and environmental systems operating within baseline parameters."],
         operational_restrictions=restrictions or ["No environmental or industrial production curtailment mandates active."]
     )

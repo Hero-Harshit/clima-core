@@ -68,6 +68,19 @@ class PersonaInput(BaseModel):
     soil_organic_carbon_g_kg: Optional[float] = Field(default=None, description="Soil organic carbon in g/kg")
     soil_fertility_index: Optional[float] = Field(default=None, description="Composite soil fertility score (0-100)")
     soil_water_holding_capacity: Optional[float] = Field(default=None, description="Estimated soil water holding capacity index")
+    # Heat-to-Electricity Grid Stress Intelligence
+    electricity_grid_stress_ratio: Optional[float] = Field(default=None, description="Forecasted electricity demand surge ratio relative to baseline (e.g. 1.25 = +25%)")
+    peak_grid_load_mw: Optional[float] = Field(default=None, description="Forecasted peak state electricity load in Megawatts (MW)")
+    grid_blackout_hazard_prob: Optional[float] = Field(default=None, description="Probability of peak unmet supply / load shedding under thermal stress (0.0 to 1.0)")
+    # SAGE Crop Calendar & Phenological Growth-Stages
+    crop_growth_stage: Optional[str] = Field(default=None, description="Current estimated crop phenological stage (e.g. Anthesis/Flowering, Vegetative, Harvesting)")
+    crop_sowing_dates: Optional[str] = Field(default=None, description="Normal sowing window dates from SAGE calendar")
+    crop_anthesis_dates: Optional[str] = Field(default=None, description="Critical flowering/anthesis window dates from SAGE calendar")
+    crop_harvest_dates: Optional[str] = Field(default=None, description="Normal harvesting window dates from SAGE calendar")
+    # CHETNA Industrial Power Plants Point-Source Exposure
+    thermal_plants_within_100km: Optional[int] = Field(default=None, description="Number of thermal power plants within 100km regional airshed")
+    thermal_capacity_100km_mw: Optional[float] = Field(default=None, description="Total generating capacity of thermal power plants within 100km in MW")
+    closest_thermal_plant: Optional[str] = Field(default=None, description="Name, distance, and bearing of closest major thermal power plant")
 
 
 class PersonaResult(BaseModel):
