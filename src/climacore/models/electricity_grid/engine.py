@@ -64,14 +64,17 @@ class PowerGridEngine:
 
     def evaluate_grid_stress(
         self,
-        city: str,
-        state: str,
-        temp_max_c: float,
-        temp_min_c: float,
+        city: str = "",
+        state: str = "All India",
+        temp_max_c: float = 35.0,
+        temp_min_c: float = 25.0,
         cooling_degree_days: Optional[float] = None,
         is_tropical_night: Optional[bool] = None,
         population_15km: Optional[int] = None,
         utci_max_c: Optional[float] = None,
+        thermal_plants_within_100km: Optional[int] = None,
+        thermal_capacity_100km_mw: Optional[float] = None,
+        **kwargs: Any,
     ) -> Dict[str, Any]:
         """
         Evaluate peak grid load demand surge and unmet supply stress probability.
@@ -118,13 +121,47 @@ class PowerGridEngine:
         return {
             "city": city,
             "state": state,
+            "peak_load_mw": peak_load_mw,
             "projected_peak_grid_load_mw": peak_load_mw,
+            "cooling_demand_surge_ratio": stress_ratio,
             "electricity_grid_stress_ratio": stress_ratio,
             "unmet_supply_stress_probability": deficit_prob,
             "grid_stability_tier": grid_status,
+            "cooling_degree_days_18c": round(cdd, 1),
             "cooling_degree_days_cdd": round(cdd, 1),
             "tropical_night_failure_risk": trop_night,
+            "discom_advisory": {
+                "status": grid_status,
+                "spinning_reserves_required": deficit_prob >= 0.20,
+            },
             "advisories": advisories or ["Regional grid operating within standard dispatch reserves."],
             "operational_restrictions": restrictions or ["No grid-mandated load shedding active."],
         }
+
+    def evaluate_power_grid_risk(
+        self,
+        temp_max_c: float,
+        temp_min_c: float,
+        state: str = "All India",
+        city: str = "",
+        population_15km: Optional[int] = None,
+        thermal_plants_within_100km: Optional[int] = None,
+        thermal_capacity_100km_mw: Optional[float] = None,
+        cooling_degree_days: Optional[float] = None,
+        is_tropical_night: Optional[bool] = None,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        """Alias for evaluate_grid_stress with positional/named parameter flexibility."""
+        return self.evaluate_grid_stress(
+            city=city,
+            state=state,
+            temp_max_c=temp_max_c,
+            temp_min_c=temp_min_c,
+            cooling_degree_days=cooling_degree_days,
+            is_tropical_night=is_tropical_night,
+            population_15km=population_15km,
+            thermal_plants_within_100km=thermal_plants_within_100km,
+            thermal_capacity_100km_mw=thermal_capacity_100km_mw,
+            **kwargs,
+        )
 

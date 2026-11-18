@@ -137,6 +137,7 @@ class FloodRiskEngine:
         return {
             "city": city,
             "hazard_probability": hazard_prob,
+            "hydrological_hazard_probability": hazard_prob,
             "hazard_tier": hazard_tier,
             "impact_severity_index": impact_score,
             "antecedent_hydrology": {

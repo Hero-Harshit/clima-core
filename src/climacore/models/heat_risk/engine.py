@@ -60,9 +60,13 @@ class HeatRiskEngine:
         temp_max_c: float,
         temp_min_c: float,
         relative_humidity_pct: float = 45.0,
+        relative_humidity: Optional[float] = None,
         wind_speed_kmh: float = 12.0,
         solar_radiation_mj: float = 22.0,
         urban_density_tier: str = "Metro Core",
+        dense_cluster_pop: Optional[int] = None,
+        uhi_delta_c: Optional[float] = None,
+        **kwargs: Any,
     ) -> Dict[str, Any]:
         """
         Evaluate comprehensive dual diurnal heat stress, UHI anomaly, and return period.
@@ -70,7 +74,8 @@ class HeatRiskEngine:
         t_max = float(temp_max_c)
         t_min = float(temp_min_c)
         t_mean = (t_max + t_min) / 2.0
-        rh = float(np.clip(relative_humidity_pct, 1.0, 99.0))
+        eff_rh = relative_humidity if relative_humidity is not None else relative_humidity_pct
+        rh = float(np.clip(eff_rh, 1.0, 99.0))
 
         # 1. Cooling Degree Days (CDD, 18.0°C engineering base)
         cdd = max(0.0, t_mean - 18.0)
@@ -86,14 +91,19 @@ class HeatRiskEngine:
 
         # 4. Oke Urban Heat Island (UHI) Microclimate Delta
         # High building fraction and nocturnal thermal inertia amplify city center temperature
-        uhi_base = 1.2
-        if is_tropical_night:
-            uhi_base += 1.0
-        if wind_speed_kmh <= 8.0:
-            uhi_base += 0.8
-        if "core" in urban_density_tier.lower() or "dense" in urban_density_tier.lower():
-            uhi_base += 0.6
-        uhi_delta = round(float(min(5.5, uhi_base)), 1)
+        if uhi_delta_c is not None:
+            uhi_delta = round(float(uhi_delta_c), 1)
+        else:
+            uhi_base = 1.2
+            if is_tropical_night:
+                uhi_base += 1.0
+            if wind_speed_kmh <= 8.0:
+                uhi_base += 0.8
+            if "core" in urban_density_tier.lower() or "dense" in urban_density_tier.lower():
+                uhi_base += 0.6
+            if dense_cluster_pop and dense_cluster_pop > 500_000:
+                uhi_base += 0.5
+            uhi_delta = round(float(min(5.5, uhi_base)), 1)
 
         # 5. GEV 74-Year Return Period Evaluation (Extreme Value Theory)
         evt_res = evaluate_return_period(city, t_max, hazard_type="temperature")
@@ -135,6 +145,26 @@ class HeatRiskEngine:
             "uhi_temperature_delta_c": uhi_delta,
             "heatwave_alert_tier": alert_tier,
             "heatwave_severity_code": severity_code,
+            "daytime": {
+                "temp_max_c": t_max,
+                "apparent_temp_c": apparent_t,
+            },
+            "nighttime": {
+                "temp_min_c": t_min,
+                "tropical_night_failure": is_tropical_night,
+                "transformer_cooling_impaired": is_tropical_night,
+            },
+            "uhi_microclimate": {
+                "uhi_excess_c": uhi_delta,
+            },
+            "imd_heatwave": {
+                "alert_tier": alert_tier,
+                "severity_code": severity_code,
+            },
+            "gev_return_period": {
+                "return_period_years": t_years,
+                "rarity_tier": rarity_tier,
+            },
             "extreme_value_gev": {
                 "return_period_years": t_years,
                 "rarity_tier": rarity_tier,
