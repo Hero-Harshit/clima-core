@@ -1,0 +1,31 @@
+{
+  "evaluation_name": "FloodRisk_Champion_vs_SCS_CN_Challenger",
+  "test_holdout": "date >= 2022-01-01",
+  "test_sample_count": 36500,
+  "champion": {
+    "model_path": "artifacts\\models\\flood_risk\\v0.1.0\\flood_risk_v1.booster",
+    "feature_count": 20,
+    "metrics": {
+      "roc_auc": 0.7931,
+      "pr_auc": 0.1134,
+      "brier_score": 0.1373
+    }
+  },
+  "challenger": {
+    "model_path": "artifacts\\models\\flood_risk\\v0.1.0\\flood_risk_challenger_scs_cn.booster",
+    "feature_count": 23,
+    "added_scs_features": [
+      "scs_runoff_depth_mm",
+      "scs_runoff_coefficient",
+      "scs_potential_retention_s"
+    ],
+    "metrics": {
+      "roc_auc": 0.8011,
+      "pr_auc": 0.1224,
+      "brier_score": 0.1354
+    },
+    "roc_auc_gain": 0.008,
+    "pr_auc_gain": 0.009
+  },
+  "disclaimer": "SCS-CN runoff features represent hydrological excess rainfall depth and retention. Urban stormwater pipe backwater and drain overflow are not modeled."
+}
