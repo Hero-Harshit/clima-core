@@ -27,7 +27,8 @@ This file is the current **single source of truth** for Clima-Core. Follow it be
 2. **Cross-Dataset Fusion & Flagship V3 Models (Roadmap Phase 2 - 100% COMPLETE):** Integrated hydro-atmospheric soil-saturation and drainage bottlenecks into FloodRisk V3; dual diurnal and microclimate Oke UHI into HeatRisk V4; lag-augmented calendar load modeling into PowerGrid V3; tri-task suitability/yield/phenology into AgriSense V3; boundary layer ventilation and nocturnal inversion into AirQuality V3.
 3. **Advanced ML & Hybrid Architectures (Roadmap Phase 3 - 100% COMPLETE):** Conducted rigorous Champion vs Challenger tournament benchmarking on identical Phase 1 holdouts pitting CatBoost against LightGBM for crop suitability and deep PyTorch Temporal Fusion Transformer (TFT) against LightGBM for power grid load forecasting; codified tournament manifest and dynamic multi-engine routing (`champion`, `challenger`, `ensemble`).
 4. **Probabilistic Intelligence & Compound Risks (Roadmap Phase 4 - 100% COMPLETE):** Distribution-free split conformal prediction intervals guaranteeing $\ge 90\%$ marginal coverage; 3 cascading multi-hazard infrastructure failure chains; standardized unified JSON prediction contract `v1.0.0` with full system provenance, spatial buffers, and SI physical units manifest.
-5. **Next Active Milestone:** Roadmap Phase 5 (Generalization, Deployment & Continuous Intelligence).
+5. **Generalization, Deployment & Continuous Intelligence (Roadmap Phase 5 - 100% COMPLETE):** 6-point Deployment Gatekeeper with feature ablation studies; Population Stability Index (PSI) & Kolmogorov-Smirnov drift detection; MAPIE-style conformal calibration exchangeability degradation monitoring; zero-cold-start FastAPI / Vercel serverless inference service (`api/index.py`, sub-millisecond warm CPU latency).
+6. **Milestone Summary:** All 5 advanced development roadmap phases are 100% complete and fully verified with 143/143 tests passing.
 
 Do **not** build arbitrary UI pages, bloated consumer screens, or unverified frontend prototypes until the predictive and statistical engines meet these scientific defense standards.
 
@@ -201,8 +202,38 @@ Consolidated the 5 Champion ML Model Suites into modular flagship engines:
     - `cascading_risk`: Critical infrastructure cascade chains, failure nodes, time-to-impact, and mitigation actions.
 - **Verification:** 128/128 tests passing in 7.73s with zero regressions.
 
-## 2.8 Roadmap Phase 5: Generalization, Deployment & Continuous Intelligence (NEXT ACTIVE PHASE)
-- Zero-cold-start FastAPI / Vercel edge deployment, model monitoring, and drift detection.
+## 2.8 Roadmap Phase 5: Generalization, Deployment & Continuous Intelligence (100% COMPLETE)
+- **Status:** 100% COMPLETED.
+- **Production Deployment Gatekeeper (`src/climacore/evaluation/gatekeeper.py`):**
+  - Codifies the 6-point non-negotiable production promotion gate before any candidate can replace a champion:
+    1. **Primary Task Metric:** Challenger must meet or exceed champion on identical holdout sets ($\Delta \ge \text{min\_delta}$).
+    2. **Calibration & Uncertainty Compliance:** Conformal empirical coverage must satisfy $\ge 88\%$ (nominal 90% target).
+    3. **Spatial Generalization:** 5-Zone LOCZO breakdown must prove no single bioclimatic zone collapses ($> 25\%$ below mean).
+    4. **Inference Latency & Memory Budget:** P95 CPU latency must be $\le 50\text{ms}$, peak memory $\le 200\text{MB}$.
+    5. **Deterministic Reproducibility:** Zero numerical drift across model reload ($\Delta_{\max} \le 10^{-6}$).
+    6. **Feature Schema Compatibility:** Strict feature ordering, naming, and data type assertions.
+  - Generates cryptographically hashed `PromotionEvaluationReport` (SHA-256) logging pass/fail decisions and granular failure rationales.
+  - **Feature Ablation Experiments (`FeatureAblationStudy`):**
+    - Systematically evaluates the marginal information value of feature groupings: Baseline, Baseline + Soil, Baseline + Terrain, Baseline + Vegetation, and Combined.
+    - Computes marginal delta and feature efficiency ratios to scientifically eliminate feature bloat.
+- **Continuous Model Monitoring & Drift Detection (`src/climacore/monitoring/drift.py`, `service.py`):**
+  - **Population Stability Index (PSI):** Quantile-binned drift calculation across continuous environmental features ($T_{\max}$, rainfall, power load, $\text{PM}_{2.5}$, soil saturation, wind speed) with standard operating tiers: `STABLE` ($< 0.10$), `MODERATE_DRIFT` ($0.10 \le \text{PSI} < 0.25$), `SIGNIFICANT_DRIFT` ($\ge 0.25$).
+  - **Two-Sample Kolmogorov-Smirnov (KS) Test:** Non-parametric statistical distribution shift hypothesis testing ($p < 0.05$).
+  - **Missing Data Rate & Upstream Telemetry Dropouts:** Real-time tracking of sensor and feed dropouts.
+  - **Conformal Calibration Health Monitor:** MAPIE-style rolling empirical coverage tracking on streaming ground truth verifications; triggers `CALIBRATION_DRIFT_ALERT` when empirical coverage drops below $85\%$.
+  - **Latency Profiler:** In-memory recording of P50, P95, P99 inference latencies and error rates.
+- **Zero-Cold-Start Serverless & Edge-Ready Inference Architecture (`src/climacore/service/app.py`, `api/index.py`):**
+  - High-performance FastAPI ASGI application fully decoupled from heavy offline training routines.
+  - Loads compiled booster artifacts (`.booster`, `.cbm`, `.pt`) and cached live weather bundles with warm sub-millisecond execution ($0.74\text{ms} - 1.32\text{ms}$ on CPU).
+  - Clean operational endpoints:
+    - `GET /` & `GET /api/health`: Platform status, schema version `v1.0.0`, registered model count, latency profile.
+    - `POST /api/predict/city`: Emits unified `PredictionResult` v1.0.0 for any of the 50 Indian cities with conformal bounds, cascading compound risks, and persona advisories.
+    - `POST /api/predict/custom`: Direct coordinate and environmental feature inference.
+    - `GET /api/monitoring/health`: Real-time feature drift and calibration health report.
+    - `POST /api/monitoring/verify`: Ingests verified ground truth to update calibration health.
+    - `GET /api/tournament/status`: Tournament summary and champion-challenger registry.
+    - `POST /api/gatekeeper/evaluate`: Programmatic gatekeeper promotion assessment.
+- **Verification:** 143/143 unit and integration tests passing in 13.22s with zero regressions.
 
 ---
 

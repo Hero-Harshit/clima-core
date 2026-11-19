@@ -1,0 +1,316 @@
+"""
+FastAPI Serverless & Edge-Ready Inference Application for Clima-Core (Phase 5).
+Optimized for Vercel Python Functions and local production serving.
+Decoupled architecture: Loads only lightweight booster artifacts and cached bundles.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime, timezone
+import time
+from typing import Dict, List, Any, Optional
+import numpy as np
+from pydantic import BaseModel, Field
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
+
+from climacore.common.logging import get_logger
+from climacore.ingestion.engine import LiveForecastEngine
+from climacore.ingestion.models import LivePredictionResult
+from climacore.monitoring.service import get_monitoring_service
+from climacore.evaluation.gatekeeper import DeploymentGatekeeper, GatekeeperCriteria
+from climacore.registry import get_model_registry, get_dataset_registry
+
+logger = get_logger("climacore.service.app")
+
+# Global engine cache (singleton for warm container reuse)
+_LIVE_ENGINE: Optional[LiveForecastEngine] = None
+STARTUP_TIME = datetime.now(timezone.utc)
+
+
+def get_live_engine() -> LiveForecastEngine:
+    global _LIVE_ENGINE
+    if _LIVE_ENGINE is None:
+        _LIVE_ENGINE = LiveForecastEngine()
+    return _LIVE_ENGINE
+
+
+# Pydantic Schemas for Request & Response
+class CityPredictionRequest(BaseModel):
+    city: str = Field(..., description="Indian city name (e.g. Delhi, Mumbai, Kolkata, Bengaluru)")
+    requested_personas: Optional[List[str]] = Field(default=None, description="Optional list of personas to evaluate")
+    force_refresh: bool = Field(default=False, description="Bypass local cache and query upstream APIs")
+
+
+class CustomPredictionRequest(BaseModel):
+    city_name: str = Field(default="Custom Coordinates")
+    latitude: float = Field(default=28.61, ge=-90.0, le=90.0)
+    longitude: float = Field(default=77.23, ge=-180.0, le=180.0)
+    temperature_max: float = Field(..., description="Daily maximum temperature in degC")
+    temperature_min: float = Field(..., description="Daily minimum temperature in degC")
+    rainfall_mm: float = Field(..., ge=0.0, description="Daily precipitation in mm")
+    relative_humidity: float = Field(default=50.0, ge=0.0, le=100.0)
+    wind_speed_kmh: float = Field(default=12.0, ge=0.0)
+    pm25: float = Field(default=60.0, ge=0.0, description="PM2.5 in ug/m3")
+    pm10: Optional[float] = Field(default=None, ge=0.0)
+    soil_saturation_ratio: float = Field(default=0.40, ge=0.0, le=1.0)
+    requested_personas: Optional[List[str]] = None
+
+
+class VerificationRecordRequest(BaseModel):
+    target_name: str = Field(..., description="Target variable name (e.g. temperature_max, rainfall_mm)")
+    y_true: float = Field(..., description="Actual verifying ground truth observation")
+    interval_lower: float = Field(..., description="Conformal interval lower bound")
+    interval_upper: float = Field(..., description="Conformal interval upper bound")
+
+
+class GatekeeperEvaluationRequest(BaseModel):
+    model_name: str
+    champion_metric: float
+    challenger_metric: float
+    champion_version: str = "v2.0.0"
+    challenger_version: str = "v3.0.0"
+    conformal_coverage: Optional[float] = None
+    loczo_zone_scores: Optional[Dict[str, float]] = None
+    expected_features: Optional[List[str]] = None
+    candidate_features: Optional[List[str]] = None
+    higher_is_better: bool = True
+    min_metric_delta: float = 0.0
+
+
+def create_app() -> FastAPI:
+    """Application factory for Clima-Core FastAPI service."""
+    app = FastAPI(
+        title="Clima-Core Environmental Intelligence API",
+        description="Unified Multi-Source Probabilistic Environmental Risk API for Indian Cities",
+        version="1.0.0",
+        docs_url="/docs",
+        redoc_url="/redoc",
+    )
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    @app.get("/")
+    def root() -> Dict[str, Any]:
+        return {
+            "platform": "Clima-Core Environmental Intelligence System",
+            "version": "1.0.0",
+            "schema_contract": "v1.0.0",
+            "status": "OPERATIONAL",
+            "docs": "/docs",
+            "endpoints": [
+                "/api/health",
+                "/api/predict/city",
+                "/api/predict/custom",
+                "/api/monitoring/health",
+                "/api/monitoring/verify",
+                "/api/tournament/status",
+                "/api/gatekeeper/evaluate",
+            ],
+        }
+
+    @app.get("/health")
+    @app.get("/api/health")
+    def health_check() -> Dict[str, Any]:
+        monitor = get_monitoring_service()
+        model_reg = get_model_registry()
+        uptime_sec = (datetime.now(timezone.utc) - STARTUP_TIME).total_seconds()
+
+        return {
+            "status": "HEALTHY",
+            "schema_version": "v1.0.0",
+            "uptime_seconds": round(uptime_sec, 1),
+            "registered_models_count": len(model_reg),
+            "flagship_champions": [
+                "FloodRisk V3 (Hydro-Atmospheric Cascade)",
+                "HeatRisk V4 (Dual Diurnal + Oke UHI + Conformal)",
+                "PowerGrid V3 (Lags + Regressor + Conformal)",
+                "AgriSense V3 (Suitability GBDT + Yield Quantiles + SAGE)",
+                "AirQuality V3 (Ventilation + Nocturnal Inversion)",
+            ],
+            "latency_profile": monitor.latency_profiler.get_summary(),
+        }
+
+    @app.post("/api/predict/city")
+    def predict_city(req: CityPredictionRequest) -> Dict[str, Any]:
+        monitor = get_monitoring_service()
+        t0 = time.perf_counter()
+        try:
+            engine = get_live_engine()
+            persona_arg = req.requested_personas[0] if (req.requested_personas and len(req.requested_personas) == 1) else "all"
+            res = engine.predict(
+                query=req.city,
+                persona=persona_arg,
+                force_refresh=req.force_refresh,
+            )
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=False)
+            return res.model_dump()
+        except Exception as e:
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=True)
+            logger.error(f"Error predicting city {req.city}: {e}")
+            raise HTTPException(status_code=500, detail=f"Prediction failed for city {req.city}: {str(e)}")
+
+    @app.post("/api/predict/custom")
+    def predict_custom(req: CustomPredictionRequest) -> Dict[str, Any]:
+        monitor = get_monitoring_service()
+        t0 = time.perf_counter()
+        try:
+            engine = get_live_engine()
+
+            # Evaluate heat risk
+            heat_res = engine.heat_engine.evaluate_heat_risk(
+                city=req.city_name,
+                temp_max_c=req.temperature_max,
+                temp_min_c=req.temperature_min,
+                relative_humidity_pct=req.relative_humidity,
+                wind_speed_kmh=req.wind_speed_kmh,
+            )
+            # Evaluate flood risk
+            flood_res = engine.flood_engine.evaluate_flood_risk(
+                city=req.city_name,
+                rainfall_mm=req.rainfall_mm,
+                rain_rolling_3d=round(req.rainfall_mm * 1.5, 1),
+                smdi=req.soil_saturation_ratio,
+            )
+            # Evaluate grid risk
+            grid_res = engine.power_engine.evaluate_power_grid_risk(
+                temp_max_c=req.temperature_max,
+                temp_min_c=req.temperature_min,
+                city=req.city_name,
+            )
+            # Evaluate air quality risk
+            air_res = engine.aq_engine.evaluate_air_quality(
+                city=req.city_name,
+                pm2_5_ug_m3=req.pm25,
+                t_max=req.temperature_max,
+                t_min=req.temperature_min,
+                wind_speed_kmh=req.wind_speed_kmh,
+            )
+            # Conformal calibration intervals
+            from climacore.analytics.conformal import (
+                calibrate_temperature_conformal,
+                calibrate_rainfall_conformal,
+                calibrate_power_demand_conformal,
+                calibrate_pm25_conformal,
+            )
+            conf_t = calibrate_temperature_conformal(req.temperature_max)
+            conf_r = calibrate_rainfall_conformal(req.rainfall_mm)
+            conf_p = calibrate_power_demand_conformal(grid_res["peak_load_mw"])
+            conf_a = calibrate_pm25_conformal(req.pm25)
+
+            # Cascading compound risks
+            cascades = engine.cascading_engine.evaluate_cascading_chains(
+                city=req.city_name,
+                temp_max_c=req.temperature_max,
+                temp_min_c=req.temperature_min,
+                rainfall_mm=req.rainfall_mm,
+                pm2_5_ug_m3=req.pm25,
+                is_tropical_night=heat_res.get("is_tropical_night", False),
+                grid_deficit_prob=grid_res.get("unmet_supply_stress_probability", 0.05),
+                flood_hazard_prob=flood_res.get("hydrological_hazard_probability", 0.05),
+                stagnation_flag=air_res.get("atmospheric_physics", {}).get("stagnation_flag", 0),
+            )
+
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=False)
+
+            return {
+                "schema_version": "v1.0.0",
+                "location": {
+                    "city_name": req.city_name,
+                    "latitude": req.latitude,
+                    "longitude": req.longitude,
+                },
+                "evaluated_at_utc": datetime.now(timezone.utc).isoformat(),
+                "predictions": {
+                    "heat_risk": heat_res,
+                    "flood_risk": flood_res,
+                    "power_grid_stress": grid_res,
+                    "air_quality": air_res,
+                },
+                "conformal_bounds": {
+                    "temperature": conf_t,
+                    "rainfall": conf_r,
+                    "power_demand": conf_p,
+                    "pm25": conf_a,
+                },
+                "cascading_risk": cascades,
+                "latency_ms": round(lat_ms, 2),
+            }
+        except Exception as e:
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=True)
+            logger.error(f"Error in custom prediction: {e}")
+            raise HTTPException(status_code=500, detail=f"Custom prediction failed: {str(e)}")
+
+    @app.get("/api/monitoring/health")
+    def get_monitoring_health() -> Dict[str, Any]:
+        monitor = get_monitoring_service()
+        # Sample check of default baseline features against a normal operational batch
+        np.random.seed(int(time.time()) % 10000)
+        sample_prod = {
+            "temperature_max": np.random.normal(loc=33.0, scale=5.8, size=100),
+            "rainfall_mm": np.random.exponential(scale=11.5, size=100),
+            "peak_grid_load_mw": np.random.normal(loc=12600.0, scale=2400.0, size=100),
+            "pm25_concentration": np.random.lognormal(mean=3.85, sigma=0.75, size=100),
+        }
+        return monitor.evaluate_production_batch(sample_prod)
+
+    @app.post("/api/monitoring/verify")
+    def verify_observation(rec: VerificationRecordRequest) -> Dict[str, Any]:
+        monitor = get_monitoring_service()
+        covered = monitor.calibration_monitor.record_verification(
+            target_name=rec.target_name,
+            y_true=rec.y_true,
+            interval_lower=rec.interval_lower,
+            interval_upper=rec.interval_upper,
+        )
+        return {
+            "recorded": True,
+            "covered": covered,
+            "current_health": monitor.calibration_monitor.get_health_status(),
+        }
+
+    @app.get("/api/tournament/status")
+    def get_tournament_status() -> Dict[str, Any]:
+        from climacore.config.loader import get_project_root
+        import json
+        manifest_file = get_project_root() / "data" / "manifests" / "champion_challenger_tournament.json"
+        if manifest_file.exists():
+            with open(manifest_file, "r", encoding="utf-8") as f:
+                return json.load(f)
+        return {"status": "MANIFEST_NOT_FOUND", "note": "Run tournament suite to generate manifest"}
+
+    @app.post("/api/gatekeeper/evaluate")
+    def evaluate_gatekeeper(req: GatekeeperEvaluationRequest) -> Dict[str, Any]:
+        criteria = GatekeeperCriteria(
+            min_metric_delta=req.min_metric_delta,
+            higher_is_better=req.higher_is_better,
+        )
+        gatekeeper = DeploymentGatekeeper(criteria=criteria)
+        report = gatekeeper.evaluate_promotion(
+            model_name=req.model_name,
+            champion_metric=req.champion_metric,
+            challenger_metric=req.challenger_metric,
+            champion_version=req.champion_version,
+            challenger_version=req.challenger_version,
+            conformal_coverage=req.conformal_coverage,
+            loczo_zone_scores=req.loczo_zone_scores,
+            expected_schema_features=req.expected_features,
+            candidate_features=req.candidate_features,
+        )
+        return report.to_dict()
+
+    return app
+
+
+# Default ASGI application instance
+app = create_app()
