@@ -33,14 +33,15 @@ def test_candidate_families_fitting_and_selection():
     u, v = compute_pseudo_observations(x, y)
     candidates = engine.fit_candidate_families(u, v)
 
-    assert len(candidates) == 3
+    assert len(candidates) == 4
     families = [c.family for c in candidates]
     assert CopulaFamily.GUMBEL in families
     assert CopulaFamily.CLAYTON in families
+    assert CopulaFamily.SURVIVAL_CLAYTON in families
     assert CopulaFamily.FRANK in families
 
     # Sorted by AIC ascending
-    assert candidates[0].aic <= candidates[1].aic <= candidates[2].aic
+    assert candidates[0].aic <= candidates[1].aic <= candidates[2].aic <= candidates[3].aic
     assert candidates[0].theta > 0.0
 
 
@@ -78,4 +79,6 @@ def test_joint_return_periods_properties():
     # 4. Bootstrap 95% CI covers T_AND
     ci_low, ci_high = res.bootstrap_ci_95_t_and
     assert ci_low <= res.t_and_years <= ci_high
+    assert res.event_scope == "annual_maxima_coincidence"
+    assert res.temporal_resolution == "annual"
     assert "Confidence intervals must be considered" in res.scientific_disclaimer

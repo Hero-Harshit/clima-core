@@ -14,7 +14,7 @@ import numpy as np
 
 from climacore.common.logging import get_logger
 from climacore.config.loader import get_project_root
-from climacore.features.groundwater_quality import BIS_STANDARDS
+from climacore.features.groundwater_quality import BIS_STANDARDS, compute_water_quality_index
 
 logger = get_logger("climacore.models.water_quality.engine")
 
@@ -64,6 +64,26 @@ class WaterQualityRiskEngine:
             except Exception as e:
                 logger.warning(f"Could not load WQI regressor: {e}")
 
+    def calculate_exact_wqi_and_exceedances(
+        self,
+        chemical_params: Dict[str, float],
+    ) -> Dict[str, Any]:
+        """Compute exact BIS IS 10500:2012 Weighted Arithmetic WQI and exceedances deterministically."""
+        wqi, category = compute_water_quality_index(chemical_params)
+        exceedances = []
+        for param, val in chemical_params.items():
+            if val is not None and param in BIS_STANDARDS:
+                std = BIS_STANDARDS[param]
+                if "permissible" in std and val > std["permissible"]:
+                    exceedances.append(f"{param} ({val}) exceeds permissible limit ({std['permissible']})")
+                elif "acceptable" in std and val > std["acceptable"]:
+                    exceedances.append(f"{param} ({val}) exceeds acceptable limit ({std['acceptable']})")
+        return {
+            "exact_wqi": wqi,
+            "wqi_category": category,
+            "bis_standard_exceedances": exceedances,
+        }
+
     def evaluate_water_quality(
         self,
         latitude: float,
@@ -82,7 +102,12 @@ class WaterQualityRiskEngine:
     ) -> Dict[str, Any]:
         """
         Evaluate groundwater chemical quality, WQI, and potability hazard.
+        Combines exact deterministic BIS IS 10500:2012 calculations with LightGBM surrogate predictions.
         """
+        has_user_measurements = any(
+            p is not None for p in [ph, electric_conductivity, total_hardness, chloride, sulphate, calcium, magnesium, sodium]
+        )
+
         # Populate missing values with regional aquifer baselines
         v_ph = ph if ph is not None else DEFAULT_AQUIFER_BASELINES["ph"]
         v_ec = electric_conductivity if electric_conductivity is not None else DEFAULT_AQUIFER_BASELINES["electric_conductivity"]
@@ -114,7 +139,7 @@ class WaterQualityRiskEngine:
             v_na,
         ]], dtype=float)
 
-        # 1. Predict Hazard Probability
+        # 1. Predict Hazard Probability via ML Surrogate
         if self.clf_booster is not None:
             hazard_prob = float(self.clf_booster.predict(features)[0])
         else:
@@ -122,13 +147,33 @@ class WaterQualityRiskEngine:
             tds_est = v_ec * 0.64
             hazard_prob = 0.85 if (tds_est > 1500.0 or v_th > 500.0) else 0.40 if tds_est > 500.0 else 0.15
 
-        # 2. Predict WQI Score
+        # 2. Predict WQI Score via ML Surrogate
         if self.reg_booster is not None:
-            pred_wqi = float(self.reg_booster.predict(features)[0])
+            surrogate_pred_wqi = float(self.reg_booster.predict(features)[0])
         else:
-            pred_wqi = float((v_ec * 0.64 / 500.0) * 45.0 + (v_th / 200.0) * 35.0)
+            surrogate_pred_wqi = float((v_ec * 0.64 / 500.0) * 45.0 + (v_th / 200.0) * 35.0)
 
-        pred_wqi = max(10.0, round(pred_wqi, 1))
+        surrogate_pred_wqi = max(10.0, round(surrogate_pred_wqi, 1))
+
+        # 3. Direct Deterministic BIS Calculation
+        active_sample = {
+            "ph": v_ph,
+            "total_dissolved_solids": v_ec * 0.64,
+            "total_hardness": v_th,
+            "chloride": v_cl,
+            "sulphate": v_so4,
+            "calcium": v_ca,
+            "magnesium": v_mg,
+        }
+        exact_wqi, exact_category = compute_water_quality_index(active_sample)
+
+        # If user provided chemical measurements, use exact BIS formula; otherwise use surrogate with regional defaults
+        if has_user_measurements and not np.isnan(exact_wqi):
+            pred_wqi = exact_wqi
+            wqi_calc_mode = "exact_deterministic_formula"
+        else:
+            pred_wqi = surrogate_pred_wqi
+            wqi_calc_mode = "regional_baseline_surrogate"
 
         # Categorize WQI
         if pred_wqi < 25.0:
@@ -147,7 +192,7 @@ class WaterQualityRiskEngine:
             wqi_grade = "UNSUITABLE_FOR_DRINKING"
             potability_status = "Hazardous (Unfit for Human Consumption)"
 
-        # 3. Chemical Exceedance Analysis against BIS IS 10500:2012
+        # 4. Chemical Exceedance Analysis against BIS IS 10500:2012
         tds_est = round(v_ec * 0.64, 1)
         exceedances: List[str] = []
         if tds_est > BIS_STANDARDS["total_dissolved_solids"]["permissible"]:
@@ -166,7 +211,7 @@ class WaterQualityRiskEngine:
         if not (6.5 <= v_ph <= 8.5):
             exceedances.append(f"pH ({v_ph:.1f}) outside safe range (6.5 - 8.5)")
 
-        # 4. Actionable Health & Public Works Advisories
+        # 5. Actionable Health & Public Works Advisories
         advisories: List[str] = []
         if wqi_grade in ["VERY_POOR", "UNSUITABLE_FOR_DRINKING"]:
             advisories.append("MUNICIPAL_ADVISORY: Prohibit direct extraction from shallow borewells for drinking water supply.")
@@ -182,8 +227,17 @@ class WaterQualityRiskEngine:
             "coordinates": {"latitude": latitude, "longitude": longitude},
             "contamination_hazard_probability": round(hazard_prob, 4),
             "predicted_wqi": pred_wqi,
+            "exact_formula_wqi": exact_wqi if not np.isnan(exact_wqi) else None,
+            "surrogate_predicted_wqi": surrogate_pred_wqi,
             "wqi_grade": wqi_grade,
             "potability_status": potability_status,
+            "wqi_calculation_mode": wqi_calc_mode,
+            "is_deterministic_surrogate": True,
+            "surrogate_fidelity_note": (
+                "ML boosters wqi_regressor_v1 and water_hazard_v1 are deterministic surrogates approximating "
+                "the BIS IS 10500:2012 Weighted Arithmetic index from chemical ion concentrations. "
+                "They do not predict future groundwater quality changes or hydrological contaminant transport."
+            ),
             "estimated_parameters": {
                 "ph": round(v_ph, 2),
                 "electric_conductivity_us_cm": round(v_ec, 1),

@@ -39,8 +39,10 @@ class FeatureContribution(BaseModel):
     """Individual feature Shapley value contribution."""
     feature_name: str
     feature_value: float = Field(..., description="Actual input value of the feature")
-    shap_value: float = Field(..., description="Shapley marginal attribution in output space")
-    unit: str = Field(..., description="Physical SI or domain unit of the feature")
+    shap_value: float = Field(..., description="Shapley marginal attribution in model output space")
+    feature_input_unit: str = Field(..., description="Physical SI or domain unit of the input feature")
+    shap_attribution_unit: str = Field(..., description="Unit of the SHAP attribution in model output space (e.g. 'log-odds' or target unit)")
+    unit: str = Field(..., description="Backward-compatible alias for feature_input_unit")
     direction: str = Field(..., description="'amplifies' (increases output) or 'mitigates' (decreases output)")
 
     model_config = {"frozen": True}
@@ -74,7 +76,11 @@ class TreeSHAPExplanation(BaseModel):
         ...,
         description="Absolute deviation: |sum(phi) + phi_0 - f(x)| (must be < 1e-6)"
     )
-    latency_ms: float = Field(..., description="TreeSHAP computation latency in milliseconds")
+    latency_ms: float = Field(..., description="TreeSHAP total computation latency in milliseconds")
+    latency_benchmark_breakdown: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Latency breakdown in ms: cpp_kernel_ms (native LightGBM C++ TreeSHAP) vs python_pipeline_ms"
+    )
     non_causal_disclaimer: str = Field(
         default=(
             "SHAP values quantify statistical observational attributions to the model's prediction "
@@ -199,13 +205,17 @@ class TreeSHAPEngine:
             raise TypeError(f"Unsupported features type: {type(features)}")
 
         # 2. Native LightGBM TreeSHAP execution (pred_contrib=True)
-        # Returns [phi_1, phi_2, ..., phi_M, phi_0]
-        contribs = booster.predict(input_arr, pred_contrib=True)[0]
+        # For single-instance low-latency inference, use single-thread execution to avoid OpenMP sync overhead
+        n_threads = 1 if input_arr.shape[0] == 1 else -1
+        t_kernel_0 = time.perf_counter()
+        contribs = booster.predict(input_arr, pred_contrib=True, num_threads=n_threads)[0]
+        cpp_kernel_ms = (time.perf_counter() - t_kernel_0) * 1000.0
+
         phi = contribs[:-1]
         phi_0 = float(contribs[-1])
 
         # 3. Model prediction f(x)
-        raw_pred = float(booster.predict(input_arr, raw_score=True)[0])
+        raw_pred = float(booster.predict(input_arr, raw_score=True, num_threads=n_threads)[0])
 
         # 4. Strict mathematical additivity verification
         shap_sum = float(np.sum(phi))
@@ -244,6 +254,8 @@ class TreeSHAPEngine:
                     feature_name=f_name,
                     feature_value=round(f_val, 3),
                     shap_value=round(shap_val, 4),
+                    feature_input_unit=f_unit,
+                    shap_attribution_unit=unit_str,
                     unit=f_unit,
                     direction="amplifies",
                 ))
@@ -252,6 +264,8 @@ class TreeSHAPEngine:
                     feature_name=f_name,
                     feature_value=round(f_val, 3),
                     shap_value=round(shap_val, 4),
+                    feature_input_unit=f_unit,
+                    shap_attribution_unit=unit_str,
                     unit=f_unit,
                     direction="mitigates",
                 ))
@@ -260,7 +274,8 @@ class TreeSHAPEngine:
         pos_list.sort(key=lambda x: x.shap_value, reverse=True)
         neg_list.sort(key=lambda x: x.shap_value)
 
-        latency_ms = (time.perf_counter() - t0) * 1000.0
+        total_latency_ms = (time.perf_counter() - t0) * 1000.0
+        python_pipeline_ms = max(0.0, total_latency_ms - cpp_kernel_ms)
 
         return TreeSHAPExplanation(
             model_id=model_id,
@@ -274,5 +289,9 @@ class TreeSHAPEngine:
             top_negative_contributions=neg_list[:top_k],
             all_contributions=all_contribs,
             additivity_error=float(f"{additivity_error:.2e}"),
-            latency_ms=round(latency_ms, 3),
+            latency_ms=round(total_latency_ms, 3),
+            latency_benchmark_breakdown={
+                "cpp_kernel_ms": round(cpp_kernel_ms, 3),
+                "python_pipeline_ms": round(python_pipeline_ms, 3),
+            },
         )

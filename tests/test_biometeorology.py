@@ -118,3 +118,40 @@ def test_persona_dispatches():
     worker_dispatch = dispatch_outdoor_worker_advisory(wbgt, work_intensity="heavy", is_acclimatized=False)
     assert worker_dispatch["persona"] == "OutdoorWorkerAdvisory"
     assert "UNACCLIMATIZED WORKER NOTICE" in worker_dispatch["guidance"][0]
+
+
+def test_utci_domain_boundary_validation():
+    # Valid domain test
+    res_valid = calculate_utci(temp_c=30.0, rh_pct=50.0, wind_speed_10m_ms=2.0)
+    assert res_valid.is_within_valid_domain is True
+    assert len(res_valid.domain_boundary_warnings) == 0
+    assert res_valid.mean_radiant_temp_assumed_shaded is True
+
+    # Out of boundary test: wind speed 25 m/s (clipped to 17 m/s) and extreme temperature 55°C
+    res_invalid = calculate_utci(temp_c=55.0, rh_pct=20.0, wind_speed_10m_ms=25.0)
+    assert res_invalid.is_within_valid_domain is False
+    assert len(res_invalid.domain_boundary_warnings) >= 1
+    assert any("clipped" in w for w in res_invalid.domain_boundary_warnings)
+
+
+def test_wbgt_metadata_and_stull_psychrometric_distinction():
+    res = calculate_estimated_wbgt(
+        temp_c=35.0,
+        rh_pct=60.0,
+        wind_speed_10m_ms=2.0,
+        solar_radiation_wm2=700.0,
+        is_outdoor_sun=True,
+    )
+    assert res.thermal_stress_index_name == "Estimated Thermal Stress Index (Simplified WBGT Proxy)"
+    assert res.simplified_wbgt_outdoor_c == res.estimated_wbgt_outdoor_c
+    assert res.simplified_wbgt_shaded_c == res.estimated_wbgt_shaded_c
+    assert res.wet_bulb_method == "aspirated_psychrometric_stull2011"
+    assert res.globe_temp_method == "liljegren_bom_empirical_approximation"
+    assert res.is_instrument_measured is False
+
+
+def test_multi_night_threshold_convention():
+    res = calculate_multi_night_heat_index(nightly_min_temps_c=[26.0, 27.0, 29.0])
+    assert "Project-Specific Regional Thresholds" in res.threshold_convention
+    assert res.tropical_nights_count == 3
+    assert res.severe_tropical_nights_count == 1

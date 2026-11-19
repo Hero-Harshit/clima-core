@@ -102,20 +102,52 @@ class UTCIResult(BaseModel):
     utci_c: float = Field(..., description="UTCI equivalent bioclimatic temperature [°C]")
     category: UTCICategory
     bioclimatic_assessment: str
+    is_within_valid_domain: bool = Field(
+        default=True,
+        description="Whether input meteorological variables fall within the valid operational UTCI polynomial domain."
+    )
+    mean_radiant_temp_assumed_shaded: bool = Field(
+        default=True,
+        description="True if Tmrt was defaulted to Ta (shaded/indoor baseline); False if explicit radiation was modeled."
+    )
+    domain_boundary_warnings: List[str] = Field(
+        default_factory=list,
+        description="Boundary warnings if input temperature, wind, vapor pressure or radiant delta exceeded operational bounds."
+    )
 
     model_config = {"frozen": True}
 
 
 class EstimatedWBGTResult(BaseModel):
     """Estimated Wet Bulb Globe Temperature (explicitly non-instrument)."""
+    thermal_stress_index_name: str = Field(
+        default="Estimated Thermal Stress Index (Simplified WBGT Proxy)",
+        description="Explicit index identity clarifying empirical proxy vs. instrument measurement."
+    )
     temperature_c: float
     relative_humidity_pct: float
     wind_speed_10m_ms: float
     solar_radiation_wm2: float
-    estimated_wet_bulb_c: float
-    estimated_globe_temp_c: float
+    estimated_wet_bulb_c: float = Field(
+        ...,
+        description="Approximated aspirated psychrometric wet bulb Tw [°C] via Stull (2011)."
+    )
+    estimated_globe_temp_c: float = Field(
+        ...,
+        description="Approximated black-globe temperature Tg [°C] via Liljegren/BOM solar radiation balance."
+    )
     estimated_wbgt_outdoor_c: float = Field(..., description="0.7*Tw + 0.2*Tg + 0.1*Ta in full sunshine [°C]")
     estimated_wbgt_shaded_c: float = Field(..., description="0.7*Tw + 0.3*Ta in shade [°C]")
+    simplified_wbgt_outdoor_c: float = Field(..., description="Alias for estimated_wbgt_outdoor_c for standards compliance.")
+    simplified_wbgt_shaded_c: float = Field(..., description="Alias for estimated_wbgt_shaded_c for standards compliance.")
+    wet_bulb_method: str = Field(
+        default="aspirated_psychrometric_stull2011",
+        description="Aspirated psychrometric wet bulb (Tw) at 1013.25 hPa, distinct from unventilated natural wet bulb (Tnw)."
+    )
+    globe_temp_method: str = Field(
+        default="liljegren_bom_empirical_approximation",
+        description="Empirical solar radiation and wind convective balance approximation, distinct from physical 15cm copper black globe."
+    )
     light_work_cycle: WBGTWorkRestCycle
     moderate_work_cycle: WBGTWorkRestCycle
     heavy_work_cycle: WBGTWorkRestCycle
@@ -124,8 +156,8 @@ class EstimatedWBGTResult(BaseModel):
     disclaimer: str = Field(
         default=(
             "Calculated via psychrometric approximations (Stull & Liljegren models). "
-            "Not an instrument black-globe measurement. Work-rest allocations require "
-            "onsite evaluation of worker acclimatization, PPE, and hydration."
+            "Not an instrument black-globe measurement and not ISO 7243 certified physical verification. "
+            "Work-rest allocations require onsite evaluation of worker acclimatization, PPE, and hydration."
         )
     )
 
@@ -136,8 +168,18 @@ class MultiNightHeatExposureResult(BaseModel):
     """Multi-night heat exposure and nocturnal recovery shortfall indicator."""
     window_days: int
     nightly_min_temps_c: List[float]
-    tropical_nights_count: int = Field(..., description="Count of nights with Tmin >= 25.0°C")
-    severe_tropical_nights_count: int = Field(..., description="Count of nights with Tmin >= 28.0°C")
+    tropical_nights_count: int = Field(
+        ...,
+        description="Count of nights with Tmin >= 25.0°C (Project-Specific Regional Threshold: Indian Urban Warm Night)"
+    )
+    severe_tropical_nights_count: int = Field(
+        ...,
+        description="Count of nights with Tmin >= 28.0°C (Project-Specific Regional Threshold: Indian Urban Severe Warm Night)"
+    )
+    threshold_convention: str = Field(
+        default="Project-Specific Regional Thresholds (Indian Urban Warm Night: Tmin >= 25°C, Severe: Tmin >= 28°C)",
+        description="Regional meteorological threshold convention for uncooled Indian urban summer nights."
+    )
     cumulative_nocturnal_debt_deg_c: float = Field(
         ...,
         description="Cumulative Nocturnal Cooling Shortfall: sum(max(0, Tmin - 25.0°C))"
@@ -255,17 +297,41 @@ def calculate_utci(
         International Journal of Biometeorology.
     """
     t_a = float(temp_c)
-    rh = float(np.clip(rh_pct, 1.0, 100.0))
+    rh_input = float(rh_pct)
+    rh = float(np.clip(rh_input, 1.0, 100.0))
+    ws_input = float(wind_speed_10m_ms)
     # Wind speed at 10m height, clipped to valid UTCI domain [0.5, 17.0 m/s]
-    va = float(np.clip(wind_speed_10m_ms, 0.5, 17.0))
+    va = float(np.clip(ws_input, 0.5, 17.0))
 
     # Mean Radiant Temperature Tmrt defaults to Ta if not provided (indoor/shaded baseline)
+    is_shaded = mean_radiant_temp_c is None
     tmrt = float(mean_radiant_temp_c) if mean_radiant_temp_c is not None else t_a
     d_tmrt = tmrt - t_a
 
     # Water vapour pressure in kPa
     es_hpa = saturation_vapor_pressure_hpa(t_a)
     e_kpa = (es_hpa * (rh / 100.0)) / 10.0
+
+    # Operational domain boundary validation (Bröde et al. 2012)
+    # Ta in [-50, +50] °C, va in [0.5, 17.0] m/s, e_kpa in [0, 5.0] kPa, D_Tmrt in [-30, +70] °C
+    warnings: List[str] = []
+    is_within_domain = True
+
+    if not (-50.0 <= t_a <= 50.0):
+        is_within_domain = False
+        warnings.append(f"Air temperature {t_a:.1f}°C is outside valid UTCI operational domain [-50°C, +50°C].")
+
+    if ws_input < 0.5 or ws_input > 17.0:
+        is_within_domain = False
+        warnings.append(f"Wind speed {ws_input:.1f} m/s was clipped to valid UTCI domain [{va:.1f} m/s].")
+
+    if e_kpa > 5.0:
+        is_within_domain = False
+        warnings.append(f"Water vapor pressure {e_kpa:.2f} kPa exceeds valid UTCI limit [5.0 kPa].")
+
+    if not (-30.0 <= d_tmrt <= 70.0):
+        is_within_domain = False
+        warnings.append(f"Radiant temperature delta {d_tmrt:.1f}°C is outside valid UTCI domain [-30°C, +70°C].")
 
     # Standard operational UTCI regression polynomial approximation
     # Delta_UTCI = f(Ta, va, D_Tmrt, e_kPa)
@@ -323,6 +389,9 @@ def calculate_utci(
         utci_c=round(utci_c, 2),
         category=cat,
         bioclimatic_assessment=assess,
+        is_within_valid_domain=is_within_domain,
+        mean_radiant_temp_assumed_shaded=is_shaded,
+        domain_boundary_warnings=warnings,
     )
 
 
@@ -340,7 +409,7 @@ def calculate_estimated_wbgt(
     """Calculate Estimated Wet Bulb Globe Temperature (psychrometric approximation).
 
     Uses Stull (2011) for wet-bulb temperature Tw, and Liljegren/BOM approximation for globe Tg.
-    Explicitly labeled as Estimated WBGT.
+    Explicitly labeled as Estimated WBGT / Simplified WBGT Proxy.
     """
     t_a = float(temp_c)
     rh = float(np.clip(rh_pct, 1.0, 100.0))
@@ -403,6 +472,8 @@ def calculate_estimated_wbgt(
         estimated_globe_temp_c=round(tg, 2),
         estimated_wbgt_outdoor_c=round(wbgt_outdoor, 2),
         estimated_wbgt_shaded_c=round(wbgt_shaded, 2),
+        simplified_wbgt_outdoor_c=round(wbgt_outdoor, 2),
+        simplified_wbgt_shaded_c=round(wbgt_shaded, 2),
         light_work_cycle=light_cycle,
         moderate_work_cycle=mod_cycle,
         heavy_work_cycle=heavy_cycle,

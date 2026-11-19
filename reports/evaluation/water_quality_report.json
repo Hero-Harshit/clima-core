@@ -1,5 +1,9 @@
 {
   "model_id": "water_quality_v1",
+  "task_type": "deterministic_formula_surrogate",
+  "task_description": "Deterministic formula surrogate approximating BIS IS 10500:2012 Weighted Arithmetic Water Quality Index and Permissible Limit Exceedances from geochemical ion measurements.",
+  "disclaimer": "Models wqi_regressor_v1.booster and water_hazard_v1.booster are deterministic surrogates learning the Weighted Arithmetic WQI from chemical ion concentrations. They do not predict future groundwater quality changes or hydrological contaminant transport.",
+  "deterministic_baseline_available": true,
   "split_protocol": "chronological_split_2018_2019",
   "train_samples": 11548,
   "test_samples": 2731,
@@ -24,7 +28,7 @@
     "mae": 7.222
   },
   "saved_artifacts": {
-    "classifier": "D:\\Proper Codebases\\Clima Core\\artifacts\\models\\water_quality\\v0.1.0\\water_hazard_v1.booster",
-    "regressor": "D:\\Proper Codebases\\Clima Core\\artifacts\\models\\water_quality\\v0.1.0\\wqi_regressor_v1.booster"
+    "classifier": "artifacts/models/water_quality/v0.1.0/water_hazard_v1.booster",
+    "regressor": "artifacts/models/water_quality/v0.1.0/wqi_regressor_v1.booster"
   }
 }

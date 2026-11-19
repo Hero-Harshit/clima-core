@@ -122,9 +122,30 @@ def test_water_quality_risk_engine():
     assert "contamination_hazard_probability" in res
     assert res["contamination_hazard_probability"] > 0.50
     assert res["wqi_grade"] in ["VERY_POOR", "UNSUITABLE_FOR_DRINKING"]
+    assert res["wqi_calculation_mode"] == "exact_deterministic_formula"
+    assert res["is_deterministic_surrogate"] is True
+    assert "surrogate_fidelity_note" in res
     assert len(res["bis_standard_exceedances"]) > 0
     assert len(res["operational_advisories"]) > 0
     assert any("RO" in adv or "Reverse Osmosis" in adv for adv in res["operational_advisories"])
+
+
+def test_water_quality_exact_deterministic_pathway():
+    """Verify direct deterministic evaluation matches BIS standard calculations."""
+    engine = WaterQualityRiskEngine()
+    params = {
+        "ph": 7.2,
+        "total_dissolved_solids": 280.0,
+        "total_hardness": 140.0,
+        "chloride": 60.0,
+        "sulphate": 45.0,
+        "calcium": 40.0,
+        "magnesium": 18.0,
+    }
+    exact = engine.calculate_exact_wqi_and_exceedances(params)
+    assert exact["exact_wqi"] < 50.0
+    assert exact["wqi_category"] in ("EXCELLENT", "GOOD")
+    assert len(exact["bis_standard_exceedances"]) == 0
 
 
 # ----------------------------------------------------------------------

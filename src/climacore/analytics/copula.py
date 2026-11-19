@@ -33,10 +33,11 @@ logger = logging.getLogger(__name__)
 
 class CopulaFamily(str, Enum):
     """Bivariate Archimedean copula families."""
-    GUMBEL = "gumbel"      # Upper tail dependence (co-occurring extremes)
-    CLAYTON = "clayton"    # Lower tail dependence
-    FRANK = "frank"        # Symmetric dependence, zero tail dependence
-    INDEPENDENCE = "independence"  # Product copula C(u, v) = u * v
+    GUMBEL = "gumbel"                      # Upper tail dependence (co-occurring extremes)
+    CLAYTON = "clayton"                    # Lower tail dependence
+    SURVIVAL_CLAYTON = "survival_clayton"  # Rotated 180° Clayton for upper tail dependence
+    FRANK = "frank"                        # Symmetric dependence, zero tail dependence
+    INDEPENDENCE = "independence"          # Product copula C(u, v) = u * v
 
 
 class CopulaFitResult(BaseModel):
@@ -75,6 +76,14 @@ class JointReturnPeriodResult(BaseModel):
         description="95% confidence interval for T_AND from parametric bootstrap [lower, upper]"
     )
     all_candidate_fits: List[CopulaFitResult]
+    event_scope: str = Field(
+        default="annual_maxima_coincidence",
+        description="Physical scope: 'annual_maxima_coincidence' (same-year annual block maxima) or 'concurrent_daily_extremes' (simultaneous daily event)"
+    )
+    temporal_resolution: str = Field(
+        default="annual",
+        description="Temporal resolution of observations ('annual' with mu=1.0 yr or 'daily' with mu=365.25 d/yr)"
+    )
     scientific_disclaimer: str = Field(
         default=(
             "Joint return periods reflect bivariate Archimedean copula inference based on "
@@ -141,6 +150,19 @@ def clayton_log_likelihood(u: np.ndarray, v: np.ndarray, theta: float) -> float:
     return float(np.sum(np.log(c)))
 
 
+def survival_clayton_cdf(u: np.ndarray, v: np.ndarray, theta: float) -> np.ndarray:
+    """Survival Clayton copula CDF (180° rotated Clayton for upper-tail dependence):
+    C_survival(u, v) = u + v - 1 + C_clayton(1 - u, 1 - v).
+    """
+    c_rot = clayton_cdf(1.0 - u, 1.0 - v, theta)
+    return np.clip(u + v - 1.0 + c_rot, 0.0, 1.0)
+
+
+def survival_clayton_log_likelihood(u: np.ndarray, v: np.ndarray, theta: float) -> float:
+    """Survival Clayton copula log-likelihood: c_survival(u, v) = c_clayton(1 - u, 1 - v)."""
+    return clayton_log_likelihood(1.0 - u, 1.0 - v, theta)
+
+
 def frank_cdf(u: np.ndarray, v: np.ndarray, theta: float) -> np.ndarray:
     """Frank copula CDF: C(u, v) = -1/theta * ln(1 + (e^(-theta*u) - 1)(e^(-theta*v) - 1)/(e^(-theta) - 1))."""
     t = float(theta)
@@ -199,7 +221,7 @@ def compute_empirical_copula(u: np.ndarray, v: np.ndarray) -> np.ndarray:
 class CompoundCopulaEngine:
     """Bivariate Archimedean copula fitting, family selection, and joint return period engine."""
 
-    def __init__(self, bootstrap_iterations: int = 150):
+    def __init__(self, bootstrap_iterations: int = 500):
         self.bootstrap_iterations = bootstrap_iterations
 
     def fit_candidate_families(
@@ -207,12 +229,12 @@ class CompoundCopulaEngine:
         u: np.ndarray,
         v: np.ndarray,
     ) -> List[CopulaFitResult]:
-        """Fit Gumbel, Clayton, and Frank copulas via MLE and evaluate goodness of fit."""
+        """Fit Gumbel, Clayton, Survival Clayton, and Frank copulas via MLE and evaluate goodness of fit."""
         n = len(u)
         c_empirical = compute_empirical_copula(u, v)
         results = []
 
-        # 1. Gumbel (theta >= 1.0)
+        # 1. Gumbel (theta >= 1.0) - Upper Tail Dependence
         res_g = minimize_scalar(lambda th: -gumbel_log_likelihood(u, v, th), bounds=(1.001, 15.0), method="bounded")
         th_g = float(res_g.x)
         ll_g = gumbel_log_likelihood(u, v, th_g)
@@ -234,7 +256,7 @@ class CompoundCopulaEngine:
             lower_tail_dependence=0.0,
         ))
 
-        # 2. Clayton (theta > 0)
+        # 2. Clayton (theta > 0) - Lower Tail Dependence
         res_c = minimize_scalar(lambda th: -clayton_log_likelihood(u, v, th), bounds=(0.01, 15.0), method="bounded")
         th_c = float(res_c.x)
         ll_c = clayton_log_likelihood(u, v, th_c)
@@ -256,7 +278,29 @@ class CompoundCopulaEngine:
             lower_tail_dependence=round(lambda_l_c, 4),
         ))
 
-        # 3. Frank (theta != 0)
+        # 3. Survival Clayton (theta > 0) - Rotated 180° for Upper Tail Dependence
+        res_sc = minimize_scalar(lambda th: -survival_clayton_log_likelihood(u, v, th), bounds=(0.01, 15.0), method="bounded")
+        th_sc = float(res_sc.x)
+        ll_sc = survival_clayton_log_likelihood(u, v, th_sc)
+        aic_sc = 2.0 * 1.0 - 2.0 * ll_sc
+        bic_sc = 1.0 * math.log(n) - 2.0 * ll_sc
+        c_fit_sc = survival_clayton_cdf(u, v, th_sc)
+        sn_sc = float(np.sum((c_empirical - c_fit_sc) ** 2))
+        tau_sc = th_sc / (th_sc + 2.0)
+        lambda_u_sc = 2.0 ** (-1.0 / th_sc)
+        results.append(CopulaFitResult(
+            family=CopulaFamily.SURVIVAL_CLAYTON,
+            theta=round(th_sc, 4),
+            log_likelihood=round(ll_sc, 3),
+            aic=round(aic_sc, 3),
+            bic=round(bic_sc, 3),
+            cramer_von_mises_sn=round(sn_sc, 4),
+            kendall_tau=round(tau_sc, 4),
+            upper_tail_dependence=round(lambda_u_sc, 4),
+            lower_tail_dependence=0.0,
+        ))
+
+        # 4. Frank (theta != 0) - Radial Symmetry
         res_f = minimize_scalar(lambda th: -frank_log_likelihood(u, v, th), bounds=(-15.0, 15.0), method="bounded")
         th_f = float(res_f.x)
         ll_f = frank_log_likelihood(u, v, th_f)
@@ -264,7 +308,6 @@ class CompoundCopulaEngine:
         bic_f = 1.0 * math.log(n) - 2.0 * ll_f
         c_fit_f = frank_cdf(u, v, th_f)
         sn_f = float(np.sum((c_empirical - c_fit_f) ** 2))
-        # Kendall's tau for Frank: numerical approximation
         tau_f = 1.0 - (4.0 / th_f) * (1.0 - (1.0 / th_f) * math.log((math.exp(th_f) - 1.0) / th_f)) if abs(th_f) > 0.1 else 0.0
         results.append(CopulaFitResult(
             family=CopulaFamily.FRANK,
@@ -290,6 +333,8 @@ class CompoundCopulaEngine:
             return float(gumbel_cdf(u_arr, v_arr, theta)[0])
         elif family == CopulaFamily.CLAYTON:
             return float(clayton_cdf(u_arr, v_arr, theta)[0])
+        elif family == CopulaFamily.SURVIVAL_CLAYTON:
+            return float(survival_clayton_cdf(u_arr, v_arr, theta)[0])
         elif family == CopulaFamily.FRANK:
             return float(frank_cdf(u_arr, v_arr, theta)[0])
         else:
@@ -304,8 +349,17 @@ class CompoundCopulaEngine:
         hazard_x_name: str = "Extreme_Temperature",
         hazard_y_name: str = "Extreme_Rainfall",
         annual_interarrival_years: float = 1.0,
+        event_scope: str = "annual_maxima_coincidence",
+        temporal_resolution: str = "annual",
     ) -> JointReturnPeriodResult:
-        """Fit copulas, select champion, and compute joint return periods with bootstrap CIs."""
+        """Fit copulas, select champion, and compute joint return periods with bootstrap CIs.
+
+        Notes:
+            - For annual block maxima ('annual_maxima_coincidence'), annual_interarrival_years = 1.0.
+            - Overlapping record between IMD temperature (1951-2024) and IMD rainfall (1980-2025)
+              comprises exactly 45 common years (1980-2024).
+            - For daily concurrent events ('concurrent_daily_extremes'), annual_interarrival_years = 1.0 / 365.25.
+        """
         clean_mask = (~np.isnan(series_x)) & (~np.isnan(series_y))
         x_clean = series_x[clean_mask]
         y_clean = series_y[clean_mask]
@@ -348,6 +402,9 @@ class CompoundCopulaEngine:
                 elif champion.family == CopulaFamily.CLAYTON:
                     r_b = minimize_scalar(lambda th: -clayton_log_likelihood(u_boot, v_boot, th), bounds=(0.01, 15.0), method="bounded")
                     c_b = float(clayton_cdf(np.array([u_target]), np.array([v_target]), float(r_b.x))[0])
+                elif champion.family == CopulaFamily.SURVIVAL_CLAYTON:
+                    r_b = minimize_scalar(lambda th: -survival_clayton_log_likelihood(u_boot, v_boot, th), bounds=(0.01, 15.0), method="bounded")
+                    c_b = float(survival_clayton_cdf(np.array([u_target]), np.array([v_target]), float(r_b.x))[0])
                 else:
                     r_b = minimize_scalar(lambda th: -frank_log_likelihood(u_boot, v_boot, th), bounds=(-15.0, 15.0), method="bounded")
                     c_b = float(frank_cdf(np.array([u_target]), np.array([v_target]), float(r_b.x))[0])
@@ -381,4 +438,6 @@ class CompoundCopulaEngine:
             t_or_years=round(t_or, 2),
             bootstrap_ci_95_t_and=(round(ci_lower, 2), round(ci_upper, 2)),
             all_candidate_fits=candidate_fits,
+            event_scope=event_scope,
+            temporal_resolution=temporal_resolution,
         )
