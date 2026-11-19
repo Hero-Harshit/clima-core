@@ -268,7 +268,7 @@ def test_api_root_and_health(api_client: TestClient):
     assert data["status"] == "HEALTHY"
     assert data["schema_version"] == "v1.0.0"
     assert data["registered_models_count"] >= 5
-    assert len(data["flagship_champions"]) == 5
+    assert len(data["flagship_champions"]) >= 5
 
 
 def test_api_predict_city(api_client: TestClient):

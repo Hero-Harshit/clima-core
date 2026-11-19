@@ -109,6 +109,9 @@ class LiveDayPrediction(BaseModel):
     cascading_risk: Optional[Dict[str, Any]] = Field(
         default=None, description="Cascading multi-hazard infrastructure dependency failure chains"
     )
+    water_quality_risk: Optional[Dict[str, Any]] = Field(
+        default=None, description="CGWB groundwater contamination risk, WQI, and BIS IS 10500:2012 potability advisories"
+    )
 
 
 class LivePredictionResult(BaseModel):

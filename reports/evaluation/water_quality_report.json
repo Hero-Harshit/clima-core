@@ -1,0 +1,30 @@
+{
+  "model_id": "water_quality_v1",
+  "split_protocol": "chronological_split_2018_2019",
+  "train_samples": 11548,
+  "test_samples": 2731,
+  "features": [
+    "latitude",
+    "longitude",
+    "ph",
+    "electric_conductivity",
+    "total_hardness",
+    "chloride",
+    "sulphate",
+    "calcium",
+    "magnesium",
+    "sodium"
+  ],
+  "classifier_metrics": {
+    "roc_auc": 0.9286,
+    "pr_auc": 0.9673
+  },
+  "regressor_metrics": {
+    "r2": 0.9255,
+    "mae": 7.222
+  },
+  "saved_artifacts": {
+    "classifier": "D:\\Proper Codebases\\Clima Core\\artifacts\\models\\water_quality\\v0.1.0\\water_hazard_v1.booster",
+    "regressor": "D:\\Proper Codebases\\Clima Core\\artifacts\\models\\water_quality\\v0.1.0\\wqi_regressor_v1.booster"
+  }
+}

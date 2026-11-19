@@ -16,6 +16,7 @@ import lightgbm as lgb
 
 from climacore.common.logging import get_logger
 from climacore.config.loader import get_project_root
+from climacore.features.hydrorivers import get_city_river_profile
 
 logger = get_logger("climacore.models.flood_risk.engine")
 
@@ -116,6 +117,20 @@ class FloodRiskEngine:
         # Optimal ratio ~ 0.50; ratio < 0.25 impedes runoff egress
         drainage_impedance = round(float(np.clip(1.0 + max(0.0, 0.35 - drainage_ratio) * 2.2, 1.0, 2.5)), 2)
 
+        # HydroRIVERS Fluvial Basin Hydrology
+        river_prof = get_city_river_profile(city)
+        major_dist = river_prof["nearest_major_river"]["distance_km"]
+        major_q = river_prof["nearest_major_river"]["average_discharge_m3s"]
+        fluvial_tier = river_prof["fluvial_flood_susceptibility_tier"]
+
+        # Riverine channel overflow amplification during multi-day prolonged rainfall
+        fluvial_amplification = 1.0
+        if major_dist <= 10.0 and major_q >= 10.0:
+            proximity_factor = max(0.0, (10.0 - major_dist) / 10.0)
+            discharge_factor = min(1.0, major_q / 200.0)
+            rain_factor = min(1.0, r_3d / 100.0)
+            fluvial_amplification = round(1.0 + 0.35 * proximity_factor * discharge_factor * rain_factor, 3)
+
         # 2. Multi-Horizon Inundation Hazard Evaluation (24h, 48h, 72h)
         # P_24h: Flash surface runoff inundation
         base_24h = (effective_runoff_mm / 45.0) * 0.55 + (api / 120.0) * 0.25 + (drainage_impedance - 1.0) * 0.20
@@ -123,11 +138,11 @@ class FloodRiskEngine:
 
         # P_48h: Channel overflow & localized drainage backwater
         base_48h = (r_3d / 120.0) * 0.45 + (effective_runoff_mm / 60.0) * 0.30 + (drainage_impedance - 1.0) * 0.25
-        p_48h = float(np.clip(base_48h, 0.01, 0.98))
+        p_48h = float(np.clip(base_48h * fluvial_amplification, 0.01, 0.98))
 
         # P_72h: Catchment waterlogging & regional drainage egress lag
         base_72h = (r_7d / 180.0) * 0.45 + (sat_pct / 100.0) * 0.35 + (drainage_impedance - 1.0) * 0.20
-        p_72h = float(np.clip(base_72h, 0.01, 0.98))
+        p_72h = float(np.clip(base_72h * fluvial_amplification, 0.01, 0.98))
 
         # Active horizon hazard
         if forecast_horizon_hours == 72:
@@ -208,6 +223,15 @@ class FloodRiskEngine:
                 "effective_surface_runoff_mm": effective_runoff_mm,
                 "drainage_impedance_factor": drainage_impedance,
                 "infiltration_state": infiltration_state,
+            },
+            "river_hydrology": {
+                "nearest_river_distance_km": river_prof["nearest_river"]["distance_km"],
+                "nearest_major_river_distance_km": major_dist,
+                "nearest_major_river_strahler_order": river_prof["nearest_major_river"]["strahler_order"],
+                "nearest_major_river_discharge_m3s": major_q,
+                "upstream_catchment_sqkm": river_prof["nearest_major_river"]["upstream_catchment_sqkm"],
+                "fluvial_flood_susceptibility_tier": fluvial_tier,
+                "fluvial_amplification_factor": fluvial_amplification,
             },
             "antecedent_hydrology": {
                 "rain_1d_mm": rain_1d,

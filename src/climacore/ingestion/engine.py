@@ -33,6 +33,7 @@ from climacore.models.heat_risk.engine import HeatRiskEngine
 from climacore.models.electricity_grid.engine import PowerGridEngine
 from climacore.models.crop_resilience.engine import AgriSenseEngine
 from climacore.models.air_quality.engine import AirQualityEngine
+from climacore.models.water_quality.engine import WaterQualityRiskEngine
 from climacore.analytics.conformal import (
     calibrate_temperature_conformal,
     calibrate_rainfall_conformal,
@@ -60,6 +61,7 @@ class LiveForecastEngine:
         self.power_engine = PowerGridEngine()
         self.agri_engine = AgriSenseEngine()
         self.aq_engine = AirQualityEngine()
+        self.water_quality_engine = WaterQualityRiskEngine()
         self._cyclone_profiles: Optional[Dict[str, Dict[str, Any]]] = None
         self._hap_triggers: Optional[Dict[str, Dict[str, Any]]] = None
         self._population_profiles: Optional[Dict[str, Dict[str, Any]]] = None
@@ -404,7 +406,16 @@ class LiveForecastEngine:
                 arterial_roads_15km=infra_info.get("arterial_roads_15km"),
             )
 
-            # 5. Evaluate Selected Persona or All 13 Personas
+            # 5. Groundwater Chemical Quality Risk (CGWB Geochemical Hazard)
+            wq_eval = self.water_quality_engine.evaluate_water_quality(
+                latitude=forecast.latitude,
+                longitude=forecast.longitude,
+                city=forecast.city,
+                is_drought_stressed=bool(day.temp_max >= 42.0 and day.precipitation_mm == 0.0),
+                is_flood_inundated=bool(flood_disaster_risk >= 0.40),
+            )
+
+            # 6. Evaluate Selected Persona or All 13 Personas
             if str(persona).strip().lower() in ["all", "none", "*", ""]:
                 p_results = evaluate_all_personas(p_input)
             else:
@@ -437,22 +448,27 @@ class LiveForecastEngine:
                         "power_grid": power_eval,
                         "agrisense": agri_eval,
                         "air_quality": aq_eval,
+                        "water_quality": wq_eval,
                     },
                     conformal_bounds=conformal_bounds,
                     cascading_risk=cascade_eval,
+                    water_quality_risk=wq_eval,
                 )
             )
 
         provenance = {
             "engine_version": "v1.0.0",
-            "phase_architecture": "Phase 4 Probabilistic & Compound Environmental Intelligence",
+            "phase_architecture": "Advanced Environmental Intelligence & Multi-Source Fusion",
             "champion_models": {
-                "flood_risk": "IFI LightGBM v1 (AUC 0.7931)",
+                "flood_risk": "IFI LightGBM v1 + HydroRIVERS Fluvial Basin Hydrology",
                 "heat_risk": "HeatRisk V4 Dual Diurnal GEV",
                 "electricity_grid": "POSOCO LightGBM Dual Regressor/Classifier (R2 0.8758, AUC 0.9521)",
                 "agrisense": "AgriSense LightGBM Multi-Class GBDT (Top-1 82.49%)",
                 "air_quality": "CPCB NAQI Multi-Pollutant Transfer Calibrator",
+                "water_quality": "CGWB LightGBM v1 (ROC-AUC 0.9286, R2 0.9255)",
             },
+            "hydrological_data": "HydroSHEDS HydroRIVERS v1.0 (Asia Basin Network)",
+            "groundwater_chemical_data": "Central Ground Water Board (CGWB) NWDP / India-WRIS",
             "tournament_manifest": "data/manifests/champion_challenger_tournament.json",
             "canonical_registry": "data/manifests/canonical_model_registry.json",
         }

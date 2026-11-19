@@ -57,6 +57,22 @@ class CustomPredictionRequest(BaseModel):
     requested_personas: Optional[List[str]] = None
 
 
+class WaterQualityRequest(BaseModel):
+    latitude: float = Field(default=19.0760, ge=-90.0, le=90.0)
+    longitude: float = Field(default=72.8777, ge=-180.0, le=180.0)
+    city: str = Field(default="Mumbai")
+    ph: Optional[float] = Field(default=None, ge=0.0, le=14.0)
+    electric_conductivity: Optional[float] = Field(default=None, ge=0.0)
+    total_hardness: Optional[float] = Field(default=None, ge=0.0)
+    chloride: Optional[float] = Field(default=None, ge=0.0)
+    sulphate: Optional[float] = Field(default=None, ge=0.0)
+    calcium: Optional[float] = Field(default=None, ge=0.0)
+    magnesium: Optional[float] = Field(default=None, ge=0.0)
+    sodium: Optional[float] = Field(default=None, ge=0.0)
+    is_drought_stressed: bool = False
+    is_flood_inundated: bool = False
+
+
 class VerificationRecordRequest(BaseModel):
     target_name: str = Field(..., description="Target variable name (e.g. temperature_max, rainfall_mm)")
     y_true: float = Field(..., description="Actual verifying ground truth observation")
@@ -128,11 +144,12 @@ def create_app() -> FastAPI:
             "uptime_seconds": round(uptime_sec, 1),
             "registered_models_count": len(model_reg),
             "flagship_champions": [
-                "FloodRisk V3 (Hydro-Atmospheric Cascade)",
+                "FloodRisk V3 (Hydro-Atmospheric Cascade + HydroRIVERS)",
                 "HeatRisk V4 (Dual Diurnal + Oke UHI + Conformal)",
                 "PowerGrid V3 (Lags + Regressor + Conformal)",
                 "AgriSense V3 (Suitability GBDT + Yield Quantiles + SAGE)",
                 "AirQuality V3 (Ventilation + Nocturnal Inversion)",
+                "WaterQuality V1 (CGWB Chemical Potability GBDT)",
             ],
             "latency_profile": monitor.latency_profiler.get_summary(),
         }
@@ -219,6 +236,15 @@ def create_app() -> FastAPI:
                 stagnation_flag=air_res.get("atmospheric_physics", {}).get("stagnation_flag", 0),
             )
 
+            # Evaluate groundwater chemical quality
+            wq_res = engine.water_quality_engine.evaluate_water_quality(
+                latitude=req.latitude,
+                longitude=req.longitude,
+                city=req.city_name,
+                is_drought_stressed=bool(req.temperature_max >= 42.0 and req.rainfall_mm == 0.0),
+                is_flood_inundated=bool(flood_res.get("hydrological_hazard_probability", 0.0) >= 0.40),
+            )
+
             lat_ms = (time.perf_counter() - t0) * 1000.0
             monitor.latency_profiler.record(lat_ms, is_error=False)
 
@@ -235,6 +261,7 @@ def create_app() -> FastAPI:
                     "flood_risk": flood_res,
                     "power_grid_stress": grid_res,
                     "air_quality": air_res,
+                    "water_quality": wq_res,
                 },
                 "conformal_bounds": {
                     "temperature": conf_t,
@@ -250,6 +277,37 @@ def create_app() -> FastAPI:
             monitor.latency_profiler.record(lat_ms, is_error=True)
             logger.error(f"Error in custom prediction: {e}")
             raise HTTPException(status_code=500, detail=f"Custom prediction failed: {str(e)}")
+
+    @app.post("/api/predict/water_quality")
+    def predict_water_quality(req: WaterQualityRequest) -> Dict[str, Any]:
+        monitor = get_monitoring_service()
+        t0 = time.perf_counter()
+        try:
+            engine = get_live_engine()
+            res = engine.water_quality_engine.evaluate_water_quality(
+                latitude=req.latitude,
+                longitude=req.longitude,
+                city=req.city,
+                ph=req.ph,
+                electric_conductivity=req.electric_conductivity,
+                total_hardness=req.total_hardness,
+                chloride=req.chloride,
+                sulphate=req.sulphate,
+                calcium=req.calcium,
+                magnesium=req.magnesium,
+                sodium=req.sodium,
+                is_drought_stressed=req.is_drought_stressed,
+                is_flood_inundated=req.is_flood_inundated,
+            )
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=False)
+            res["latency_ms"] = round(lat_ms, 2)
+            return res
+        except Exception as e:
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=True)
+            logger.error(f"Error predicting water quality: {e}")
+            raise HTTPException(status_code=500, detail=f"Water quality prediction failed: {str(e)}")
 
     @app.get("/api/monitoring/health")
     def get_monitoring_health() -> Dict[str, Any]:
