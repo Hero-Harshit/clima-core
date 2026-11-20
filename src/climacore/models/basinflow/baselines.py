@@ -130,3 +130,71 @@ class BasinFlowV1Baseline:
         routing_filter = np.array([0.2, 0.5, 0.3], dtype=np.float64)
         q_routed = np.convolve(q_excess, routing_filter, mode="full")[:len(prcp)]
         return q_routed
+
+
+class AR1Baseline:
+    """1-Day Ahead Autoregressive Streamflow Forecaster with Precipitation Forcing (ARX(1,1)).
+    
+    Formulation:
+      Q_t = max(0.0, c + phi * Q_{t-1} + beta * P_t)
+    """
+
+    def __init__(self):
+        self.c = 0.0
+        self.phi = 0.7
+        self.beta = 0.05
+        self.fitted = False
+
+    def fit(self, q_train: np.ndarray, prcp_train: Optional[np.ndarray] = None):
+        """Fits ARX(1,1) model parameters using ordinary least squares."""
+        n = len(q_train)
+        if n < 3:
+            return
+
+        if prcp_train is None:
+            prcp_train = np.zeros(n, dtype=np.float64)
+
+        # Build lag-1 pairs
+        y = q_train[1:]
+        x_q = q_train[:-1]
+        x_p = prcp_train[1:]
+
+        valid = (~np.isnan(y)) & (~np.isnan(x_q)) & (~np.isnan(x_p)) & (y >= 0.0) & (x_q >= 0.0)
+        if np.sum(valid) < 10:
+            return
+
+        X = np.column_stack([np.ones(np.sum(valid)), x_q[valid], x_p[valid]])
+        y_valid = y[valid]
+
+        try:
+            # Ridge/OLS regularized fit
+            XtX = X.T @ X + 1e-4 * np.eye(3)
+            Xty = X.T @ y_valid
+            coeffs = np.linalg.solve(XtX, Xty)
+            self.c = float(coeffs[0])
+            self.phi = float(np.clip(coeffs[1], 0.0, 0.99))
+            self.beta = float(max(0.0, coeffs[2]))
+            self.fitted = True
+        except Exception:
+            self.phi = 0.7
+            self.beta = 0.05
+            self.c = 0.0
+
+    def predict(self, q_obs: np.ndarray, prcp: Optional[np.ndarray] = None) -> np.ndarray:
+        """Generates 1-day ahead streamflow forecasts given preceding observations."""
+        n = len(q_obs)
+        pred = np.zeros(n, dtype=np.float64)
+        if prcp is None:
+            prcp = np.zeros(n, dtype=np.float64)
+
+        curr_q = float(np.nanmedian(q_obs[q_obs >= 0.0])) if np.any(q_obs >= 0.0) else 0.0
+        for t in range(n):
+            pt = float(prcp[t]) if t < len(prcp) else 0.0
+            pred[t] = max(0.0, self.c + self.phi * curr_q + self.beta * pt)
+            val = q_obs[t]
+            if not np.isnan(val) and val >= 0.0:
+                curr_q = float(val)
+            else:
+                curr_q = pred[t]
+        return pred
+

@@ -9,8 +9,8 @@
     "spatial_resolution": "1.0 degree gridded",
     "temporal_resolution": "Daily",
     "total_records": 1351450,
-    "processed_file_path": "data/processed/imd_temperature_1951_2024.parquet",
-    "sha256": "PENDING_VERIFICATION",
+    "processed_file_path": "data/processed/imd_temperature_74y_50_cities.parquet",
+    "sha256": "18942a8d836c5ed3f821906272b85a1c13bdc73afdeb8e7451e58a01f1e98f5a",
     "feature_columns": [
       "temp_max",
       "temp_min",
@@ -28,8 +28,8 @@
     "spatial_resolution": "0.25 degree gridded",
     "temporal_resolution": "Daily",
     "total_records": 840050,
-    "processed_file_path": "data/processed/imd_rainfall_1979_2024.parquet",
-    "sha256": "PENDING_VERIFICATION",
+    "processed_file_path": "data/processed/imd_rainfall_50_cities.parquet",
+    "sha256": "119e86c8821b50b01b8b342434c3fdedd1872c0293dca1a6df7d7481afcd8bba",
     "feature_columns": [
       "precipitation_mm",
       "annual_max_rainfall"
@@ -188,6 +188,103 @@
       "plants_within_100km",
       "thermal_capacity_100km_mw",
       "closest_plant_distance_km"
+    ]
+  },
+  {
+    "dataset_id": "camels_ind_v2_2",
+    "name": "CAMELS-IND Peninsular India Catchment Hydro-Meteorological Archive",
+    "source_agency": "Indian Institute of Technology (IIT) / Zenodo",
+    "citation": "CAMELS-IND: hydrometeorological time series and catchment attributes for 472 catchments in Peninsular India (Zenodo 14999580, CC-BY-4.0).",
+    "temporal_range": "1980-2018",
+    "spatial_coverage": "Peninsular India (109 Quality-Screened Gauged Catchments)",
+    "spatial_resolution": "Catchment Aggregate Polygons",
+    "temporal_resolution": "Daily",
+    "total_records": 1551060,
+    "processed_file_path": "data/processed/camels_ind_selected_catchments.json",
+    "sha256": "1c2af6d60ffd7c43fc2f96895e7633f998ece95e371826b1f088e654fc7299e2",
+    "feature_columns": [
+      "streamflow_mm_day",
+      "precipitation_mm_day",
+      "potential_evapotranspiration_mm_day",
+      "temperature_c_mean"
+    ]
+  },
+  {
+    "dataset_id": "cgwb_groundwater_quality",
+    "name": "Central Ground Water Board National Chemical Water Quality Survey",
+    "source_agency": "Central Ground Water Board (CGWB), Ministry of Jal Shakti",
+    "citation": "CGWB Ground Water Quality in Shallow Aquifers of India (2020-2024), BIS 10500 compliance monitoring.",
+    "temporal_range": "2018-2024",
+    "spatial_coverage": "All India (District Monitoring Wells)",
+    "spatial_resolution": "Point Aquifer Borewell",
+    "temporal_resolution": "Pre/Post-Monsoon Biennial",
+    "total_records": 45000,
+    "processed_file_path": "data/processed/cgwb_groundwater_quality_cleaned.parquet",
+    "sha256": "213a03729951f2086cfb181c45c8d2243321172d0fa8bb2bae1817ad51970fb6",
+    "feature_columns": [
+      "electrical_conductivity_us_cm",
+      "total_dissolved_solids_mg_l",
+      "fluoride_mg_l",
+      "nitrate_mg_l",
+      "arsenic_mg_l",
+      "bis_potable"
+    ]
+  },
+  {
+    "dataset_id": "hydrorivers_asia",
+    "name": "HydroSHEDS HydroRIVERS Asia River Network Topology",
+    "source_agency": "World Wildlife Fund (WWF) / HydroSHEDS",
+    "citation": "Lehner & Grill (2013), Global river hydrography and network routing database, HydroSHEDS.",
+    "temporal_range": "Static Reference",
+    "spatial_coverage": "Pan-Asia (50 Indian City Basins Aligned)",
+    "spatial_resolution": "Vector River Reach Polylines (15-arcsec DEM)",
+    "temporal_resolution": "Static Topology",
+    "total_records": 50,
+    "processed_file_path": "data/processed/city_hydrorivers_profiles.json",
+    "sha256": "ac48ec23bc06ef275c64455332023b3e6a731eaf9fbefba7402db21f6abbb708",
+    "feature_columns": [
+      "river_reaches_count",
+      "primary_river_name",
+      "max_strahler_order",
+      "total_upstream_area_sqkm"
+    ]
+  },
+  {
+    "dataset_id": "cwc_reservoir_storage",
+    "name": "Central Water Commission 150 Major Reservoirs Daily Storage Monitoring",
+    "source_agency": "Central Water Commission (CWC)",
+    "citation": "CWC Live Storage Status of 150 Major Reservoirs in the Country.",
+    "temporal_range": "2020-2024",
+    "spatial_coverage": "150 Major Indian Reservoirs",
+    "spatial_resolution": "Dam Reservoir Site",
+    "temporal_resolution": "Daily / Weekly",
+    "total_records": 12000,
+    "processed_file_path": "data/processed/cwc_reservoir_storage.parquet",
+    "sha256": "24008e61e1d8a69b2a276f7d1962238589bb41d8788e06a3d454b16de8c99bdc",
+    "feature_columns": [
+      "storage_bcm",
+      "full_reservoir_level_m",
+      "percentage_of_foc"
+    ]
+  },
+  {
+    "dataset_id": "cpcb_ground_truth_cities",
+    "name": "CPCB Continuous Ambient Air Quality Monitoring Station (CAAQMS) Network",
+    "source_agency": "Central Pollution Control Board (CPCB)",
+    "citation": "CPCB National Air Quality Monitoring Programme (NAMP) Real-time Continuous Telemetry.",
+    "temporal_range": "2022-2024",
+    "spatial_coverage": "50 Indian Cities Ground Stations",
+    "spatial_resolution": "Ground Station Point Sensor",
+    "temporal_resolution": "Daily Station-Aggregated",
+    "total_records": 48500,
+    "processed_file_path": "data/processed/cpcb_ground_truth_cities.parquet",
+    "sha256": "440d067a6760928a2d68af1786ef94148ca68b97394e348db5857db3c9351fc2",
+    "feature_columns": [
+      "pm2_5_cpcb",
+      "pm10_cpcb",
+      "no2_cpcb",
+      "so2_cpcb",
+      "cpcb_aqi"
     ]
   }
 ]

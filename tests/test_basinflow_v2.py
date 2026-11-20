@@ -188,3 +188,91 @@ def test_baselines():
     q_scs = scs.predict(p)
     assert q_scs[0] == 0.0
     assert q_scs[2] > q_scs[1]
+
+
+def test_hybrid_gr4j_simulation_and_non_negativity():
+    """Tests that HybridGR4J strictly enforces streamflow non-negativity and serializes cleanly."""
+    from src.climacore.models.basinflow.hybrid_gr4j import HybridGR4J
+
+    p = np.array([0.0, 5.0, 20.0, 45.0, 10.0, 1.0, 0.0, 0.0, 0.5, 0.0] * 5)
+    e = np.array([3.5, 3.5, 3.0, 2.5, 3.0, 3.5, 4.0, 4.5, 4.0, 3.5] * 5)
+    q_obs = np.array([0.2, 0.5, 2.1, 8.5, 3.2, 1.1, 0.4, 0.3, 0.2, 0.1] * 5)
+
+    hybrid = HybridGR4J(gr4j_params=np.array([300.0, 0.0, 80.0, 1.5]), alpha=10.0)
+    # Forward simulation prior to calibration
+    res_uncal = hybrid.simulate(p, e)
+    assert np.all(res_uncal["q_sim"] >= 0.0)
+    assert np.allclose(res_uncal["q_sim"], res_uncal["q_gr4j"])
+
+    # Calibrate
+    cal_res = hybrid.calibrate(p, e, q_obs, warmup_days=10)
+    assert hybrid.calibrated is True
+    assert "hybrid_metrics" in cal_res
+
+    # Forward simulation after calibration
+    res = hybrid.simulate(p, e)
+    assert len(res["q_sim"]) == len(p)
+    assert np.all(res["q_sim"] >= 0.0)
+
+    # Serialization test
+    d = hybrid.to_dict()
+    assert d["calibrated"] is True
+    loaded = HybridGR4J.from_dict(d)
+    res_loaded = loaded.simulate(p, e)
+    assert np.allclose(res["q_sim"], res_loaded["q_sim"], atol=1e-5)
+
+
+def test_eckhardt_baseflow_separation():
+    """Tests Eckhardt recursive digital filter hydrograph partitioning."""
+    from src.climacore.models.basinflow.water_balance import eckhardt_filter
+
+    q = np.array([0.5, 0.8, 2.5, 12.0, 25.0, 14.0, 6.0, 2.5, 1.2, 0.8, 0.6], dtype=np.float64)
+    baseflow, quickflow = eckhardt_filter(q, alpha=0.98, bfi_max=0.80)
+
+    # Exact closure at every time step
+    assert np.allclose(q, baseflow + quickflow, atol=1e-6)
+    # Both components non-negative
+    assert np.all(baseflow >= 0.0)
+    assert np.all(quickflow >= 0.0)
+    # Baseflow never exceeds total streamflow
+    assert np.all(baseflow <= q + 1e-6)
+
+
+def test_compute_water_balance_accounting():
+    """Tests comprehensive water balance metrics, volumetric conversion, and closure."""
+    from src.climacore.models.basinflow.water_balance import compute_water_balance
+
+    p = np.array([0.0, 5.0, 25.0, 50.0, 15.0, 2.0, 0.0, 0.0, 1.0, 0.0])
+    q = np.array([0.1, 0.5, 4.0, 15.0, 6.0, 2.0, 0.8, 0.4, 0.2, 0.1])
+    area_km2 = 500.0
+
+    wb = compute_water_balance(p, q, catchment_area_km2=area_km2)
+
+    assert wb["precipitation"]["total_mm"] == float(np.sum(p))
+    assert wb["streamflow"]["total_mm"] == float(np.sum(q))
+    assert 0.0 < wb["streamflow"]["runoff_coefficient"] < 1.0
+    # Hydrograph closure error must be effectively 0
+    assert wb["hydrograph_partitioning"]["hydrograph_closure_error_mm"] < 1e-5
+    # Volumetric checks
+    assert "volumetric_m3" in wb
+    assert wb["volumetric_m3"]["catchment_area_km2"] == 500.0
+    assert wb["volumetric_m3"]["precipitation_m3"] > wb["volumetric_m3"]["streamflow_m3"]
+
+
+def test_ar1_autoregressive_baseline():
+    """Tests ARX(1,1) autoregressive 1-day ahead forecasting baseline."""
+    from src.climacore.models.basinflow.baselines import AR1Baseline
+
+    q_train = np.array([1.0, 1.5, 2.2, 3.8, 5.0, 4.2, 3.1, 2.0, 1.4, 1.1] * 3)
+    p_train = np.array([0.0, 2.0, 5.0, 12.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0] * 3)
+
+    ar = AR1Baseline()
+    ar.fit(q_train, p_train)
+    assert ar.fitted is True
+    assert 0.0 <= ar.phi <= 1.0
+    assert ar.beta >= 0.0
+
+    q_pred = ar.predict(q_train, p_train)
+    assert len(q_pred) == len(q_train)
+    assert np.all(q_pred >= 0.0)
+
