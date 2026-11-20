@@ -20,11 +20,17 @@ from climacore.ingestion.models import LivePredictionResult
 from climacore.monitoring.service import get_monitoring_service
 from climacore.evaluation.gatekeeper import DeploymentGatekeeper, GatekeeperCriteria
 from climacore.registry import get_model_registry, get_dataset_registry
+from climacore.service.assistant import (
+    AssistantEngine,
+    AssistantChatRequest,
+    AssistantChatResponse,
+)
 
 logger = get_logger("climacore.service.app")
 
 # Global engine cache (singleton for warm container reuse)
 _LIVE_ENGINE: Optional[LiveForecastEngine] = None
+_ASSISTANT_ENGINE: Optional[AssistantEngine] = None
 STARTUP_TIME = datetime.now(timezone.utc)
 
 
@@ -33,6 +39,13 @@ def get_live_engine() -> LiveForecastEngine:
     if _LIVE_ENGINE is None:
         _LIVE_ENGINE = LiveForecastEngine()
     return _LIVE_ENGINE
+
+
+def get_assistant_engine() -> AssistantEngine:
+    global _ASSISTANT_ENGINE
+    if _ASSISTANT_ENGINE is None:
+        _ASSISTANT_ENGINE = AssistantEngine()
+    return _ASSISTANT_ENGINE
 
 
 # Pydantic Schemas for Request & Response
@@ -232,6 +245,7 @@ def create_app() -> FastAPI:
                 "/api/health",
                 "/api/cities",
                 "/api/personas",
+                "/api/assistant/chat",
                 "/api/predict/city",
                 "/api/predict/custom",
                 "/api/predict/water_quality",
@@ -316,6 +330,33 @@ def create_app() -> FastAPI:
             monitor.latency_profiler.record(lat_ms, is_error=True)
             logger.error(f"Error predicting city {req.city}: {e}")
             raise HTTPException(status_code=500, detail=f"Prediction failed for city {req.city}: {str(e)}")
+
+    @app.post("/api/assistant/chat", response_model=AssistantChatResponse)
+    async def chat_with_assistant(req: AssistantChatRequest) -> AssistantChatResponse:
+        """Cognitive AI Assistant grounded in verified physical environmental data."""
+        monitor = get_monitoring_service()
+        t0 = time.perf_counter()
+        try:
+            live_engine = get_live_engine()
+            assistant_engine = get_assistant_engine()
+
+            # Retrieve or fetch live prediction contract for context grounding
+            pred = live_engine.predict(
+                query=req.city,
+                persona=req.persona,
+                force_refresh=req.force_refresh,
+            )
+
+            # Generate grounded response
+            chat_resp = await assistant_engine.chat(req=req, prediction_result=pred, live_engine=live_engine)
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=False)
+            return chat_resp
+        except Exception as e:
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=True)
+            logger.error(f"Error in assistant chat for {req.city}: {e}")
+            raise HTTPException(status_code=500, detail=f"Assistant chat failed: {str(e)}")
 
     @app.post("/api/predict/custom")
     def predict_custom(req: CustomPredictionRequest) -> Dict[str, Any]:
