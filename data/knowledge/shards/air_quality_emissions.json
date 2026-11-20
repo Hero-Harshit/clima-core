@@ -1,0 +1,68 @@
+[
+  {
+    "id": "cpcb_naqi_breakpoints_pm25",
+    "domain": "air_quality_emissions",
+    "region": "National",
+    "authority": "Central Pollution Control Board (CPCB)",
+    "title": "National Air Quality Index (NAQI) 24h PM2.5 Category Breakpoints",
+    "rule_text": "CPCB classifies 24-hour mean PM2.5 concentrations (in µg/m³) into six standard national categories: Good (0 - 30 µg/m³), Satisfactory (31 - 60 µg/m³), Moderate (61 - 90 µg/m³), Poor (91 - 120 µg/m³), Very Poor (121 - 250 µg/m³), and Severe (> 250 µg/m³). Concentrations exceeding 60 µg/m³ violate the Indian National Ambient Air Quality Standards (NAAQS).",
+    "trigger_condition": "PM2.5 > 60.0 µg/m³",
+    "mandatory_directive": "At Poor (91-120): Warn asthmatics and cardiac patients. At Very Poor (121-250): Restrict outdoor sports and heavy physical exertion. At Severe (>250): Suspend in-person elementary schooling.",
+    "citation": "CPCB National Air Quality Index Report (2014) & NAAQS Notification"
+  },
+  {
+    "id": "cpcb_grap_stage_protocols",
+    "domain": "air_quality_emissions",
+    "region": "Indo-Gangetic Plain",
+    "authority": "Commission for Air Quality Management (CAQM) / CPCB",
+    "title": "Graded Response Action Plan (GRAP) Stages 1 to 4 Enforcement",
+    "rule_text": "GRAP enforces legally binding emergency air pollution countermeasures across the National Capital Region and participating Indian metros: Stage 1 (AQI 201-300 'Poor'): Anti-dust water sprinkling, ban on open biomass burning. Stage 2 (AQI 301-400 'Very Poor'): Total ban on non-emergency diesel generator sets, enhanced parking fees. Stage 3 (AQI 401-450 'Severe'): Complete halt to non-essential construction/demolition, ban on BS-III petrol and BS-IV diesel cars. Stage 4 (AQI > 450 'Severe+'): Ban on diesel truck entry into city limits, 50% work-from-home mandate.",
+    "trigger_condition": "AQI >= 201 (Stage 1), >= 301 (Stage 2), >= 401 (Stage 3), >= 450 (Stage 4)",
+    "mandatory_directive": "Enforce municipal vehicle restrictions, halt stone crushers and brick kilns, switch schools to online instruction.",
+    "citation": "CAQM Statutory Directions on Graded Response Action Plan (2023)"
+  },
+  {
+    "id": "cpcb_atmospheric_stagnation_inversion",
+    "domain": "air_quality_emissions",
+    "region": "Indo-Gangetic Plain",
+    "authority": "CPCB & IMD Environmental Monitoring Wing",
+    "title": "Atmospheric Boundary Layer Stagnation and Nocturnal Inversion",
+    "rule_text": "Atmospheric Stagnation occurs during winter months when 10m wind speed falls < 5.0 km/h and mixing height collapses < 500 meters, yielding a Ventilation Index < 2000 m²/s. Under nocturnal radiation inversion, cooler surface air traps particulate emissions within a shallow ground layer, creating dangerous toxic smog chambers.",
+    "trigger_condition": "Ventilation Index < 2000 m²/s and Wind Speed < 5 km/h",
+    "mandatory_directive": "Prohibit all evening industrial emissions; conduct continuous mechanical water misting along dense traffic corridors.",
+    "citation": "CPCB Guidelines on Environmental Air Shed Management and Ventilation Indexing"
+  },
+  {
+    "id": "cpcb_naaqs_pm10_annual_and_24h",
+    "domain": "air_quality_emissions",
+    "region": "National",
+    "authority": "Central Pollution Control Board (CPCB)",
+    "title": "National Ambient Air Quality Standards (NAAQS) for Coarse Dust PM10",
+    "rule_text": "Under CPCB NAAQS notifications: 24-hour permissible PM10 limit is 100.0 µg/m³, and annual permissible limit is 60.0 µg/m³. Concentrations > 100 µg/m³ indicate heavy mechanical resuspension of road dust, unpaved construction debris, and quarry dust, exacerbating chronic obstructive pulmonary disease (COPD).",
+    "trigger_condition": "PM10 > 100.0 µg/m³ (24h mean)",
+    "mandatory_directive": "Deploy mechanical sweeping vehicles with vacuum filters; enforce green netting barriers around all construction perimeters.",
+    "citation": "CPCB National Ambient Air Quality Standards (NAAQS) Notification (2009)"
+  },
+  {
+    "id": "caqm_stubble_burning_seasonal_ban",
+    "domain": "air_quality_emissions",
+    "region": "Indo-Gangetic Plain",
+    "authority": "CAQM & Ministry of Agriculture",
+    "title": "Crop Residue In-Situ Management and Agricultural Burning Ban",
+    "rule_text": "Open burning of paddy stubble / crop residue (parali) is strictly prohibited under the Commission for Air Quality Management in NCR & Adjoining Areas Act. Stubble burning releases massive plumes of elemental carbon, volatile organic compounds (VOCs), and PM2.5, driving downwind AQI to 'Severe+' (> 450) across the northern plains between October 15 and November 30.",
+    "trigger_condition": "Harvest window (Oct 15 - Nov 30) with fire spot alerts",
+    "mandatory_directive": "Deploy Super-SMS, Happy Seeders, and bio-decomposer enzymes; enforce statutory environmental compensation fines on farm fires.",
+    "citation": "CAQM Framework for Control of Agricultural Crop Residue Burning in Northern States"
+  },
+  {
+    "id": "cpcb_brick_kiln_zigzag_mandate",
+    "domain": "air_quality_emissions",
+    "region": "Indo-Gangetic Plain",
+    "authority": "Central Pollution Control Board (CPCB)",
+    "title": "Clay Brick Kiln Conversion to Zig-Zag Technology and Seasonal Winter Ban",
+    "rule_text": "Traditional Fixed Chimney Bull's Trench Kilns (FCBTK) are legally prohibited from operating without conversion to induced-draft or natural-draft Zig-Zag technology, which reduces particulate emissions by 70%. Furthermore, all brick kilns in the NCR and non-attainment airsheds are barred from firing between October and February during winter inversion periods.",
+    "trigger_condition": "Non-converted FCBTK kiln or unauthorized winter operation",
+    "mandatory_directive": "Issue immediate closure notices and disconnect power supply to non-compliant brick kilns.",
+    "citation": "CPCB Directions under Section 18(1)(b) of Air (Prevention and Control of Pollution) Act"
+  }
+]

@@ -12,6 +12,7 @@ Features:
 from __future__ import annotations
 
 import os
+import re
 import time
 from typing import Dict, Any, List, Optional, Tuple
 import httpx
@@ -23,6 +24,10 @@ from climacore.service.agent_tools import (
     AGENT_FUNCTION_DECLARATIONS,
     AgentToolExecutor,
     detect_and_execute_offline_scenario,
+)
+from climacore.analytics.rag_retriever import (
+    retrieve_relevant_standards,
+    format_retrieved_standards_for_prompt,
 )
 
 logger = get_logger("climacore.service.assistant")
@@ -52,6 +57,7 @@ class AssistantChatResponse(BaseModel):
     suggested_followups: List[str] = Field(default_factory=list, description="Suggested quick-reply prompt pills")
     action: Optional[Dict[str, Any]] = Field(default=None, description="Client-side UI action dispatched by the agent")
     tool_calls: List[Dict[str, Any]] = Field(default_factory=list, description="Tools executed by the agent during reasoning")
+    retrieved_standards: List[Dict[str, Any]] = Field(default_factory=list, description="Verified institutional standards retrieved via local RAG")
     provider: str = Field(..., description="Model provider ('gemini-2.0-flash' or 'climacore-deterministic-agent')")
     latency_ms: float = Field(..., description="Total execution latency in milliseconds")
 
@@ -116,8 +122,12 @@ def build_metrics_summary(pred: LivePredictionResult, persona_id: str) -> Dict[s
     return summary
 
 
-def build_grounded_system_prompt(pred: LivePredictionResult, persona_id: str) -> str:
-    """Generate a zero-hallucination system prompt embedding Clima-Core's verified physical metrics."""
+def build_grounded_system_prompt(
+    pred: LivePredictionResult,
+    persona_id: str,
+    retrieved_standards: Optional[List[Dict[str, Any]]] = None,
+) -> str:
+    """Generate a zero-hallucination system prompt embedding Clima-Core's verified physical metrics and RAG standards."""
     metrics = build_metrics_summary(pred, persona_id)
     today = pred.daily_predictions[0]
     personas_dict = today.personas or {}
@@ -137,6 +147,10 @@ def build_grounded_system_prompt(pred: LivePredictionResult, persona_id: str) ->
             f"- {d.day_name} ({d.date}): Max Temp {m.get('temp_max')}°C, Rain {m.get('precipitation_mm')}mm (Prob {p_pct}%), PM2.5 {m.get('pm2_5')} µg/m³"
         )
     outlook_str = "\n".join(outlook_lines)
+
+    rag_section = ""
+    if retrieved_standards:
+        rag_section = f"\n\n{format_retrieved_standards_for_prompt(retrieved_standards)}"
 
     prompt = f"""You are the Clima-Core Cognitive Environmental Risk & Decision Agent, an autonomous AI system built on India's premier physics-guided environmental intelligence platform.
 
@@ -164,7 +178,7 @@ ACTIVE STRATEGIC ADVISORIES:
 {chr(10).join([f'* {a}' for a in advisories]) if advisories else '* Standard operations.'}
 
 UPCOMING 5-DAY OUTLOOK:
-{outlook_str}
+{outlook_str}{rag_section}
 
 AGENT POWERS AND CAPABILITIES:
 You have access to specialized simulation and control tools:
@@ -231,6 +245,7 @@ def generate_deterministic_synthesis(
     query: str,
     pred: LivePredictionResult,
     persona_id: str,
+    retrieved_standards: Optional[List[Dict[str, Any]]] = None,
 ) -> str:
     """Intelligent rule-based synthesis answering basic weather queries when Gemini API key is absent."""
     metrics = build_metrics_summary(pred, persona_id)
@@ -251,8 +266,78 @@ def generate_deterministic_synthesis(
 
     is_rainy = (rain_prob_pct >= 35) or (rain_mm >= 1.5)
 
-    # 1. Umbrella / Rain Query
-    if any(k in q_lower for k in ["umbrella", "rain", "shower", "monsoon", "deluge", "pour"]):
+    # 1. Agriculture / Pesticide / Crop Query
+    if re.search(r"\b(pesticide|spray|spraying|crop|crops|wheat|paddy|rice|cotton|mustard|potato|irrigate|irrigation|farming|sowing|soil)\b", q_lower):
+        icar_ref = ""
+        if retrieved_standards:
+            icar = next((s for s in retrieved_standards if "pesticide" in s.get("id", "") or "spray" in s.get("id", "") or s.get("domain") in ["agro_meteorology", "agriculture"]), None)
+            if icar:
+                icar_ref = (
+                    f"\n\n* **ICAR-CRIDA Scientific Standard ({icar['title']}):** {icar['rule_text']}\n"
+                    f"* **Mandatory Directive:** {icar['mandatory_directive']} ({icar['citation']})"
+                )
+
+        if is_rainy:
+            return (
+                f"**Hold off on chemical pesticide spraying in {city} today.**\n\n"
+                f"* **Reason:** Rainfall is forecast at {rain_mm:.1f} mm ({rain_prob_pct}% probability). "
+                f"Chemicals applied now will suffer severe surface wash-off, reducing efficacy and causing pesticide runoff into drainage channels.\n"
+                f"* **Recommendation:** Delay chemical applications until dry conditions return.{icar_ref}"
+            )
+        else:
+            return (
+                f"**Field spraying conditions in {city} are favorable today.**\n\n"
+                f"* **Forecast:** Precipitation probability is low ({rain_prob_pct}%), and wind speed is {metrics['wind_speed_kmh']} km/h (within safe spray drift threshold < 15 km/h).\n"
+                f"* **Soil Deficit:** Soil moisture deficit index is {metrics['soil_moisture_deficit_index']}.{icar_ref}"
+            )
+
+    # 2. Water Quality / Chemical Potability / Aquifer Contamination (RAG Driven)
+    if re.search(r"\b(fluoride|nitrate|arsenic|lead|uranium|hardness|tds|potable|drinking water|water quality|borewell|aquifer)\b", q_lower):
+        wq_std = None
+        if retrieved_standards:
+            wq_std = next((s for s in retrieved_standards if s.get("domain") in ["hydro_geology", "water_quality"]), None)
+        if wq_std:
+            return (
+                f"### Drinking Water Potability Assessment ({wq_std['authority']})\n\n"
+                f"* **Standard:** **{wq_std['title']}**\n"
+                f"* **Regulatory Limit:** {wq_std['rule_text']}\n"
+                f"* **Trigger Threshold:** `{wq_std['trigger_condition']}`\n"
+                f"* **Mandatory Directive:** {wq_std['mandatory_directive']}\n"
+                f"* **Official Citation:** {wq_std['citation']}"
+            )
+
+    # 3. Critical Infrastructure, Railway Track Safety & Energy Grid (RAG Driven)
+    if re.search(r"\b(railway|rail|track|buckling|patrolling|transformer|grid|substation|transmission|bitumen|asphalt|power plant)\b", q_lower):
+        infra_std = None
+        if retrieved_standards:
+            infra_std = next((s for s in retrieved_standards if s.get("domain") == "infrastructure_energy"), None)
+        if infra_std:
+            return (
+                f"### Infrastructure Operational Directive ({infra_std['authority']})\n\n"
+                f"* **Standard:** **{infra_std['title']}**\n"
+                f"* **Engineering Threshold:** {infra_std['rule_text']}\n"
+                f"* **Trigger Condition:** `{infra_std['trigger_condition']}`\n"
+                f"* **Mandatory Safety Action:** {infra_std['mandatory_directive']}\n"
+                f"* **Official Reference:** {infra_std['citation']}"
+            )
+
+    # 4. Air Quality & GRAP Emergency Countermeasures (RAG Driven)
+    if re.search(r"\b(aqi|pm2.5|pm10|grap|stubble|inversion|stagnation|kiln|smog)\b", q_lower):
+        air_std = None
+        if retrieved_standards:
+            air_std = next((s for s in retrieved_standards if s.get("domain") == "air_quality_emissions"), None)
+        if air_std:
+            return (
+                f"### Air Quality Regulatory Protocol ({air_std['authority']})\n\n"
+                f"* **Regulatory Standard:** **{air_std['title']}**\n"
+                f"* **Enforcement Threshold:** {air_std['rule_text']}\n"
+                f"* **Trigger Condition:** `{air_std['trigger_condition']}`\n"
+                f"* **Mandatory Countermeasure:** {air_std['mandatory_directive']}\n"
+                f"* **Statutory Citation:** {air_std['citation']}"
+            )
+
+    # 5. Umbrella / Rain Query
+    if re.search(r"\b(umbrella|rain|raining|rainy|shower|showers|monsoon|deluge|pour|downpour)\b", q_lower):
         if is_rainy:
             return (
                 f"**Yes, you should definitely carry an umbrella today in {city}.**\n\n"
@@ -268,39 +353,54 @@ def generate_deterministic_synthesis(
                 f"* **Conditions:** Skies are predominantly dry. You can travel without rain protection."
             )
 
-    # 2. Heat / Outdoor Activity Query
-    if any(k in q_lower for k in ["heat", "hot", "sun", "outdoor", "run", "sports", "jog", "exercise", "walk"]):
+    # 6. Heat / Outdoor Activity Query
+    if re.search(r"\b(heat|heatwave|hot|sun|outdoor|sports|jog|exercise)\b", q_lower):
+        ndma_ref = ""
+        if retrieved_standards:
+            ndma_std = next((s for s in retrieved_standards if s.get("domain") in ["public_health_disaster", "heat_disaster"]), None)
+            if ndma_std and ndma_std.get("relevance_score", 0.0) >= 0.2:
+                ndma_ref = f"\n* **NDMA Protocol ({ndma_std['title']}):** {ndma_std['rule_text']}"
+
         if t_max >= 38.0 or (wet_bulb and wet_bulb >= 28.0):
             return (
                 f"**Caution is advised for outdoor activities in {city} today.**\n\n"
                 f"* **Peak Temperature:** {t_max:.1f}°C (Apparent Heat Index: {metrics['apparent_temp_max_c']:.1f}°C).\n"
                 f"* **Wet-Bulb Stress:** {wet_bulb:.1f}°C, which indicates heightened thermal strain.\n"
-                f"* **Recommendation:** Reschedule strenuous outdoor sports or heavy physical labor to before 9:00 AM or after 5:30 PM. Maintain continuous hydration."
+                f"* **Recommendation:** Reschedule strenuous outdoor sports or heavy physical labor to before 9:00 AM or after 5:30 PM. Maintain continuous hydration.{ndma_ref}"
             )
         else:
             return (
                 f"**Outdoor conditions in {city} are comfortable for activities today.**\n\n"
                 f"* **Max Temperature:** {t_max:.1f}°C with relative humidity at {metrics['relative_humidity_pct']}%. "
-                f"Thermal strain is within normal operational limits."
+                f"Thermal strain is within normal operational limits.{ndma_ref}"
             )
 
-    # 3. Agriculture / Pesticide / Crop Query
+    # 4. Agriculture / Pesticide / Crop Query
     if any(k in q_lower for k in ["pesticide", "spray", "crop", "irrigate", "farming", "sowing", "soil"]):
+        icar_ref = ""
+        if retrieved_standards:
+            icar = next((s for s in retrieved_standards if "pesticide" in s.get("id", "") or "spray" in s.get("id", "") or s.get("domain") == "agriculture"), None)
+            if icar:
+                icar_ref = (
+                    f"\n* **ICAR-CRIDA Scientific Standard ({icar['title']}):** {icar['rule_text']}\n"
+                    f"* **Mandatory Directive:** {icar['mandatory_directive']} ({icar['citation']})"
+                )
+
         if is_rainy:
             return (
                 f"**Hold off on chemical pesticide spraying in {city} today.**\n\n"
                 f"* **Reason:** Rainfall is forecast at {rain_mm:.1f} mm ({rain_prob_pct}% probability). "
                 f"Chemicals applied now will suffer severe surface wash-off, reducing efficacy and causing pesticide runoff into drainage channels.\n"
-                f"* **Recommendation:** Delay chemical applications until dry conditions return."
+                f"* **Recommendation:** Delay chemical applications until dry conditions return.{icar_ref}"
             )
         else:
             return (
                 f"**Field spraying conditions in {city} are favorable today.**\n\n"
                 f"* **Forecast:** Precipitation probability is low ({rain_prob_pct}%), and wind speed is {metrics['wind_speed_kmh']} km/h (within safe spray drift threshold < 15 km/h).\n"
-                f"* **Soil Deficit:** Soil moisture deficit index is {metrics['soil_moisture_deficit_index']}."
+                f"* **Soil Deficit:** Soil moisture deficit index is {metrics['soil_moisture_deficit_index']}.{icar_ref}"
             )
 
-    # 4. Default Comprehensive Synthesis
+    # 5. Default Comprehensive Synthesis
     lines = [
         f"### Environmental Risk Summary for **{city}** ({persona_id.capitalize()} Context)\n",
         f"* **Thermal State:** High of **{t_max:.1f}°C** (Wet-Bulb: {wet_bulb or 'N/A'}°C), 90% confidence range: {metrics['conformal_intervals_90pct']['temperature_range']}.",
@@ -310,6 +410,15 @@ def generate_deterministic_synthesis(
     ]
     if restrictions:
         lines.append(f"\n**Active Operational Directives:**\n" + "\n".join([f"- ⚠️ {r}" for r in restrictions]))
+
+    if retrieved_standards:
+        top_std = retrieved_standards[0]
+        if top_std.get("relevance_score", 0.0) >= 0.25:
+            lines.append(
+                f"\n**Institutional Regulatory Benchmark ({top_std['authority']}):**\n"
+                f"- **{top_std['title']}**: {top_std['rule_text']}\n"
+                f"  *(Directive: {top_std['mandatory_directive']} | Ref: {top_std['citation']})*"
+            )
 
     return "\n".join(lines)
 
@@ -453,7 +562,20 @@ class AssistantEngine:
     ) -> AssistantChatResponse:
         t0 = time.perf_counter()
         metrics = build_metrics_summary(prediction_result, req.persona)
-        system_prompt = build_grounded_system_prompt(prediction_result, req.persona)
+
+        # 0. Retrieve Institutional Regulatory Standards via Federated Multi-Shard RAG
+        retrieved_standards = retrieve_relevant_standards(
+            query=req.message,
+            persona=req.persona,
+            city=prediction_result.city,
+            top_k=2,
+        )
+
+        system_prompt = build_grounded_system_prompt(
+            pred=prediction_result,
+            persona_id=req.persona,
+            retrieved_standards=retrieved_standards,
+        )
         followups = generate_suggested_followups(prediction_result, req.persona)
 
         # Initialize tool executor
@@ -500,6 +622,7 @@ class AssistantEngine:
                     query=req.message,
                     pred=prediction_result,
                     persona_id=req.persona,
+                    retrieved_standards=retrieved_standards,
                 )
                 provider = "climacore-deterministic-synthesis"
 
@@ -513,6 +636,7 @@ class AssistantEngine:
             suggested_followups=followups,
             action=action,
             tool_calls=tool_calls,
+            retrieved_standards=retrieved_standards,
             provider=provider,
             latency_ms=round(latency_ms, 2),
         )

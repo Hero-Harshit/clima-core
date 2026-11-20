@@ -341,9 +341,11 @@ def create_app() -> FastAPI:
             assistant_engine = get_assistant_engine()
 
             # Retrieve or fetch live prediction contract for context grounding
+            canonical_ids = {p["id"] for p in CANONICAL_PERSONAS}
+            persona_to_fetch = req.persona if req.persona in canonical_ids else "all"
             pred = live_engine.predict(
                 query=req.city,
-                persona=req.persona,
+                persona=persona_to_fetch,
                 force_refresh=req.force_refresh,
             )
 

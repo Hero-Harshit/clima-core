@@ -1,0 +1,79 @@
+[
+  {
+    "id": "ndma_heatwave_declaration_criteria",
+    "domain": "public_health_disaster",
+    "region": "National",
+    "authority": "National Disaster Management Authority (NDMA)",
+    "title": "Heatwave and Severe Heatwave Declaration Criteria for India",
+    "rule_text": "NDMA declares a Heatwave in plains when maximum temperature reaches >= 40.0°C (>= 37.0°C in coastal regions, >= 30.0°C in hill regions), or when departure from normal reaches +4.5°C to +6.4°C. Severe Heatwave declares when maximum temperature reaches >= 47.0°C in plains, or departure from normal exceeds +6.4°C.",
+    "trigger_condition": "Temperature >= 40.0°C or departure >= +4.5°C",
+    "mandatory_directive": "Activate Heat Action Plan (HAP) departmental coordination; prepare primary health centers for heatstroke triage.",
+    "citation": "NDMA National Guidelines for Preparation of Action Plan - Prevention and Management of Heat Wave (2019), Section 2.1"
+  },
+  {
+    "id": "ndma_heatwave_alert_stages",
+    "domain": "public_health_disaster",
+    "region": "National",
+    "authority": "National Disaster Management Authority (NDMA)",
+    "title": "Heatwave Warning Tiers (Yellow, Orange, Red Alerts)",
+    "rule_text": "Yellow Alert (Be Updated): Heatwave persists for up to 2 days; high thermal discomfort for vulnerable populations. Orange Alert (Be Prepared): Severe heatwave persists for 2 days or heatwave conditions persist for 4+ days. Red Alert (Take Action): Severe heatwave persists for more than 2 days or total heatwave duration exceeds 6 days. Extreme health hazard for all age groups.",
+    "trigger_condition": "Heatwave persistence >= 2 days",
+    "mandatory_directive": "At Orange Alert: Supply mobile water tankers to slums and transit hubs; adjust school hours. At Red Alert: Prohibit outdoor manual and construction labor between 12:00 PM and 3:30 PM.",
+    "citation": "NDMA National Guidelines for Preparation of Action Plan - Prevention and Management of Heat Wave (2019), Section 4.2"
+  },
+  {
+    "id": "ndma_wet_bulb_thermal_mortality",
+    "domain": "public_health_disaster",
+    "region": "Coastal & Deltaic",
+    "authority": "NDMA & Indian Institute of Public Health (IIPH)",
+    "title": "Psychrometric Wet-Bulb Temperature Survivability and Labor Limits",
+    "rule_text": "Wet-bulb temperature (Tw) integrates evaporative cooling limits of the human body. At Tw >= 29.0°C, heavy outdoor physical labor requires mandatory 45-minute rest breaks per hour with electrolyte replenishment. At Tw >= 31.0°C (extreme hazard threshold), the body cannot shed metabolic heat via perspiration; prolonged outdoor exposure leads to fatal exertional heatstroke.",
+    "trigger_condition": "Wet-Bulb Temperature >= 29.0°C",
+    "mandatory_directive": "Enforce mandatory shaded rest intervals for gig workers, agricultural laborers, and construction crews; deploy oral rehydration salts (ORS) kiosks.",
+    "citation": "Ahmedabad Heat Action Plan (HAP) & NDMA Extreme Temperature Health Adaptation Protocol"
+  },
+  {
+    "id": "ndma_school_and_child_heat_protection",
+    "domain": "public_health_disaster",
+    "region": "Indo-Gangetic Plain",
+    "authority": "NDMA & Ministry of Education",
+    "title": "School Shift Rescheduling and Playground Closure Guidelines",
+    "rule_text": "When ambient temperature exceeds 42.0°C or when IMD issues an Orange Heatwave Alert, schools must terminate afternoon sessions. Operational hours must shift to 7:00 AM - 11:00 AM morning shifts only. All outdoor sports, assemblies, and physical training must be suspended. If temperatures exceed 44.0°C or Red Alert triggers, state authorities must declare temporary school closures.",
+    "trigger_condition": "Temperature >= 42.0°C or Orange/Red Alert",
+    "mandatory_directive": "End school sessions by 11:00 AM; prohibit open-ground physical activities; ensure cold drinking water availability on school transit buses.",
+    "citation": "Ministry of Education & NDMA Advisory on School Safety during Extreme Weather"
+  },
+  {
+    "id": "ncdc_monsoon_vector_borne_disease",
+    "domain": "public_health_disaster",
+    "region": "National",
+    "authority": "National Centre for Disease Control (NCDC) & NVBDCP",
+    "title": "Post-Monsoon Waterlogging Vector-Borne Dengue/Malaria Breeding Limits",
+    "rule_text": "Aedes aegypti (Dengue/Chikungunya) and Anopheles (Malaria) mosquitoes complete their larval-to-pupal life cycle in stagnant freshwater pools within 7 to 10 days at ambient temperatures between 25.0°C and 32.0°C with relative humidity > 70%. Standing pools formed after deluge rainfall create exponential vector breeding surges within 14 days.",
+    "trigger_condition": "Persistent standing rainwater > 7 days with RH > 70%",
+    "mandatory_directive": "Conduct municipal anti-larval fogging and apply Temephos larvicide granules to un-drained water bodies; inspect overhead water tanks and tire storage yards.",
+    "citation": "NVBDCP Technical Guidelines for Prevention and Control of Dengue and Vector-Borne Diseases"
+  },
+  {
+    "id": "ndma_cold_wave_declaration_criteria",
+    "domain": "public_health_disaster",
+    "region": "Indo-Gangetic Plain",
+    "authority": "National Disaster Management Authority & IMD",
+    "title": "Cold Wave and Severe Cold Wave Declaration Tiers in Plains",
+    "rule_text": "A Cold Wave in plains is declared when minimum temperature is <= 10.0°C and the departure from normal is -4.5°C to -6.4°C (or actual minimum <= 4.0°C regardless of departure). A Severe Cold Wave is declared when minimum temperature is <= 10.0°C and departure is >= -6.5°C below normal (or actual minimum <= 2.0°C).",
+    "trigger_condition": "Min Temp <= 10.0°C with departure <= -4.5°C",
+    "mandatory_directive": "Open 24-hour heated municipal night shelters ('Rain Baseras') with clean blankets for homeless populations; distribute firewood and heating fuel.",
+    "citation": "NDMA Guidelines for Preparation of Action Plan - Prevention and Management of Cold Wave"
+  },
+  {
+    "id": "ndma_cyclone_four_stage_warning",
+    "domain": "public_health_disaster",
+    "region": "Coastal & Deltaic",
+    "authority": "NDMA & India Meteorological Department (IMD)",
+    "title": "Four-Stage Cyclone Alert and Coastal Storm Surge Evacuation Protocol",
+    "rule_text": "IMD operates a 4-stage warning system for coastal cyclonic storms: Stage 1 'Pre-Cyclone Watch' (72 hours prior), Stage 2 'Cyclone Alert' (48 hours prior, Yellow Alert), Stage 3 'Cyclone Warning' (24 hours prior, Orange Alert), and Stage 4 'Post-Landfall Outlook' (12 hours prior, Red Alert). A storm surge >= 2.0 meters warrants mandatory total evacuation of all populations within 5 km of coastline.",
+    "trigger_condition": "Cyclone Alert Orange/Red or predicted storm surge >= 2.0 meters",
+    "mandatory_directive": "Halt all port cargo handling, suspend fishing vessel operations, execute mandatory evacuation of coastal thatch/kutcha settlements to multi-purpose cyclone shelters.",
+    "citation": "NDMA National Cyclone Risk Mitigation Project (NCRMP) Standard Operating Procedure"
+  }
+]

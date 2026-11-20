@@ -1,0 +1,79 @@
+[
+  {
+    "id": "cea_transformer_tropical_night_stress",
+    "domain": "infrastructure_energy",
+    "region": "National",
+    "authority": "Central Electricity Authority (CEA)",
+    "title": "Transformer Thermal Dissipation & Tropical Night Degradation",
+    "rule_text": "Power distribution transformers rely on nocturnal ambient cooling to dissipate core and winding thermal energy accumulated during daytime peak operations. When nocturnal temperatures remain >= 28.0°C ('Tropical Night'), thermal dissipation collapses. Transformer oil temperatures remain elevated, degrading insulation life and increasing catastrophic blowout hazard by 3.5x under AC cooling surges.",
+    "trigger_condition": "Night temperature (Tmin) >= 28.0°C and peak load > 90% capacity",
+    "mandatory_directive": "Activate auxiliary substation cooling fans; redistribute feeder loads to prevent localized distribution transformer tripping.",
+    "citation": "CEA Manual on Transmission and Distribution Substation Operations"
+  },
+  {
+    "id": "cea_cooling_tower_wet_bulb_approach",
+    "domain": "infrastructure_energy",
+    "region": "National",
+    "authority": "Central Electricity Authority (CEA)",
+    "title": "Thermal Power Plant Wet-Bulb Approach & Generation De-Rating",
+    "rule_text": "Thermal and combined-cycle gas turbine generating units utilize wet cooling towers designed for a wet-bulb approach temperature of 28.0°C. When ambient wet-bulb temperature exceeds 31.0°C, cooling water return temperature rises, condenser vacuum degrades, and power generating efficiency drops by 0.5% per °C, forcing units into thermal generation de-rating.",
+    "trigger_condition": "Wet-Bulb Temperature >= 31.0°C",
+    "mandatory_directive": "Issue generation de-rating notices to State Load Despatch Centres (SLDC); schedule peaker generation reserves.",
+    "citation": "CEA Technical Standards for Construction of Thermal Power Stations"
+  },
+  {
+    "id": "rdso_railway_track_buckling_cwr",
+    "domain": "infrastructure_energy",
+    "region": "National",
+    "authority": "Research Designs & Standards Organisation (RDSO / Indian Railways)",
+    "title": "Continuous Welded Rail (CWR) Track Buckling & Hot Weather Patrolling",
+    "rule_text": "On Indian Railways tracks, high summer ambient heat induces severe longitudinal compressive thermal stresses in continuous welded rails (CWR). When rail temperature rises above Td + 25°C (where Td is de-stressing temperature, typically 40°C-44°C) for tracks with sleeper density >= 1540/km (or Td + 20°C for lower density), rails expand dangerously, risking sudden lateral buckling (sun kinks) and derailment.",
+    "trigger_condition": "Rail temperature >= Td + 25.0°C (typically ambient >= 42°C with solar radiation)",
+    "mandatory_directive": "Initiate mandatory Hot Weather Patrolling along track beats during peak daylight hours; impose speed restrictions (caution orders) on vulnerable curves and approaches.",
+    "citation": "Indian Railways Permanent Way Manual (IRPWM), Chapter 8 on Welded Rails, Section 8.1"
+  },
+  {
+    "id": "rdso_railway_maintenance_temperature_window",
+    "domain": "infrastructure_energy",
+    "region": "National",
+    "authority": "Research Designs & Standards Organisation (RDSO / Indian Railways)",
+    "title": "Permissible Rail Temperature Window for Track Maintenance Operations",
+    "rule_text": "Track maintenance operations such as packing, lifting, ballast screening, and alignment adjustments disturb lateral ballast resistance. To prevent buckling, maintenance on CWR track is strictly forbidden when rail temperature exceeds Td + 10°C or falls below Td - 30°C. Heavy mechanized tamping during extreme heat leads to catastrophic track destabilization.",
+    "trigger_condition": "Rail temperature > Td + 10.0°C during scheduled track work",
+    "mandatory_directive": "Immediately suspend track tamping and lining operations; consolidate ballast shoulders; do not alter rail fastening geometry until temperatures cool.",
+    "citation": "IRPWM Manual, Section 8.7 Guidelines on Track Disturbance and Temperature Limitations"
+  },
+  {
+    "id": "nhai_asphalt_pavement_bleeding",
+    "domain": "infrastructure_energy",
+    "region": "Western Arid Zone",
+    "authority": "Ministry of Road Transport and Highways (MoRTH) & NHAI",
+    "title": "High Pavement Surface Temperature & Bitumen Bleeding Hazard",
+    "rule_text": "Standard bitumen binder Viscosity Grades (VG-30) have softening points between 47°C and 55°C. Under intense direct solar radiation, asphalt pavement temperatures reach 15°C to 20°C higher than ambient air. When road surface temperature exceeds 60.0°C, bitumen liquefies and migrates to the surface ('bleeding'), drastically reducing skid resistance and causing vehicle slippage.",
+    "trigger_condition": "Ambient Temp >= 43.0°C resulting in asphalt pavement temp >= 60.0°C",
+    "mandatory_directive": "Spread aggregate quarry dust / coarse sand over bleeding highway segments; place dynamic electronic speed reduction warnings.",
+    "citation": "MoRTH Specifications for Road and Bridge Works (Fifth Revision), Section 500"
+  },
+  {
+    "id": "cwc_urban_drainage_surcharge_limit",
+    "domain": "infrastructure_energy",
+    "region": "National",
+    "authority": "Central Water Commission (CWC) & CPHEEO",
+    "title": "Urban Stormwater Canal Capacity & Surcharge Inundation Limit",
+    "rule_text": "Urban stormwater drainage systems across Tier-1 and Tier-2 Indian cities are historically engineered to handle rainfall intensities of 25.0 to 35.0 mm/hour. When precipitation exceeds 50.0 mm in a 3-hour window over catchments with impervious urban surface fractions > 65%, gravity drainage canals surcharge and backflow into arterial roads, submerging underpasses within 30 to 45 minutes.",
+    "trigger_condition": "Precipitation > 50.0 mm in 3 hours in urban core",
+    "mandatory_directive": "Activate de-watering high-capacity diesel pumps at subway underpasses; deploy traffic police diversions away from designated flood-prone junctions.",
+    "citation": "CPHEEO Manual on Storm Water Drainage Systems, Ministry of Housing and Urban Affairs"
+  },
+  {
+    "id": "posoco_grid_transmission_conductor_thermal_sag",
+    "domain": "infrastructure_energy",
+    "region": "National",
+    "authority": "Grid Controller of India (POSOCO) & CEA",
+    "title": "Extra High Voltage (EHV) Overhead Transmission Conductor Thermal Sag",
+    "rule_text": "EHV transmission conductors (400 kV / 765 kV ACSR) carry rated electrical currents that generate resistive ohmic heating. When high electrical transfer coincides with ambient heatwaves (> 44.0°C) and calm wind (< 2.0 km/h), conductor temperatures approach their 75.0°C/85.0°C thermal limit, causing excessive mechanical line sag that breaches mandatory statutory ground clearances, risking flashovers to vegetation.",
+    "trigger_condition": "Ambient Temp >= 44.0°C with transmission line loading > 85% MVA rating",
+    "mandatory_directive": "Activate Dynamic Line Rating (DLR) monitoring; re-dispatch thermal generation to relieve heavily loaded transmission corridors.",
+    "citation": "CEA Technical Standards for Construction of Electric Plants and Electric Lines Regulations"
+  }
+]

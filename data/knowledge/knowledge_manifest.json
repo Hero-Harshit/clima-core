@@ -1,0 +1,110 @@
+{
+  "architecture": "Federated Multi-Shard Institutional RAG (Option C)",
+  "total_standards": 36,
+  "domains": [
+    "agro_meteorology",
+    "hydro_geology",
+    "public_health_disaster",
+    "air_quality_emissions",
+    "infrastructure_energy"
+  ],
+  "shards": {
+    "agro_meteorology": {
+      "count": 8,
+      "embedding_shape": [
+        8,
+        7
+      ],
+      "regions": [
+        "Western Arid Zone",
+        "Coastal & Deltaic",
+        "National",
+        "Indo-Gangetic Plain",
+        "Deccan Plateau"
+      ]
+    },
+    "hydro_geology": {
+      "count": 8,
+      "embedding_shape": [
+        8,
+        7
+      ],
+      "regions": [
+        "Coastal & Deltaic",
+        "National",
+        "Indo-Gangetic Plain",
+        "Western Arid Zone"
+      ]
+    },
+    "public_health_disaster": {
+      "count": 7,
+      "embedding_shape": [
+        7,
+        6
+      ],
+      "regions": [
+        "Coastal & Deltaic",
+        "National",
+        "Indo-Gangetic Plain"
+      ]
+    },
+    "air_quality_emissions": {
+      "count": 6,
+      "embedding_shape": [
+        6,
+        5
+      ],
+      "regions": [
+        "National",
+        "Indo-Gangetic Plain"
+      ]
+    },
+    "infrastructure_energy": {
+      "count": 7,
+      "embedding_shape": [
+        7,
+        6
+      ],
+      "regions": [
+        "National",
+        "Western Arid Zone"
+      ]
+    }
+  },
+  "regions": [
+    "Western Arid Zone",
+    "Coastal & Deltaic",
+    "National",
+    "Indo-Gangetic Plain",
+    "Deccan Plateau"
+  ],
+  "authorities": [
+    "Central Ground Water Board (CGWB)",
+    "ICAR - National Rice Research Institute (NRRI)",
+    "NDMA & India Meteorological Department (IMD)",
+    "ICAR-CRIDA & IMD Agromet",
+    "ICAR - Central Institute for Cotton Research (CICR)",
+    "Bureau of Indian Standards (BIS)",
+    "National Disaster Management Authority & IMD",
+    "CAQM & Ministry of Agriculture",
+    "Grid Controller of India (POSOCO) & CEA",
+    "Central Water Commission (CWC) & CPHEEO",
+    "ICAR - Central Institute of Agricultural Engineering (CIAE)",
+    "ICAR - Indian Institute of Wheat and Barley Research (IIWBR)",
+    "Research Designs & Standards Organisation (RDSO / Indian Railways)",
+    "National Centre for Disease Control (NCDC) & NVBDCP",
+    "Central Electricity Authority (CEA)",
+    "NDMA & Indian Institute of Public Health (IIPH)",
+    "National Disaster Management Authority (NDMA)",
+    "ICAR - Directorate of Rapeseed-Mustard Research (DRMR)",
+    "Indian Council of Agricultural Research (ICAR-CRIDA)",
+    "Commission for Air Quality Management (CAQM) / CPCB",
+    "NDMA & Ministry of Education",
+    "Central Ground Water Board (CGWB) & AERB",
+    "Central Pollution Control Board (CPCB)",
+    "Ministry of Road Transport and Highways (MoRTH) & NHAI",
+    "CPCB & IMD Environmental Monitoring Wing",
+    "Bureau of Indian Standards & CGWB",
+    "ICAR - Central Potato Research Institute (CPRI)"
+  ]
+}

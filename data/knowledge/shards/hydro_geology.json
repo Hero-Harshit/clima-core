@@ -1,0 +1,90 @@
+[
+  {
+    "id": "bis_fluoride_chemical_standard",
+    "domain": "hydro_geology",
+    "region": "Western Arid Zone",
+    "authority": "Bureau of Indian Standards (BIS)",
+    "title": "Fluoride Chemical Limits in Drinking Water (IS 10500:2012)",
+    "rule_text": "Under BIS IS 10500:2012, acceptable fluoride concentration in drinking water is 1.0 mg/L, with a maximum permissible limit of 1.5 mg/L in the absence of an alternate source. Concentrations > 1.5 mg/L cause dental fluorosis (mottling and pitting of tooth enamel) in children and crippling skeletal fluorosis (bone deformation and calcification of ligaments) in adults.",
+    "trigger_condition": "Fluoride > 1.5 mg/L",
+    "mandatory_directive": "Water is chemically NON-POTABLE. Boiling does NOT remove fluoride. Community-level defluoridation using Activated Alumina (Nalgonda technique) or domestic Reverse Osmosis (RO) filtration is mandatory.",
+    "citation": "Bureau of Indian Standards IS 10500:2012 (Second Revision), Table 2 Chemical Requirements"
+  },
+  {
+    "id": "bis_nitrate_methemoglobinemia",
+    "domain": "hydro_geology",
+    "region": "National",
+    "authority": "Bureau of Indian Standards (BIS)",
+    "title": "Nitrate Limit and Infant Blue-Baby Syndrome Risk (IS 10500:2012)",
+    "rule_text": "Under BIS IS 10500:2012, maximum permissible limit for Nitrate (as NO3) in drinking water is 45.0 mg/L with NO RELAXATION. High nitrate arises from agricultural fertilizer runoff and sewage infiltration. Ingesting water with nitrate > 45 mg/L causes infant methemoglobinemia ('blue-baby syndrome'), converting blood hemoglobin to methemoglobin and impairing oxygen transport, leading to suffocation.",
+    "trigger_condition": "Nitrate > 45.0 mg/L",
+    "mandatory_directive": "Strictly prohibit consumption of this water by pregnant mothers and infants under 1 year. Implement ion-exchange de-nitrification or RO filtration.",
+    "citation": "Bureau of Indian Standards IS 10500:2012, Table 2 Toxic Substances"
+  },
+  {
+    "id": "bis_total_hardness_and_tds",
+    "domain": "hydro_geology",
+    "region": "National",
+    "authority": "Bureau of Indian Standards (BIS)",
+    "title": "Total Hardness and Total Dissolved Solids (TDS) Limits",
+    "rule_text": "Under BIS IS 10500:2012: Total Hardness (as CaCO3) acceptable limit is 200.0 mg/L, permissible limit 600.0 mg/L. Hardness > 600 mg/L causes encrustation in water pipelines, scale formation in boilers, and poor palatability. Total Dissolved Solids (TDS) acceptable limit is 500.0 mg/L, permissible limit 2000.0 mg/L. TDS > 2000 mg/L causes gastrointestinal irritation and severe mineral scaling.",
+    "trigger_condition": "Hardness > 600.0 mg/L or TDS > 2000.0 mg/L",
+    "mandatory_directive": "Install cation-exchange water softening or commercial RO desalinization before domestic or industrial use.",
+    "citation": "Bureau of Indian Standards IS 10500:2012, Table 1 Organoleptic and Physical Parameters"
+  },
+  {
+    "id": "bis_heavy_metals_arsenic_lead",
+    "domain": "hydro_geology",
+    "region": "Indo-Gangetic Plain",
+    "authority": "Bureau of Indian Standards & CGWB",
+    "title": "Heavy Metal Toxicity Limits: Arsenic and Lead (IS 10500:2012)",
+    "rule_text": "Under BIS IS 10500:2012: Arsenic acceptable limit is 0.01 mg/L (10 ppb), maximum permissible limit 0.05 mg/L. Chronic arsenic ingestion leads to arsenicosis, hyperkeratosis of palms, black foot disease, and vascular cancer. Lead acceptable limit is 0.01 mg/L with NO RELAXATION; lead induces irreversible neurotoxicity, cognitive deficits in children, and renal impairment.",
+    "trigger_condition": "Arsenic > 0.01 mg/L or Lead > 0.01 mg/L",
+    "mandatory_directive": "Seal contaminated borewells immediately; mark hand pumps with red hazard paint; provide piped surface water or deep-aquifer potable alternatives.",
+    "citation": "Central Ground Water Board (CGWB) & BIS IS 10500:2012 Heavy Metals Schedule"
+  },
+  {
+    "id": "cgwb_uranium_northwest_aquifer_stress",
+    "domain": "hydro_geology",
+    "region": "Indo-Gangetic Plain",
+    "authority": "Central Ground Water Board (CGWB) & AERB",
+    "title": "Groundwater Uranium Radiological Limits in Northwestern Alluvium",
+    "rule_text": "Atomic Energy Regulatory Board (AERB) and BIS specify maximum permissible uranium concentration in drinking water as 30.0 ppb (µg/L). In northwestern states (Punjab, Haryana, Delhi, western Rajasthan), excessive groundwater over-extraction oxidizes alluvial sediment horizons, mobilizing geogenic uranyl-carbonate complexes into drinking borewells, causing nephrotoxicity and chronic kidney damage.",
+    "trigger_condition": "Uranium > 30.0 ppb in drinking aquifer",
+    "mandatory_directive": "Issue urgent public health advisories; prohibit borewell extraction from shallow contaminated horizons; install community RO purification plants with certified brine disposal.",
+    "citation": "CGWB National Ground Water Quality Assessment & AERB Drinking Water Safety Directive"
+  },
+  {
+    "id": "cgwb_coastal_saline_ingress",
+    "domain": "hydro_geology",
+    "region": "Coastal & Deltaic",
+    "authority": "Central Ground Water Board (CGWB)",
+    "title": "Coastal Aquifer Seawater Intrusion and Electrical Conductivity Threshold",
+    "rule_text": "Over-pumping of coastal freshwater aquifers disrupts the Ghyben-Herzberg hydrostatic equilibrium, causing dense seawater to intrude inland. When Electrical Conductivity (EC) exceeds 3000 µS/cm or Chloride exceeds 1000 mg/L in coastal wells, the aquifer is brackish, unusable for agriculture, and causes progressive salinization of arable coastal soils.",
+    "trigger_condition": "Electrical Conductivity > 3000 µS/cm or Chloride > 1000 mg/L in coastal zone",
+    "mandatory_directive": "Impose legal moratoriums on deep tubewell drilling within 5 km of coastline; construct tidal regulators and subsurface recharge barriers.",
+    "citation": "CGWB Manual on Management of Coastal Aquifers and Saline Ingress Mitigation"
+  },
+  {
+    "id": "cgwb_groundwater_stage_of_extraction",
+    "domain": "hydro_geology",
+    "region": "National",
+    "authority": "Central Ground Water Board (CGWB)",
+    "title": "Dynamic Ground Water Resource Assessment Categorization",
+    "rule_text": "CGWB categorizes groundwater assessment assessment units (blocks/talukas) based on Stage of Extraction (SOE = Annual Extraction / Annual Recharge): Safe (SOE <= 70%), Semi-Critical (SOE 70% - 90%), Critical (SOE 90% - 100%), and Over-Exploited (SOE > 100% with significant water table decline).",
+    "trigger_condition": "Stage of Extraction > 90% (Critical) or > 100% (Over-Exploited)",
+    "mandatory_directive": "Prohibit issuance of commercial and industrial groundwater extraction NOCs; mandate rainwater harvesting on all structures > 100 sq meters.",
+    "citation": "CGWB & Ministry of Jal Shakti National Compilation on Dynamic Ground Water Resources of India"
+  },
+  {
+    "id": "bis_bacteriological_potability_e_coli",
+    "domain": "hydro_geology",
+    "region": "National",
+    "authority": "Bureau of Indian Standards (BIS)",
+    "title": "Bacteriological Quality Requirements (E. coli and Coliform Zero-Tolerance)",
+    "rule_text": "Under BIS IS 10500:2012, all drinking water intended for human consumption must be completely free from Escherichia coli or thermotolerant coliform bacteria in any 100 mL sample (0 CFU/100 mL). Detection of E. coli indicates recent fecal contamination, presenting severe cholera, typhoid, and acute diarrheal outbreak hazards.",
+    "trigger_condition": "E. coli or Coliform count > 0 CFU/100 mL",
+    "mandatory_directive": "Boil drinking water vigorously for at least 1 minute; dose water supply with sodium hypochlorite / bleaching powder to maintain 0.2 to 0.5 mg/L residual free chlorine.",
+    "citation": "BIS IS 10500:2012 Table 6 Microbiological Requirements"
+  }
+]

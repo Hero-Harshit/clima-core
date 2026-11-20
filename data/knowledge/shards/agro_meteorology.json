@@ -1,0 +1,90 @@
+[
+  {
+    "id": "icar_pesticide_foliar_washoff",
+    "domain": "agro_meteorology",
+    "region": "National",
+    "authority": "Indian Council of Agricultural Research (ICAR-CRIDA)",
+    "title": "Chemical Pesticide Foliar Application & Rainfall Wash-off Threshold",
+    "rule_text": "Systemic and contact foliar pesticides, fungicides, and herbicides require a minimum of 4 to 6 rain-free hours for penetration of the waxy plant cuticle. Applying foliar sprays when rainfall is forecast within 4 hours results in 80%+ active ingredient wash-off, contaminating surface runoff and rendering pest control completely ineffective.",
+    "trigger_condition": "Precipitation >= 2.0mm or rain probability >= 40% within 6 hours",
+    "mandatory_directive": "Postpone all chemical pesticide, insecticide, and weedicide spraying until a guaranteed dry window is confirmed.",
+    "citation": "ICAR-CRIDA Standard Operating Procedures for Agrometeorological Advisory Services, Section 5.3"
+  },
+  {
+    "id": "icar_spray_drift_wind_speed_limit",
+    "domain": "agro_meteorology",
+    "region": "National",
+    "authority": "ICAR - Central Institute of Agricultural Engineering (CIAE)",
+    "title": "Agricultural Spray Drift Wind Speed Operational Boundary",
+    "rule_text": "Foliar spraying of agrochemicals must only be conducted when 10m wind speeds are between 3.0 km/h and 15.0 km/h. Wind speeds > 15.0 km/h cause severe droplet drift into non-target neighboring crops, residential settlements, and water channels. Wind speeds < 3.0 km/h under temperature inversion conditions trap fine spray mists near the ground, causing localized chemical toxicity.",
+    "trigger_condition": "Wind speed > 15.0 km/h or < 3.0 km/h with stagnation",
+    "mandatory_directive": "Halt knapsack and tractor-mounted boom spraying during gusty winds; schedule applications during calm early morning hours (6:00 AM - 9:00 AM).",
+    "citation": "ICAR Technical Bulletin on Precision Chemical Application and Environmental Safety"
+  },
+  {
+    "id": "icar_wheat_terminal_heat_anthesis",
+    "domain": "agro_meteorology",
+    "region": "Indo-Gangetic Plain",
+    "authority": "ICAR - Indian Institute of Wheat and Barley Research (IIWBR)",
+    "title": "Rabi Wheat Terminal Heat Stress & Anthesis Reproductive Limit",
+    "rule_text": "Rabi wheat crops entering the reproductive anthesis (flowering) and grain-filling stages (February-March) are exceptionally vulnerable to terminal heat. Maximum daytime temperatures exceeding 32.0°C shorten the grain-filling duration, accelerate leaf senescence, cause pollen abortion, and lead to shriveled grains with 4% to 6% yield loss per degree Celsius above 32°C.",
+    "trigger_condition": "Temperature > 32.0°C during wheat reproductive stage (Feb-March)",
+    "mandatory_directive": "Apply light, frequent sprinkler irrigation during evening/early morning hours to lower crop canopy temperature by 1.5°C - 2.0°C; spray 2% potassium nitrate (KNO3) or thiourea (1000 ppm) to mitigate osmotic stress.",
+    "citation": "ICAR-IIWBR Contingency Strategy for Mitigating Heat Stress in Wheat"
+  },
+  {
+    "id": "icar_paddy_flowering_thermal_sterility",
+    "domain": "agro_meteorology",
+    "region": "Coastal & Deltaic",
+    "authority": "ICAR - National Rice Research Institute (NRRI)",
+    "title": "Paddy (Rice) High-Temperature Spikelet Sterility Threshold",
+    "rule_text": "Rice spikelet flowering and anthesis occur between 9:00 AM and 11:30 AM. Temperatures exceeding 35.0°C or relative humidity exceeding 85% during anthesis impede anther dehiscence, reduce pollen viability, and prevent stigma fertilization, causing spikelet sterility (chaffy grain formation).",
+    "trigger_condition": "Day temperature > 35.0°C during rice flowering window",
+    "mandatory_directive": "Maintain 5 cm standing water layer in the paddy field to buffer rhizosphere temperatures; avoid heavy nitrogen fertilizer top-dressing during heat spikes.",
+    "citation": "ICAR-NRRI Agromet Protocol on Climate Resilient Rice Production"
+  },
+  {
+    "id": "icar_cotton_waterlogging_deluge",
+    "domain": "agro_meteorology",
+    "region": "Deccan Plateau",
+    "authority": "ICAR - Central Institute for Cotton Research (CICR)",
+    "title": "Cotton Crop Root-Zone Waterlogging & Hypoxia Threshold",
+    "rule_text": "Cotton grown in heavy black vertisol soils is exceptionally sensitive to waterlogging. Saturated root-zone conditions (> 85% volumetric moisture content) lasting more than 48 hours induce soil hypoxia (oxygen starvation), causing root death, sudden parawilt, yellowing of foliage, and massive premature shedding of floral squares and bolls.",
+    "trigger_condition": "Excess rainfall resulting in continuous standing water > 24-48 hours",
+    "mandatory_directive": "Dig emergency inter-row drainage trenches to evacuate excess standing water immediately; spray 1% urea + 1% magnesium sulphate solution post-drainage to restore root nutrient uptake.",
+    "citation": "ICAR-CICR Advisory on Monsoon Flood Management in Cotton Belts"
+  },
+  {
+    "id": "icar_soil_moisture_deficit_drought",
+    "domain": "agro_meteorology",
+    "region": "Western Arid Zone",
+    "authority": "ICAR-CRIDA & IMD Agromet",
+    "title": "Soil Moisture Deficit Index (SMDI) Flash Drought Triggers",
+    "rule_text": "SMDI quantifies root-zone moisture anomalies on a -4.0 (extreme drought) to +4.0 (extreme wetness) scale. SMDI values between -1.5 and -2.5 indicate Moderate Agricultural Stress. SMDI < -2.5 indicates Severe Flash Drought, meaning soil moisture has fallen below the permanent wilting point (PWP) of crops.",
+    "trigger_condition": "SMDI <= -2.5 for 10+ consecutive days",
+    "mandatory_directive": "Implement life-saving micro-irrigation (drip/sprinkler); apply biomass mulch to conserve residual soil capillary moisture; postpone top-dressing fertilizers.",
+    "citation": "ICAR-CRIDA Drought Management Contingency Atlas for Indian Districts"
+  },
+  {
+    "id": "icar_mustard_pod_setting_heat_blast",
+    "domain": "agro_meteorology",
+    "region": "Western Arid Zone",
+    "authority": "ICAR - Directorate of Rapeseed-Mustard Research (DRMR)",
+    "title": "Rabi Mustard Flowering and Pod-Filling Thermal Blast Limit",
+    "rule_text": "Mustard crops during flowering and siliqua (pod) formation are highly vulnerable to abrupt temperature spikes. Maximum temperatures exceeding 30.0°C to 35.0°C cause premature flower abortion, poor honeybee pollinator activity, and desiccated, partially filled pods with substantial seed oil yield loss.",
+    "trigger_condition": "Temperature > 30.0°C during mustard flowering (January-February)",
+    "mandatory_directive": "Apply light sprinkler irrigation in the evening to maintain canopy humidity; spray 0.2% borax solution to improve pollen tube growth and seed set.",
+    "citation": "ICAR-DRMR Agrometeorological Advisory Guidelines for Oilseed Belts"
+  },
+  {
+    "id": "icar_potato_late_blight_microclimate",
+    "domain": "agro_meteorology",
+    "region": "Indo-Gangetic Plain",
+    "authority": "ICAR - Central Potato Research Institute (CPRI)",
+    "title": "Potato Late Blight (Phytophthora infestans) Epidemic Microclimate Window",
+    "rule_text": "Late blight fungus sporulates rapidly and decimates potato fields when relative humidity remains >= 90% and mean temperature stays between 10.0°C and 20.0°C for 48 consecutive hours (the 'Jhulsan' weather pattern). Once established, the fungus can completely destroy foliage within 7 to 10 days.",
+    "trigger_condition": "RH >= 90% and Temp 10°C-20°C for >= 48 hours",
+    "mandatory_directive": "Spray prophylactic systemic/contact fungicides (Mancozeb 0.25% or Metalaxyl + Mancozeb) immediately before rain sets in; halt overhead sprinkler irrigation.",
+    "citation": "ICAR-CPRI Technical Bulletin on Decision Support System for Potato Late Blight"
+  }
+]
