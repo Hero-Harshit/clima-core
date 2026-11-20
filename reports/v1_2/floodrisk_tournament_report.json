@@ -1,0 +1,74 @@
+{
+  "suite": "FloodRisk",
+  "test_holdout": "date >= 2022-01-01 (36,500 samples across 50 cities)",
+  "tournament_results": {
+    "LightGBM_Champion_20feat": {
+      "roc_auc": 0.7931,
+      "pr_auc": 0.1134,
+      "brier_score": 0.1373,
+      "f1_at_p35": 0.0602,
+      "precision_at_p35": 0.0314,
+      "recall_at_p35": 0.737
+    },
+    "LightGBM_SCS_CN_23feat": {
+      "roc_auc": 0.8011,
+      "pr_auc": 0.1224,
+      "brier_score": 0.1354,
+      "f1_at_p35": 0.0596,
+      "precision_at_p35": 0.0311,
+      "recall_at_p35": 0.7324
+    },
+    "CatBoost_23feat": {
+      "roc_auc": 0.8003,
+      "pr_auc": 0.0654,
+      "brier_score": 0.2137,
+      "f1_at_p35": 0.0239,
+      "precision_at_p35": 0.0121,
+      "recall_at_p35": 1.0
+    },
+    "XGBoost_Optuna_23feat": {
+      "roc_auc": 0.8014,
+      "pr_auc": 0.1077,
+      "brier_score": 0.1374,
+      "f1_at_p35": 0.059,
+      "precision_at_p35": 0.0307,
+      "recall_at_p35": 0.737
+    },
+    "Ensemble_LGB_CB_XGB_23feat": {
+      "roc_auc": 0.8073,
+      "pr_auc": 0.1141,
+      "brier_score": 0.138,
+      "f1_at_p35": 0.0552,
+      "precision_at_p35": 0.0287,
+      "recall_at_p35": 0.7551
+    }
+  },
+  "resource_benchmarks": {
+    "CatBoost_23feat": {
+      "task_name": "FloodRisk_CatBoost_23feat",
+      "duration_seconds": 5.171,
+      "start_ram_mb": 652.0,
+      "peak_ram_mb": 652.0,
+      "net_ram_increase_mb": 0.0,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 10.2
+    },
+    "XGBoost_Optuna_23feat": {
+      "task_name": "FloodRisk_XGBoost_Optuna_23feat",
+      "duration_seconds": 8.093,
+      "start_ram_mb": 280.2,
+      "peak_ram_mb": 280.2,
+      "net_ram_increase_mb": 0.0,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 240.97
+    }
+  },
+  "best_xgb_optuna_params": {
+    "lr": 0.1409964008693105,
+    "max_depth": 5,
+    "subsample": 0.8130334049062752,
+    "colsample": 0.7352215893527666
+  },
+  "champion_status": "LightGBM_SCS_CN_23feat retained as Primary Champion; XGBoost registered as Top Challenger.",
+  "scientific_conclusion": "XGBoost with Optuna and CatBoost achieve competitive discrimination on severe flood events. LightGBM with deterministic SCS-CN features maintains the best calibration and PR-AUC/ROC-AUC balance, while the 3-way ensemble delivers an additional lift in discrimination without runtime instability."
+}

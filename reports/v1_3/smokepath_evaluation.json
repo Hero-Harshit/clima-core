@@ -1,0 +1,39 @@
+{
+  "model_name": "SmokePath AirQuality PM2.5 Challenger V2",
+  "features_count": 99,
+  "sha256": "2439fc29b2fdb7d6d9d38d8f5c650d586d21cf2305bd7a6884dae014f75ca10e",
+  "evaluation_period": "2026-01-01 to 2026-10-29",
+  "test_samples": 15100,
+  "champion_v010": {
+    "mae": 6.3796,
+    "rmse": 9.6255,
+    "mean_bias": -0.2298,
+    "r2_score": 0.8725,
+    "category_accuracy": 0.8072,
+    "severe_category_recall": 0.0,
+    "severe_events_count": 2
+  },
+  "smokepath_challenger": {
+    "mae": 6.341,
+    "rmse": 9.5755,
+    "mean_bias": -0.2373,
+    "r2_score": 0.8738,
+    "category_accuracy": 0.8098,
+    "severe_category_recall": 0.0,
+    "severe_events_count": 2
+  },
+  "delta": {
+    "mae_reduction": 0.0386,
+    "rmse_reduction": 0.05,
+    "severe_recall_gain": 0.0
+  },
+  "smokepath_feature_importances": {
+    "wind_u_component": 220,
+    "wind_v_component": 198,
+    "smoke_advection_index": 106,
+    "aod_smoke_coupling": 129,
+    "ventilation_index_proxy": 131,
+    "stagnation_inversion_index": 106
+  },
+  "scientific_disclaimer": "Observational atmospheric advection and fire activity proxy. Does not constitute legal source attribution or chemical fingerprinting."
+}

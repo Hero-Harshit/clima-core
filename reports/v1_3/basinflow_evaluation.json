@@ -1,0 +1,67 @@
+{
+  "model_name": "BasinFlow FloodRisk Challenger V1",
+  "features_count": 30,
+  "sha256": "f0d623e825b88bbd051dd6ec762e1d457ec7e0e5f54d27b114cce4bf225ed85d",
+  "evaluation_period": "2022-2023",
+  "test_samples": 36500,
+  "test_events": 441,
+  "champion_scs_cn": {
+    "roc_auc": 0.8013,
+    "pr_auc": 0.1226,
+    "brier_score": 0.1354,
+    "ci_95": {
+      "roc_auc_95ci": [
+        0.7767,
+        0.8239
+      ],
+      "pr_auc_95ci": [
+        0.0936,
+        0.156
+      ]
+    }
+  },
+  "basinflow_challenger": {
+    "roc_auc": 0.788,
+    "pr_auc": 0.1223,
+    "brier_score": 0.137,
+    "f1_score": 0.0586,
+    "precision": 0.0306,
+    "recall": 0.7143,
+    "ci_95": {
+      "roc_auc_95ci": [
+        0.7624,
+        0.813
+      ],
+      "pr_auc_95ci": [
+        0.0927,
+        0.1563
+      ]
+    }
+  },
+  "delta": {
+    "roc_auc_diff": -0.0133,
+    "pr_auc_diff": -0.0002,
+    "brier_diff": 0.0015
+  },
+  "top_feature_importances": {
+    "rain_rolling_30d": 456,
+    "api_14d": 283,
+    "rain_rolling_14d": 264,
+    "drainage_canals_15km": 232,
+    "et0_fao_evapotranspiration": 223,
+    "rain_rolling_7d": 218,
+    "transit_stations_15km": 203,
+    "bridges_15km": 187,
+    "wind_gusts_10m_max": 185,
+    "population_15km": 168,
+    "soil_moisture_7_to_28cm_mean": 157,
+    "dense_cluster_pop_15km": 154,
+    "precipitation_hours": 153,
+    "rootzone_moisture_anomaly": 145,
+    "rain_rolling_3d": 127
+  },
+  "gnn_blocker_declaration": {
+    "status": "BLOCKED_AWAITING_CALIBRATED_DISCHARGE_SENSORS",
+    "reason": "Graph Neural Network (GNN) streamflow discharge modeling cannot be credibly trained or calibrated because open national telemetry feeds (India WRIS / CWC) only publish water level / gauge stage (meters), without continuous rating curves or discharge time-series (m^3/s). Synthetic or uncalibrated GNN flow predictions would violate scientific integrity standards."
+  }
+}

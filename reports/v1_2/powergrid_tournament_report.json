@@ -1,0 +1,105 @@
+{
+  "suite": "PowerGrid",
+  "targets": [
+    "peak_met_mw",
+    "is_grid_deficit_day"
+  ],
+  "test_holdout": "2020-01-01 to 2020-12-31 (15,827 test samples across 49 cities)",
+  "tournament_results": {
+    "LightGBM_Champion_Regressor": {
+      "mae_mw": 1519.18,
+      "rmse_mw": 2336.25,
+      "r2_score": 0.8758,
+      "mape_pct": 18.02,
+      "mean_bias_mw": -1300.94
+    },
+    "CatBoost_Regressor": {
+      "mae_mw": 1588.97,
+      "rmse_mw": 2412.71,
+      "r2_score": 0.8675,
+      "mape_pct": 27.63,
+      "mean_bias_mw": -1318.6
+    },
+    "XGBoost_Optuna_Regressor": {
+      "mae_mw": 1550.4,
+      "rmse_mw": 2368.93,
+      "r2_score": 0.8723,
+      "mape_pct": 21.95,
+      "mean_bias_mw": -1319.69
+    },
+    "Quantile_Q50": {
+      "mae_mw": 1614.6,
+      "rmse_mw": 2546.81,
+      "r2_score": 0.8523,
+      "mape_pct": 19.13,
+      "mean_bias_mw": -1410.37
+    },
+    "Quantile_Uncertainty": {
+      "pinball_loss_q10": 263.99,
+      "pinball_loss_q50": 807.3,
+      "pinball_loss_q90": 619.41,
+      "nominal_coverage_pct": 80.0,
+      "empirical_coverage_pct": 51.68,
+      "avg_interval_width_mw": 2425.97
+    },
+    "LightGBM_Champion_Classifier": {
+      "roc_auc": 0.9521,
+      "pr_auc": 0.8065,
+      "brier_score": 0.2134,
+      "precision_at_p40": 0.1461,
+      "recall_at_p40": 0.9641
+    },
+    "CatBoost_Classifier": {
+      "roc_auc": 0.9527,
+      "pr_auc": 0.7755,
+      "brier_score": 0.21,
+      "precision_at_p40": 0.138,
+      "recall_at_p40": 0.9641
+    }
+  },
+  "resource_benchmarks": {
+    "CatBoost_Regressor": {
+      "task_name": "PowerGrid_CatBoost_Reg",
+      "duration_seconds": 7.268,
+      "start_ram_mb": 240.76,
+      "peak_ram_mb": 262.96,
+      "net_ram_increase_mb": 22.2,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 338.05
+    },
+    "XGBoost_Optuna_Regressor": {
+      "task_name": "PowerGrid_XGBoost_Optuna_Reg",
+      "duration_seconds": 2.532,
+      "start_ram_mb": 266.83,
+      "peak_ram_mb": 267.76,
+      "net_ram_increase_mb": 0.93,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 1623.59
+    },
+    "Quantile_Suite": {
+      "task_name": "PowerGrid_Quantile_Suite",
+      "duration_seconds": 5.803,
+      "start_ram_mb": 267.77,
+      "peak_ram_mb": 275.04,
+      "net_ram_increase_mb": 7.28,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 0.0
+    },
+    "CatBoost_Classifier": {
+      "task_name": "PowerGrid_CatBoost_Clf",
+      "duration_seconds": 4.521,
+      "start_ram_mb": 275.39,
+      "peak_ram_mb": 289.66,
+      "net_ram_increase_mb": 14.27,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 172.28
+    }
+  },
+  "best_xgb_optuna_params": {
+    "lr": 0.11762637680229725,
+    "max_depth": 7,
+    "subsample": 0.8694940592268656,
+    "colsample": 0.886351227317835
+  },
+  "champion_status": "LightGBM Champion retained for point prediction (R2=0.8758, MAE=1519.18 MW); CatBoost registered as competitive challenger (R2=0.8741); Quantile Suite registered as primary load uncertainty model."
+}

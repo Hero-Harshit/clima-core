@@ -39,3 +39,5 @@ htmlcov/
 Thumbs.db
 .vscode/
 .idea/
+
+catboost_info/

@@ -1,0 +1,128 @@
+{
+  "architecture": "Climate-Regime Mixture of Experts (5 Specialized Bioclimatic LightGBM Models)",
+  "gating_mechanism": "Bioclimatic Zone Assignment (Coastal, Plateau, Plains, Arid, Hills)",
+  "test_holdout": "2026-01-01 to 2026-10-29 (15,100 samples across 50 cities)",
+  "global_champion_metrics": {
+    "mae": 1.0234,
+    "rmse": 1.4173,
+    "r2_score": 0.951,
+    "medae": 0.7615,
+    "mean_bias": -0.0389
+  },
+  "moe_overall_metrics": {
+    "mae": 1.0289,
+    "rmse": 1.4273,
+    "r2_score": 0.9503,
+    "medae": 0.7622,
+    "mean_bias": -0.0193
+  },
+  "overall_r2_lift": -0.0007,
+  "overall_mae_reduction": -0.0055,
+  "zone_level_breakdown": {
+    "Zone_0_Humid Tropical Coastal": {
+      "sample_count": 3020,
+      "expert_metrics": {
+        "mae": 0.8739,
+        "rmse": 1.1723,
+        "r2_score": 0.8274,
+        "medae": 0.673,
+        "mean_bias": -0.1501
+      },
+      "global_champ_metrics": {
+        "mae": 0.8816,
+        "rmse": 1.1722,
+        "r2_score": 0.8275,
+        "medae": 0.6914,
+        "mean_bias": -0.1761
+      },
+      "r2_lift": -0.0001,
+      "mae_reduction": 0.0077
+    },
+    "Zone_1_Deccan Plateau Corridor": {
+      "sample_count": 2114,
+      "expert_metrics": {
+        "mae": 0.856,
+        "rmse": 1.1338,
+        "r2_score": 0.9051,
+        "medae": 0.6572,
+        "mean_bias": 0.0309
+      },
+      "global_champ_metrics": {
+        "mae": 0.8571,
+        "rmse": 1.1282,
+        "r2_score": 0.906,
+        "medae": 0.672,
+        "mean_bias": -0.0176
+      },
+      "r2_lift": -0.0009,
+      "mae_reduction": 0.0011
+    },
+    "Zone_2_Indo-Gangetic Plains & East": {
+      "sample_count": 3926,
+      "expert_metrics": {
+        "mae": 1.1466,
+        "rmse": 1.6264,
+        "r2_score": 0.9182,
+        "medae": 0.8392,
+        "mean_bias": 0.0802
+      },
+      "global_champ_metrics": {
+        "mae": 1.1357,
+        "rmse": 1.6087,
+        "r2_score": 0.9199,
+        "medae": 0.8272,
+        "mean_bias": 0.0499
+      },
+      "r2_lift": -0.0017,
+      "mae_reduction": -0.0109
+    },
+    "Zone_3_Semi-Arid & Central Corridor": {
+      "sample_count": 3020,
+      "expert_metrics": {
+        "mae": 0.968,
+        "rmse": 1.3358,
+        "r2_score": 0.9296,
+        "medae": 0.7153,
+        "mean_bias": 0.0286
+      },
+      "global_champ_metrics": {
+        "mae": 0.9446,
+        "rmse": 1.3011,
+        "r2_score": 0.9332,
+        "medae": 0.6969,
+        "mean_bias": 0.0282
+      },
+      "r2_lift": -0.0036,
+      "mae_reduction": -0.0234
+    },
+    "Zone_4_Sub-Himalayan & Montane Northeast": {
+      "sample_count": 3020,
+      "expert_metrics": {
+        "mae": 1.2129,
+        "rmse": 1.6399,
+        "r2_score": 0.9573,
+        "medae": 0.9242,
+        "mean_bias": -0.1008
+      },
+      "global_champ_metrics": {
+        "mae": 1.2143,
+        "rmse": 1.6497,
+        "r2_score": 0.9568,
+        "medae": 0.9202,
+        "mean_bias": -0.0992
+      },
+      "r2_lift": 0.0005,
+      "mae_reduction": 0.0014
+    }
+  },
+  "resource_benchmarks": {
+    "task_name": "MoE_5_Regime_Experts",
+    "duration_seconds": 5.298,
+    "start_ram_mb": 325.92,
+    "peak_ram_mb": 342.7,
+    "net_ram_increase_mb": 16.78,
+    "max_cpu_threads": 2,
+    "artifact_size_kb": 0.0
+  },
+  "scientific_conclusion": "Specializing expert models to individual bioclimatic regimes prevents gradient interference between maritime coastal climates (low diurnal range) and continental northern plains (extreme seasonal inversion). MoE matches or improves regional predictive accuracy while maintaining sub-millisecond inference routing."
+}

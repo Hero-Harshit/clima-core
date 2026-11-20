@@ -1,0 +1,233 @@
+{
+  "metadata": {
+    "n_train": 776,
+    "n_val": 180,
+    "n_test": 248,
+    "test_date_range": [
+      "2024-09-15",
+      "2024-11-15"
+    ]
+  },
+  "tmax": {
+    "raw_gfs": {
+      "mae": 0.8552,
+      "rmse": 1.1313,
+      "bias": 0.4095,
+      "corr": 0.9056
+    },
+    "raw_jma": {
+      "mae": 1.75,
+      "rmse": 2.0362,
+      "bias": -1.7082,
+      "corr": 0.8195
+    },
+    "raw_icon": {
+      "mae": 0.79,
+      "rmse": 0.9841,
+      "bias": 0.049,
+      "corr": 0.8811
+    },
+    "raw_best_match": {
+      "mae": 0.9296,
+      "rmse": 1.1458,
+      "bias": -0.1272,
+      "corr": 0.8371
+    },
+    "model_a_weighted_ensemble": {
+      "mae": 0.6641,
+      "rmse": 0.848,
+      "bias": -0.2306,
+      "corr": 0.9149,
+      "weights": {
+        "intercept": -0.1216,
+        "gfs": 0.1971,
+        "jma": 0.1303,
+        "icon": 0.6725,
+        "best_match": 0.0
+      }
+    },
+    "model_b_emos": {
+      "mae": 0.6237,
+      "rmse": 0.7927,
+      "bias": -0.1304,
+      "corr": 0.9147,
+      "crps": 0.4764,
+      "coverage_80": 0.9556,
+      "interval_width": 3.2421,
+      "params": {
+        "a_intercept": 2.3349,
+        "weights": {
+          "gfs": 0.1956,
+          "jma": 0.0768,
+          "icon": 0.6521,
+          "best_match": 0.0
+        },
+        "c_base_variance": 1.6,
+        "d_spread_coef": 0.0
+      }
+    },
+    "model_c_ngboost": {
+      "mae": 0.8646,
+      "rmse": 1.0712,
+      "bias": -0.5896,
+      "corr": 0.8871,
+      "crps": 0.6337,
+      "coverage_80": 0.5685,
+      "interval_width": 1.6788
+    },
+    "model_d_quantile_lgbm": {
+      "mae": 0.7878,
+      "rmse": 0.9623,
+      "bias": -0.4212,
+      "corr": 0.8902,
+      "crps": 0.2361,
+      "coverage_80": 0.8266,
+      "interval_width": 2.4809
+    }
+  },
+  "tmin": {
+    "raw_gfs": {
+      "mae": 2.8488,
+      "rmse": 3.73,
+      "bias": 2.5891,
+      "corr": 0.4898
+    },
+    "raw_jma": {
+      "mae": 1.5335,
+      "rmse": 1.8407,
+      "bias": 0.6823,
+      "corr": 0.839
+    },
+    "raw_icon": {
+      "mae": 1.5681,
+      "rmse": 1.8874,
+      "bias": 1.3044,
+      "corr": 0.8829
+    },
+    "raw_best_match": {
+      "mae": 1.5988,
+      "rmse": 1.9171,
+      "bias": 1.1048,
+      "corr": 0.8457
+    },
+    "model_a_weighted_ensemble": {
+      "mae": 1.1959,
+      "rmse": 1.432,
+      "bias": -0.3148,
+      "corr": 0.8774,
+      "weights": {
+        "intercept": -1.5214,
+        "gfs": 0.0,
+        "jma": 0.0848,
+        "icon": 0.689,
+        "best_match": 0.2262
+      }
+    },
+    "model_b_emos": {
+      "mae": 1.1849,
+      "rmse": 1.435,
+      "bias": -0.1617,
+      "corr": 0.8688,
+      "crps": 0.8987,
+      "coverage_80": 0.7056,
+      "interval_width": 4.2651,
+      "params": {
+        "a_intercept": -0.0641,
+        "weights": {
+          "gfs": 0.0533,
+          "jma": 0.2591,
+          "icon": 0.3294,
+          "best_match": 0.3062
+        },
+        "c_base_variance": 1.0067,
+        "d_spread_coef": 0.991
+      }
+    },
+    "model_c_ngboost": {
+      "mae": 1.1521,
+      "rmse": 1.4304,
+      "bias": -0.8267,
+      "corr": 0.9348,
+      "crps": 0.8917,
+      "coverage_80": 0.4798,
+      "interval_width": 1.8858
+    },
+    "model_d_quantile_lgbm": {
+      "mae": 1.1672,
+      "rmse": 1.4424,
+      "bias": -0.8667,
+      "corr": 0.9275,
+      "crps": 0.3548,
+      "coverage_80": 0.7702,
+      "interval_width": 3.2686
+    }
+  },
+  "precip": {
+    "raw_gfs": {
+      "mae": 4.1604,
+      "rmse": 11.6687,
+      "bias": -0.9777,
+      "corr": 0.5668,
+      "pod": 0.8378,
+      "far": 0.3981,
+      "csi": 0.5391,
+      "brier": 0.2137
+    },
+    "raw_jma": {
+      "mae": 4.571,
+      "rmse": 10.0711,
+      "bias": 0.6776,
+      "corr": 0.7079,
+      "pod": 0.8649,
+      "far": 0.4019,
+      "csi": 0.547,
+      "brier": 0.2137
+    },
+    "raw_icon": {
+      "mae": 4.9717,
+      "rmse": 11.1353,
+      "bias": 0.0804,
+      "corr": 0.6127,
+      "pod": 0.8514,
+      "far": 0.4661,
+      "csi": 0.4884,
+      "brier": 0.2661
+    },
+    "raw_best_match": {
+      "mae": 4.3931,
+      "rmse": 11.4547,
+      "bias": -0.7752,
+      "corr": 0.5996,
+      "pod": 0.8514,
+      "far": 0.4522,
+      "csi": 0.5,
+      "brier": 0.254
+    },
+    "model_a_weighted_ensemble": {
+      "mae": 4.3648,
+      "rmse": 9.7213,
+      "bias": 0.3302,
+      "corr": 0.7244,
+      "pod": 0.9054,
+      "far": 0.4322,
+      "csi": 0.536,
+      "brier": 0.2339,
+      "weights": {
+        "intercept": -0.0137,
+        "gfs": 0.1617,
+        "jma": 0.7174,
+        "icon": 0.1208,
+        "best_match": 0.0
+      }
+    },
+    "model_d_two_part_ensemble": {
+      "mae": 4.2685,
+      "rmse": 10.2302,
+      "bias": -1.0555,
+      "corr": 0.7976,
+      "brier": 0.1503,
+      "mean_rain_prob": 0.412,
+      "obs_rain_freq": 0.2984
+    }
+  }
+}

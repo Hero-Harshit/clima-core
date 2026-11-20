@@ -1,0 +1,316 @@
+{
+  "floodrisk_ensemble": {
+    "champion_lightgbm_scs": {
+      "roc_auc": 0.8011,
+      "pr_auc": 0.1224,
+      "brier_score": 0.1354,
+      "log_loss": 0.3995,
+      "precision_p35": 0.0311,
+      "recall_p35": 0.7324,
+      "f1_p35": 0.0596,
+      "ece": 0.2309
+    },
+    "xgboost_optuna": {
+      "roc_auc": 0.8,
+      "pr_auc": 0.1086,
+      "brier_score": 0.1346,
+      "log_loss": 0.4049,
+      "precision_p35": 0.0315,
+      "recall_p35": 0.737,
+      "f1_p35": 0.0605,
+      "ece": 0.2395
+    },
+    "catboost": {
+      "roc_auc": 0.8003,
+      "pr_auc": 0.0654,
+      "brier_score": 0.2137,
+      "log_loss": 0.6198,
+      "precision_p35": 0.0121,
+      "recall_p35": 1.0,
+      "f1_p35": 0.0239,
+      "ece": 0.4477
+    },
+    "static_blend_40_30_30": {
+      "roc_auc": 0.8067,
+      "pr_auc": 0.1149,
+      "brier_score": 0.1368,
+      "log_loss": 0.4327,
+      "precision_p35": 0.0291,
+      "recall_p35": 0.7574,
+      "f1_p35": 0.056,
+      "ece": 0.2985
+    },
+    "learned_val_blend": {
+      "roc_auc": 0.8046,
+      "pr_auc": 0.1158,
+      "brier_score": 0.1329,
+      "log_loss": 0.4103,
+      "precision_p35": 0.0304,
+      "recall_p35": 0.7415,
+      "f1_p35": 0.0584,
+      "ece": 0.2659
+    },
+    "learned_weights": {
+      "w_lgb": 0.4366,
+      "w_cb": 0.1449,
+      "w_xgb": 0.4185
+    },
+    "bootstrap_diff_ci_95": {
+      "delta_roc_auc_ci": [
+        0.0004,
+        0.0068
+      ],
+      "delta_pr_auc_ci": [
+        -0.0159,
+        0.0038
+      ],
+      "p_value_auc_superiority": 0.012
+    }
+  },
+  "heatrisk_ngboost": {
+    "ngboost_evaluation": {
+      "nll": 1.7271,
+      "crps": 0.7625,
+      "nominal_coverage_pct": 80.0,
+      "empirical_coverage_pct": 79.54,
+      "mean_sigma_deg_c": 1.25,
+      "mean_interval_width_deg_c": 3.2,
+      "city_coverage_variation": {
+        "min_coverage_city": "Srinagar",
+        "min_coverage_pct": 71.19,
+        "max_coverage_city": "Nashik",
+        "max_coverage_pct": 83.77,
+        "mean_city_coverage_pct": 79.54,
+        "std_city_coverage_pct": 2.84
+      },
+      "seasonal_coverage": {
+        "Monsoon": 79.9,
+        "Post-Monsoon": 82.07,
+        "Pre-Monsoon/Summer": 76.72,
+        "Winter": 81.93
+      },
+      "extreme_heat_coverage": {
+        "tmax_ge_38c_count": 1351,
+        "tmax_ge_38c_coverage_pct": 84.68,
+        "tmax_ge_40c_count": 653,
+        "tmax_ge_40c_coverage_pct": 85.15
+      }
+    },
+    "quantile_lightgbm_comparison": {
+      "empirical_coverage_pct": 76.82,
+      "mean_interval_width_deg_c": 3.01,
+      "crossing_rate_pct": 0.0
+    }
+  },
+  "heatrisk_moe": {
+    "architecture": "Climate-Regime Mixture of Experts (5 Specialized Bioclimatic LightGBM Models)",
+    "gating_mechanism": "Bioclimatic Zone Assignment (Coastal, Plateau, Plains, Arid, Hills)",
+    "test_holdout": "2026-01-01 to 2026-10-29 (15,100 samples across 50 cities)",
+    "global_champion_metrics": {
+      "mae": 1.0234,
+      "rmse": 1.4173,
+      "r2_score": 0.951,
+      "medae": 0.7615,
+      "mean_bias": -0.0389
+    },
+    "moe_overall_metrics": {
+      "mae": 1.0289,
+      "rmse": 1.4273,
+      "r2_score": 0.9503,
+      "medae": 0.7622,
+      "mean_bias": -0.0193
+    },
+    "overall_r2_lift": -0.0007,
+    "overall_mae_reduction": -0.0055,
+    "zone_level_breakdown": {
+      "Zone_0_Humid Tropical Coastal": {
+        "sample_count": 3020,
+        "expert_metrics": {
+          "mae": 0.8739,
+          "rmse": 1.1723,
+          "r2_score": 0.8274,
+          "medae": 0.673,
+          "mean_bias": -0.1501
+        },
+        "global_champ_metrics": {
+          "mae": 0.8816,
+          "rmse": 1.1722,
+          "r2_score": 0.8275,
+          "medae": 0.6914,
+          "mean_bias": -0.1761
+        },
+        "r2_lift": -0.0001,
+        "mae_reduction": 0.0077
+      },
+      "Zone_1_Deccan Plateau Corridor": {
+        "sample_count": 2114,
+        "expert_metrics": {
+          "mae": 0.856,
+          "rmse": 1.1338,
+          "r2_score": 0.9051,
+          "medae": 0.6572,
+          "mean_bias": 0.0309
+        },
+        "global_champ_metrics": {
+          "mae": 0.8571,
+          "rmse": 1.1282,
+          "r2_score": 0.906,
+          "medae": 0.672,
+          "mean_bias": -0.0176
+        },
+        "r2_lift": -0.0009,
+        "mae_reduction": 0.0011
+      },
+      "Zone_2_Indo-Gangetic Plains & East": {
+        "sample_count": 3926,
+        "expert_metrics": {
+          "mae": 1.1466,
+          "rmse": 1.6264,
+          "r2_score": 0.9182,
+          "medae": 0.8392,
+          "mean_bias": 0.0802
+        },
+        "global_champ_metrics": {
+          "mae": 1.1357,
+          "rmse": 1.6087,
+          "r2_score": 0.9199,
+          "medae": 0.8272,
+          "mean_bias": 0.0499
+        },
+        "r2_lift": -0.0017,
+        "mae_reduction": -0.0109
+      },
+      "Zone_3_Semi-Arid & Central Corridor": {
+        "sample_count": 3020,
+        "expert_metrics": {
+          "mae": 0.968,
+          "rmse": 1.3358,
+          "r2_score": 0.9296,
+          "medae": 0.7153,
+          "mean_bias": 0.0286
+        },
+        "global_champ_metrics": {
+          "mae": 0.9446,
+          "rmse": 1.3011,
+          "r2_score": 0.9332,
+          "medae": 0.6969,
+          "mean_bias": 0.0282
+        },
+        "r2_lift": -0.0036,
+        "mae_reduction": -0.0234
+      },
+      "Zone_4_Sub-Himalayan & Montane Northeast": {
+        "sample_count": 3020,
+        "expert_metrics": {
+          "mae": 1.2129,
+          "rmse": 1.6399,
+          "r2_score": 0.9573,
+          "medae": 0.9242,
+          "mean_bias": -0.1008
+        },
+        "global_champ_metrics": {
+          "mae": 1.2143,
+          "rmse": 1.6497,
+          "r2_score": 0.9568,
+          "medae": 0.9202,
+          "mean_bias": -0.0992
+        },
+        "r2_lift": 0.0005,
+        "mae_reduction": 0.0014
+      }
+    },
+    "resource_benchmarks": {
+      "task_name": "MoE_5_Regime_Experts",
+      "duration_seconds": 5.298,
+      "start_ram_mb": 325.92,
+      "peak_ram_mb": 342.7,
+      "net_ram_increase_mb": 16.78,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 0.0
+    },
+    "scientific_conclusion": "Specializing expert models to individual bioclimatic regimes prevents gradient interference between maritime coastal climates (low diurnal range) and continental northern plains (extreme seasonal inversion). MoE matches or improves regional predictive accuracy while maintaining sub-millisecond inference routing."
+  },
+  "powergrid_tcn": {
+    "benchmark_metrics": {
+      "test_r2": 0.5385,
+      "test_mae_mw": 3048.58,
+      "test_rmse_mw": 4502.47,
+      "test_mape_pct": 98.21,
+      "total_trainable_parameters": 15545,
+      "receptive_field_days": 31,
+      "sequence_lookback_days": 30
+    },
+    "city_scale_disparity": {
+      "min_city_mean_mw": 90.5,
+      "max_city_mean_mw": 18810.3,
+      "ratio_max_to_min_scale": 207.9
+    },
+    "root_causes": [
+      "Scale pooling without city entity embeddings: 49 cities pooled into one 1D CNN without city-specific bias terms or embeddings, forcing the network to predict vastly different state grid scales (28 MW in small union territories to 24,962 MW in Maharashtra) from weather alone.",
+      "Lack of contemporaneous calendar conditioning: LightGBM uses explicit day-of-week and month categories which capture industrial demand shifts; TCN relied entirely on temporal convolutions of weather features.",
+      "Distributional shift between train (2013-2018) and test (2020 COVID industrial lockdown): 2020 experienced massive non-meteorological electricity demand contraction, which pure autoregressive models without state-level macro indicators heavily overpredict."
+    ]
+  },
+  "drought_cascade_hmm": {
+    "state_physical_characterization": {
+      "State_0": {
+        "frequency_pct": 25.06,
+        "mean_sm_0_7cm": 0.1746,
+        "median_sm_0_7cm": 0.146,
+        "mean_smdi": -0.0038,
+        "median_smdi": 0.0,
+        "mean_rootzone_anom": -0.0005,
+        "median_rootzone_anom": 0.0,
+        "mean_soil_temp_c": 30.26,
+        "mean_dwell_days": 35.1,
+        "median_dwell_days": 19.0,
+        "self_transition_prob": 0.9699
+      },
+      "State_1": {
+        "frequency_pct": 33.26,
+        "mean_sm_0_7cm": 0.3773,
+        "median_sm_0_7cm": 0.389,
+        "mean_smdi": 0.1726,
+        "median_smdi": 0.128,
+        "mean_rootzone_anom": 0.0375,
+        "median_rootzone_anom": 0.028,
+        "mean_soil_temp_c": 26.43,
+        "mean_dwell_days": 27.0,
+        "median_dwell_days": 15.0,
+        "self_transition_prob": 0.9608
+      },
+      "State_2": {
+        "frequency_pct": 13.36,
+        "mean_sm_0_7cm": 0.2637,
+        "median_sm_0_7cm": 0.267,
+        "mean_smdi": -0.2874,
+        "median_smdi": -0.263,
+        "mean_rootzone_anom": -0.0649,
+        "median_rootzone_anom": -0.057,
+        "mean_soil_temp_c": 29.52,
+        "mean_dwell_days": 19.0,
+        "median_dwell_days": 14.0,
+        "self_transition_prob": 0.944
+      },
+      "State_3": {
+        "frequency_pct": 28.31,
+        "mean_sm_0_7cm": 0.1728,
+        "median_sm_0_7cm": 0.157,
+        "mean_smdi": 0.014,
+        "median_smdi": 0.003,
+        "mean_rootzone_anom": 0.0039,
+        "median_rootzone_anom": 0.001,
+        "mean_soil_temp_c": 25.93,
+        "mean_dwell_days": 21.1,
+        "median_dwell_days": 10.0,
+        "self_transition_prob": 0.9501
+      }
+    },
+    "causal_forward_filter_audit": {
+      "test_city": "Delhi",
+      "sequence_length": 16437,
+      "agreement_between_forward_filter_and_viterbi_pct": 93.93,
+      "operational_rule": "Live API inference must strictly execute causal forward filtering P(Z_t | X_{1:t}) using the forward-variable recursion, prohibiting future observation lookahead."
+    }
+  }
+}

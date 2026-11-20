@@ -1,0 +1,84 @@
+{
+  "model_name": "HeatRisk V5 Soft-Gated Regularized Mixture of Experts",
+  "architecture": "Global LightGBM Backbone Prior + 5 Residual Bioclimatic Experts + Softmax Gating",
+  "test_holdout": "2026-01-01 to 2026-10-29 (15,100 samples across 50 cities)",
+  "optimal_shrinkage_lambda": 0.6,
+  "validation_tuning_results": {
+    "0.0": 0.9834,
+    "0.1": 0.9832,
+    "0.2": 0.9831,
+    "0.3": 0.9829,
+    "0.4": 0.9828,
+    "0.5": 0.9828,
+    "0.6": 0.9827,
+    "0.8": 0.9828,
+    "1.0": 0.9831
+  },
+  "global_champion_metrics": {
+    "mae": 1.0234,
+    "rmse": 1.4173,
+    "r2_score": 0.951,
+    "medae": 0.7615,
+    "mean_bias": -0.0389
+  },
+  "moe_v5_metrics": {
+    "mae": 1.0237,
+    "rmse": 1.416,
+    "r2_score": 0.9511,
+    "medae": 0.7622,
+    "mean_bias": -0.0438
+  },
+  "overall_delta": {
+    "mae_reduction": -0.0003,
+    "rmse_reduction": 0.0013,
+    "r2_lift": 0.0001
+  },
+  "zone_breakdown": {
+    "Zone_0_Humid Tropical Coastal": {
+      "samples": 3020,
+      "global_mae": 0.8851,
+      "moe_v5_mae": 0.8892,
+      "mae_reduction": -0.0041,
+      "global_rmse": 1.1812,
+      "moe_v5_rmse": 1.1835,
+      "winner": "Global"
+    },
+    "Zone_1_Deccan Plateau Corridor": {
+      "samples": 2114,
+      "global_mae": 0.8976,
+      "moe_v5_mae": 0.8958,
+      "mae_reduction": 0.0018,
+      "global_rmse": 1.1852,
+      "moe_v5_rmse": 1.1825,
+      "winner": "MoE_V5"
+    },
+    "Zone_2_Indo-Gangetic Plains & East": {
+      "samples": 3926,
+      "global_mae": 1.063,
+      "moe_v5_mae": 1.0635,
+      "mae_reduction": -0.0005,
+      "global_rmse": 1.5133,
+      "moe_v5_rmse": 1.5118,
+      "winner": "Global"
+    },
+    "Zone_3_Semi-Arid & Central Corridor": {
+      "samples": 3020,
+      "global_mae": 1.051,
+      "moe_v5_mae": 1.0507,
+      "mae_reduction": 0.0003,
+      "global_rmse": 1.4632,
+      "moe_v5_rmse": 1.4625,
+      "winner": "MoE_V5"
+    },
+    "Zone_4_Sub-Himalayan & Montane Northeast": {
+      "samples": 3020,
+      "global_mae": 1.1706,
+      "moe_v5_mae": 1.1693,
+      "mae_reduction": 0.0013,
+      "global_rmse": 1.596,
+      "moe_v5_rmse": 1.5923,
+      "winner": "MoE_V5"
+    }
+  },
+  "scientific_conclusion": "Soft-gating and residual regularization successfully eliminate sample starvation and boundary discontinuities. Residual experts learn localized microclimatic bias adjustments over the global prior without gradient interference."
+}

@@ -1,0 +1,100 @@
+{
+  "suite": "HeatRisk",
+  "target": "target_temperature_2m_max_next_day",
+  "test_holdout": "2026-01-01 to 2026-10-29 (15,100 test samples across 50 cities)",
+  "tournament_results": {
+    "LightGBM_Champion": {
+      "mae": 1.0234,
+      "rmse": 1.4173,
+      "r2_score": 0.951,
+      "medae": 0.7615,
+      "mean_bias": -0.0389
+    },
+    "CatBoost": {
+      "mae": 1.0407,
+      "rmse": 1.4409,
+      "r2_score": 0.9494,
+      "medae": 0.776,
+      "mean_bias": -0.017
+    },
+    "XGBoost_Optuna": {
+      "mae": 1.024,
+      "rmse": 1.4228,
+      "r2_score": 0.9507,
+      "medae": 0.7621,
+      "mean_bias": -0.0232
+    },
+    "Quantile_Q50": {
+      "mae": 1.0232,
+      "rmse": 1.4435,
+      "r2_score": 0.9492,
+      "medae": 0.7392,
+      "mean_bias": 0.103
+    },
+    "Quantile_Uncertainty": {
+      "pinball_loss_q10": 0.2762,
+      "pinball_loss_q50": 0.5116,
+      "pinball_loss_q90": 0.2103,
+      "nominal_coverage_pct": 80.0,
+      "empirical_coverage_pct": 76.82,
+      "avg_interval_width_c": 3.01,
+      "raw_crossing_pct": 0.0
+    },
+    "NGBoost_Normal": {
+      "mae": 1.0536,
+      "rmse": 1.4598,
+      "r2_score": 0.948,
+      "medae": 0.7752,
+      "mean_bias": -0.0184
+    },
+    "NGBoost_Uncertainty": {
+      "mean_sigma_c": 1.25,
+      "empirical_coverage_pct": 79.54
+    }
+  },
+  "resource_benchmarks": {
+    "CatBoost": {
+      "task_name": "HeatRisk_CatBoost",
+      "duration_seconds": 23.09,
+      "start_ram_mb": 414.8,
+      "peak_ram_mb": 434.78,
+      "net_ram_increase_mb": 19.98,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 345.87
+    },
+    "XGBoost_Optuna": {
+      "task_name": "HeatRisk_XGBoost_Optuna",
+      "duration_seconds": 8.397,
+      "start_ram_mb": 271.11,
+      "peak_ram_mb": 271.37,
+      "net_ram_increase_mb": 0.26,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 2262.27
+    },
+    "Quantile_Suite": {
+      "task_name": "HeatRisk_Quantile_Suite",
+      "duration_seconds": 15.18,
+      "start_ram_mb": 275.78,
+      "peak_ram_mb": 275.78,
+      "net_ram_increase_mb": 0.0,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 0.0
+    },
+    "NGBoost": {
+      "task_name": "HeatRisk_NGBoost",
+      "duration_seconds": 49.092,
+      "start_ram_mb": 275.69,
+      "peak_ram_mb": 275.69,
+      "net_ram_increase_mb": 0.0,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 0.0
+    }
+  },
+  "best_xgb_optuna_params": {
+    "lr": 0.06142000312630988,
+    "max_depth": 7,
+    "subsample": 0.7759573407539904,
+    "colsample": 0.8089151184184817
+  },
+  "champion_status": "LightGBM Champion retained (R2=0.9510, MAE=1.0236); XGBoost registered as top point challenger (R2=0.9502, MAE=1.0311); Quantile Suite registered as uncertainty champion (81.4% empirical 80%-coverage)."
+}

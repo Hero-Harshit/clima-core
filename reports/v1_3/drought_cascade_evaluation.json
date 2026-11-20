@@ -1,0 +1,152 @@
+{
+  "model_name": "DroughtCascade V2 Causal Forward Filtering Gaussian HMM",
+  "version": "v1.3.0",
+  "states": {
+    "0": "Moderate Infiltration / Recovery",
+    "1": "Saturated / Monsoon Wet",
+    "2": "Severe Agricultural Drought",
+    "3": "Incipient Stress / Transitional Drying"
+  },
+  "features": [
+    "soil_moisture_deficit_index",
+    "rootzone_moisture_anomaly",
+    "soil_moisture_0_to_7cm_mean",
+    "soil_temperature_0_to_7cm_mean"
+  ],
+  "dwell_time_statistics": {
+    "state_0": {
+      "name": "Moderate Infiltration / Recovery",
+      "self_transition_prob": 0.9699,
+      "expected_dwell_days": 33.2,
+      "mean_smdi": -0.0038
+    },
+    "state_1": {
+      "name": "Saturated / Monsoon Wet",
+      "self_transition_prob": 0.9608,
+      "expected_dwell_days": 25.5,
+      "mean_smdi": 0.173
+    },
+    "state_2": {
+      "name": "Severe Agricultural Drought",
+      "self_transition_prob": 0.944,
+      "expected_dwell_days": 17.9,
+      "mean_smdi": -0.2842
+    },
+    "state_3": {
+      "name": "Incipient Stress / Transitional Drying",
+      "self_transition_prob": 0.9501,
+      "expected_dwell_days": 20.0,
+      "mean_smdi": 0.014
+    }
+  },
+  "city_evaluations": {
+    "delhi": {
+      "n_days": 16437,
+      "agreement_rate": 0.9393,
+      "severe_drought_days_viterbi": 1975,
+      "severe_drought_days_causal": 1927,
+      "severe_drought_f1": 0.9129,
+      "severe_drought_recall": 0.9018,
+      "severe_drought_precision": 0.9242,
+      "latest_severe_drought_prob": 0.0,
+      "forward_7d_severe_prob": 0.0972,
+      "forward_30d_severe_prob": 0.1776
+    },
+    "nagpur": {
+      "n_days": 16437,
+      "agreement_rate": 0.9311,
+      "severe_drought_days_viterbi": 1795,
+      "severe_drought_days_causal": 1739,
+      "severe_drought_f1": 0.8885,
+      "severe_drought_recall": 0.8747,
+      "severe_drought_precision": 0.9028,
+      "latest_severe_drought_prob": 0.9926,
+      "forward_7d_severe_prob": 0.679,
+      "forward_30d_severe_prob": 0.2914
+    },
+    "jaipur": {
+      "n_days": 16437,
+      "agreement_rate": 0.9373,
+      "severe_drought_days_viterbi": 1981,
+      "severe_drought_days_causal": 1951,
+      "severe_drought_f1": 0.9354,
+      "severe_drought_recall": 0.9283,
+      "severe_drought_precision": 0.9426,
+      "latest_severe_drought_prob": 0.0,
+      "forward_7d_severe_prob": 0.0972,
+      "forward_30d_severe_prob": 0.1776
+    },
+    "chennai": {
+      "n_days": 16437,
+      "agreement_rate": 0.9327,
+      "severe_drought_days_viterbi": 3430,
+      "severe_drought_days_causal": 3322,
+      "severe_drought_f1": 0.9212,
+      "severe_drought_recall": 0.9067,
+      "severe_drought_precision": 0.9362,
+      "latest_severe_drought_prob": 0.0002,
+      "forward_7d_severe_prob": 0.0972,
+      "forward_30d_severe_prob": 0.1775
+    },
+    "kolkata": {
+      "n_days": 16437,
+      "agreement_rate": 0.9393,
+      "severe_drought_days_viterbi": 2523,
+      "severe_drought_days_causal": 2399,
+      "severe_drought_f1": 0.8923,
+      "severe_drought_recall": 0.8704,
+      "severe_drought_precision": 0.9154,
+      "latest_severe_drought_prob": 0.0001,
+      "forward_7d_severe_prob": 0.0332,
+      "forward_30d_severe_prob": 0.0909
+    }
+  },
+  "historical_benchmark_verifications": [
+    {
+      "benchmark_name": "2002 All-India Monsoon Failure",
+      "period": "2002-07-01 to 2002-10-31",
+      "total_days": 123,
+      "severe_drought_days": 65,
+      "severe_drought_percentage": 52.8,
+      "mean_severe_prob": 0.5312,
+      "peak_severe_prob": 1.0
+    },
+    {
+      "benchmark_name": "2009 Severe Countrywide Drought",
+      "period": "2009-06-01 to 2009-10-31",
+      "total_days": 153,
+      "severe_drought_days": 38,
+      "severe_drought_percentage": 24.8,
+      "mean_severe_prob": 0.2607,
+      "peak_severe_prob": 1.0
+    },
+    {
+      "benchmark_name": "2014 El Nino Drought",
+      "period": "2014-06-01 to 2014-11-30",
+      "total_days": 183,
+      "severe_drought_days": 93,
+      "severe_drought_percentage": 50.8,
+      "mean_severe_prob": 0.4907,
+      "peak_severe_prob": 1.0
+    },
+    {
+      "benchmark_name": "2015 Back-to-Back El Nino Drought",
+      "period": "2015-06-01 to 2015-11-30",
+      "total_days": 183,
+      "severe_drought_days": 73,
+      "severe_drought_percentage": 39.9,
+      "mean_severe_prob": 0.4031,
+      "peak_severe_prob": 1.0
+    },
+    {
+      "benchmark_name": "2018-2019 Maharashtra/Central Drought",
+      "period": "2018-09-01 to 2019-06-30",
+      "total_days": 303,
+      "severe_drought_days": 44,
+      "severe_drought_percentage": 14.5,
+      "mean_severe_prob": 0.1466,
+      "peak_severe_prob": 1.0
+    }
+  ],
+  "operational_mandate": "Causal forward filtering P(Z_t | X_{1:t}) MUST be used for all live inference. Retrospective Viterbi decoding is restricted to offline historical regime audits."
+}

@@ -1,0 +1,79 @@
+{
+  "suite": "AirQuality",
+  "target": "target_pm2_5_next_day",
+  "test_holdout": "2026-01-01 to 2026-10-29 (15,100 samples across 50 cities)",
+  "tournament_results": {
+    "LightGBM_Champion": {
+      "mae_ug_m3": 6.3797,
+      "rmse_ug_m3": 9.6255,
+      "r2_score": 0.8725,
+      "medae_ug_m3": 4.0394,
+      "mean_bias_ug_m3": -0.2296
+    },
+    "CatBoost": {
+      "mae_ug_m3": 6.4995,
+      "rmse_ug_m3": 9.7896,
+      "r2_score": 0.8681,
+      "medae_ug_m3": 4.1915,
+      "mean_bias_ug_m3": -0.1031
+    },
+    "XGBoost_Optuna": {
+      "mae_ug_m3": 6.4242,
+      "rmse_ug_m3": 9.7083,
+      "r2_score": 0.8703,
+      "medae_ug_m3": 4.0752,
+      "mean_bias_ug_m3": -0.0366
+    },
+    "Quantile_Q50": {
+      "mae_ug_m3": 6.4482,
+      "rmse_ug_m3": 9.8253,
+      "r2_score": 0.8672,
+      "medae_ug_m3": 4.0705,
+      "mean_bias_ug_m3": -0.4482
+    },
+    "Quantile_Uncertainty": {
+      "pinball_loss_q10": 1.3745,
+      "pinball_loss_q50": 3.2241,
+      "pinball_loss_q90": 1.5921,
+      "nominal_coverage_pct": 80.0,
+      "empirical_coverage_pct": 76.14,
+      "avg_interval_width_ug_m3": 19.17
+    }
+  },
+  "resource_benchmarks": {
+    "CatBoost": {
+      "task_name": "AirQuality_CatBoost",
+      "duration_seconds": 11.721,
+      "start_ram_mb": 337.95,
+      "peak_ram_mb": 352.1,
+      "net_ram_increase_mb": 14.15,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 279.17
+    },
+    "XGBoost_Optuna": {
+      "task_name": "AirQuality_XGBoost_Optuna",
+      "duration_seconds": 6.261,
+      "start_ram_mb": 356.0,
+      "peak_ram_mb": 360.66,
+      "net_ram_increase_mb": 4.67,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 1199.85
+    },
+    "Quantile_Suite": {
+      "task_name": "AirQuality_Quantile_Suite",
+      "duration_seconds": 11.031,
+      "start_ram_mb": 360.71,
+      "peak_ram_mb": 367.09,
+      "net_ram_increase_mb": 6.38,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 0.0
+    }
+  },
+  "best_xgb_optuna_params": {
+    "lr": 0.07058404245230636,
+    "max_depth": 6,
+    "subsample": 0.8514646132178565,
+    "colsample": 0.7971253517359725
+  },
+  "champion_status": "LightGBM Champion retained for primary deterministic point predictions (R2=0.8725); CatBoost and XGBoost registered as strong challengers (R2 > 0.868); Quantile Suite registered as operational PM2.5 probabilistic hazard model."
+}

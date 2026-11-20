@@ -1,0 +1,162 @@
+{
+  "platform_hardware": {
+    "cpu": "Intel Core i3, 11th Gen",
+    "system_ram_gb": 8.0,
+    "os": "Windows x64",
+    "target_ram_ceiling_mb": 5000.0,
+    "max_configured_threads": 2
+  },
+  "benchmarked_tasks": [
+    {
+      "task_name": "FloodRisk_CatBoost_23feat",
+      "duration_seconds": 5.171,
+      "start_ram_mb": 652.0,
+      "peak_ram_mb": 652.0,
+      "net_ram_increase_mb": 0.0,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 10.2
+    },
+    {
+      "task_name": "FloodRisk_XGBoost_Optuna_23feat",
+      "duration_seconds": 8.093,
+      "start_ram_mb": 280.2,
+      "peak_ram_mb": 280.2,
+      "net_ram_increase_mb": 0.0,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 240.97
+    },
+    {
+      "task_name": "HeatRisk_CatBoost",
+      "duration_seconds": 23.09,
+      "start_ram_mb": 414.8,
+      "peak_ram_mb": 434.78,
+      "net_ram_increase_mb": 19.98,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 345.87
+    },
+    {
+      "task_name": "HeatRisk_XGBoost_Optuna",
+      "duration_seconds": 8.397,
+      "start_ram_mb": 271.11,
+      "peak_ram_mb": 271.37,
+      "net_ram_increase_mb": 0.26,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 2262.27
+    },
+    {
+      "task_name": "HeatRisk_Quantile_Suite",
+      "duration_seconds": 15.18,
+      "start_ram_mb": 275.78,
+      "peak_ram_mb": 275.78,
+      "net_ram_increase_mb": 0.0,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 0.0
+    },
+    {
+      "task_name": "HeatRisk_NGBoost",
+      "duration_seconds": 49.092,
+      "start_ram_mb": 275.69,
+      "peak_ram_mb": 275.69,
+      "net_ram_increase_mb": 0.0,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 0.0
+    },
+    {
+      "task_name": "PowerGrid_CatBoost_Reg",
+      "duration_seconds": 7.268,
+      "start_ram_mb": 240.76,
+      "peak_ram_mb": 262.96,
+      "net_ram_increase_mb": 22.2,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 338.05
+    },
+    {
+      "task_name": "PowerGrid_XGBoost_Optuna_Reg",
+      "duration_seconds": 2.532,
+      "start_ram_mb": 266.83,
+      "peak_ram_mb": 267.76,
+      "net_ram_increase_mb": 0.93,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 1623.59
+    },
+    {
+      "task_name": "PowerGrid_Quantile_Suite",
+      "duration_seconds": 5.803,
+      "start_ram_mb": 267.77,
+      "peak_ram_mb": 275.04,
+      "net_ram_increase_mb": 7.28,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 0.0
+    },
+    {
+      "task_name": "PowerGrid_CatBoost_Clf",
+      "duration_seconds": 4.521,
+      "start_ram_mb": 275.39,
+      "peak_ram_mb": 289.66,
+      "net_ram_increase_mb": 14.27,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 172.28
+    },
+    {
+      "task_name": "PowerGrid_PyTorch_TCN_CPU",
+      "duration_seconds": 444.496,
+      "start_ram_mb": 843.48,
+      "peak_ram_mb": 843.48,
+      "net_ram_increase_mb": 0.0,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 81.83
+    },
+    {
+      "task_name": "AirQuality_CatBoost",
+      "duration_seconds": 11.721,
+      "start_ram_mb": 337.95,
+      "peak_ram_mb": 352.1,
+      "net_ram_increase_mb": 14.15,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 279.17
+    },
+    {
+      "task_name": "AirQuality_XGBoost_Optuna",
+      "duration_seconds": 6.261,
+      "start_ram_mb": 356.0,
+      "peak_ram_mb": 360.66,
+      "net_ram_increase_mb": 4.67,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 1199.85
+    },
+    {
+      "task_name": "AirQuality_Quantile_Suite",
+      "duration_seconds": 11.031,
+      "start_ram_mb": 360.71,
+      "peak_ram_mb": 367.09,
+      "net_ram_increase_mb": 6.38,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 0.0
+    },
+    {
+      "task_name": "MoE_5_Regime_Experts",
+      "duration_seconds": 5.298,
+      "start_ram_mb": 325.92,
+      "peak_ram_mb": 342.7,
+      "net_ram_increase_mb": 16.78,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 0.0
+    },
+    {
+      "task_name": "DroughtCascade_HMM",
+      "duration_seconds": 23.503,
+      "start_ram_mb": 230.24,
+      "peak_ram_mb": 231.48,
+      "net_ram_increase_mb": 1.24,
+      "max_cpu_threads": 2,
+      "artifact_size_kb": 2.63
+    }
+  ],
+  "compliance_summary": {
+    "all_tasks_within_5gb_ram": true,
+    "max_peak_ram_observed_mb": 843.48,
+    "all_tasks_executed_on_cpu": true,
+    "cuda_required": false,
+    "max_threads_observed": 2
+  }
+}

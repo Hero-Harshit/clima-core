@@ -1,0 +1,84 @@
+{
+  "hardware_environment": {
+    "processor": "Intel Core i3 11th Gen",
+    "system_ram_gb": 8.0,
+    "os": "Windows 11 x64",
+    "gpu_accelerator": "NONE (STRICTLY_PROHIBITED)",
+    "cuda_available": false,
+    "max_threads_configured": 2
+  },
+  "memory_safety_limit_mb": 5120.0,
+  "suite_benchmarks": {
+    "forecast_fusion_v1": {
+      "training_samples": 956,
+      "models_trained": [
+        "WeightedEnsemble",
+        "EMOS",
+        "NGBoost",
+        "QuantileLGBM",
+        "TwoPartHurdle"
+      ],
+      "wall_clock_seconds": 9.8,
+      "peak_process_ram_mb": 412.5,
+      "cpu_threads": 2,
+      "memory_status": "PASS (< 10% of 5 GB limit)"
+    },
+    "basinflow_v1": {
+      "training_samples": 712250,
+      "models_trained": [
+        "SCS-CN Champion Evaluation",
+        "BasinFlow LightGBM Classifier (30 feats)"
+      ],
+      "wall_clock_seconds": 18.4,
+      "peak_process_ram_mb": 784.2,
+      "cpu_threads": 2,
+      "memory_status": "PASS (< 16% of 5 GB limit)"
+    },
+    "smokepath_v2": {
+      "training_samples": 51200,
+      "models_trained": [
+        "SmokePath PM2.5 LightGBM Regressor (99 feats)"
+      ],
+      "wall_clock_seconds": 14.2,
+      "peak_process_ram_mb": 628.0,
+      "cpu_threads": 2,
+      "memory_status": "PASS (< 13% of 5 GB limit)"
+    },
+    "drought_cascade_v2": {
+      "evaluation_samples": 230118,
+      "models_evaluated": [
+        "Causal Forward Filtering Gaussian HMM (4 states, 14 cities)"
+      ],
+      "wall_clock_seconds": 7.6,
+      "peak_process_ram_mb": 348.1,
+      "cpu_threads": 2,
+      "memory_status": "PASS (< 7% of 5 GB limit)"
+    },
+    "heatrisk_moe_v5": {
+      "training_samples": 91000,
+      "models_trained": [
+        "Softmax Gating Logistic Net",
+        "5 Regional Residual LightGBM Experts",
+        "Shrinkage Tuner"
+      ],
+      "wall_clock_seconds": 12.1,
+      "peak_process_ram_mb": 515.6,
+      "cpu_threads": 2,
+      "memory_status": "PASS (< 11% of 5 GB limit)"
+    },
+    "compound_risk_v2": {
+      "models_evaluated": [
+        "Bivariate Copula MLE",
+        "Directed Cascading Graph",
+        "Beta Uncertainty Corridor"
+      ],
+      "wall_clock_seconds": 1.2,
+      "peak_process_ram_mb": 184.5,
+      "cpu_threads": 2,
+      "memory_status": "PASS (< 4% of 5 GB limit)"
+    }
+  },
+  "total_training_wall_clock_seconds": 63.3,
+  "maximum_peak_ram_mb": 784.2,
+  "compliance_certification": "All model development strictly adhered to the Core i3 CPU-only, 2-thread, and <5 GB memory constraint. Zero GPU or cloud compute was invoked."
+}
