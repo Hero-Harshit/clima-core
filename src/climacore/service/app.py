@@ -94,6 +94,114 @@ class GatekeeperEvaluationRequest(BaseModel):
     min_metric_delta: float = 0.0
 
 
+CANONICAL_PERSONAS: List[Dict[str, Any]] = [
+    {
+        "id": "farmer",
+        "title": "Farmer & Agriculture",
+        "category": "Agriculture & Rural",
+        "icon": "Wheat",
+        "description": "Crop heat stress, soil moisture deficit, irrigation scheduling, and rainfall deluge alerts.",
+        "primary_concerns": ["Soil saturation", "Crop anthesis heat", "Pesticide drift", "Runoff erosion"],
+    },
+    {
+        "id": "student",
+        "title": "Student & School",
+        "category": "Education & Youth",
+        "icon": "GraduationCap",
+        "description": "School closure advisories, heatwave exposure, commute safety, and indoor AQI alerts.",
+        "primary_concerns": ["Extreme heat commute", "Severe AQI school warnings", "Flash flood transport safety"],
+    },
+    {
+        "id": "gig_worker",
+        "title": "Gig Worker & Outdoor Labor",
+        "category": "Urban Labor & Logistics",
+        "icon": "Bike",
+        "description": "Continuous outdoor wet-bulb heat stress, delivery hazard index, and hydration rest stops.",
+        "primary_concerns": ["Wet-bulb globe temperature", "Peak midday heat index", "Flooded arterial roads"],
+    },
+    {
+        "id": "commuter",
+        "title": "Daily Commuter & Transit",
+        "category": "Transportation & Public",
+        "icon": "Car",
+        "description": "Road waterlogging, suburban rail disruption, localized urban flooding, and storm wind gusts.",
+        "primary_concerns": ["Urban road waterlogging", "Transit delays", "Gale wind visibility"],
+    },
+    {
+        "id": "healthcare",
+        "title": "Healthcare & Hospital Ops",
+        "category": "Public Health & Emergency",
+        "icon": "Stethoscope",
+        "description": "Hospital heatstroke surge preparedness, respiratory emergency admissions, and ICU power backup.",
+        "primary_concerns": ["Heat-related illness influx", "Severe air quality exacerbation", "Hospital grid stability"],
+    },
+    {
+        "id": "city_official",
+        "title": "City Official & Disaster Mgmt",
+        "category": "Governance & Civil Defense",
+        "icon": "Building2",
+        "description": "NDMA Heat Action Plan (HAP) stage triggers, municipal flood alert levels, and shelter deployment.",
+        "primary_concerns": ["NDMA HAP alerts", "CWC reservoir levels", "Drainage outfall capacity", "Evacuation corridors"],
+    },
+    {
+        "id": "maritime",
+        "title": "Maritime & Fishermen",
+        "category": "Coastal & Marine",
+        "icon": "Ship",
+        "description": "Coastal sea state, cyclone proximity, gale wind alerts, and rough sea fishing bans.",
+        "primary_concerns": ["Cyclone track distance", "Beaufort gale force", "High astronomical tides"],
+    },
+    {
+        "id": "industry",
+        "title": "Industry & Manufacturing",
+        "category": "Manufacturing & Power",
+        "icon": "Factory",
+        "description": "Cooling tower heat dissipation, peak electrical demand surcharges, and factory floor thermal limits.",
+        "primary_concerns": ["Wet-bulb cooling tower limits", "Grid peak load shedding", "Worker shift restructuring"],
+    },
+    {
+        "id": "aviation",
+        "title": "Aviation & Airports",
+        "category": "Aviation & Logistics",
+        "icon": "Plane",
+        "description": "Crosswind runway limits, convective thunderstorms, air density altitude, and ramp ground stops.",
+        "primary_concerns": ["Surface wind shear", "Convective storm cells", "Density altitude thrust margins"],
+    },
+    {
+        "id": "water",
+        "title": "Water Utility & Stormwater",
+        "category": "Municipal Infrastructure",
+        "icon": "Droplets",
+        "description": "Stormwater pumping station capacity, reservoir storage management, and sewer overflow hazards.",
+        "primary_concerns": ["SCS runoff peak volume", "Reservoir buffer capacity", "Urban drainage canal surcharge"],
+    },
+    {
+        "id": "insurance",
+        "title": "Insurance & Catastrophe Actuary",
+        "category": "Financial Services",
+        "icon": "ShieldAlert",
+        "description": "Parametric weather derivative triggers, crop insurance claims, and catastrophe portfolio exposure.",
+        "primary_concerns": ["Parametric payout triggers", "Multi-hazard joint probabilities", "Asset exposure density"],
+    },
+    {
+        "id": "cold_chain",
+        "title": "Cold Chain Logistics",
+        "category": "Supply Chain & Food Safety",
+        "icon": "Truck",
+        "description": "Reefer transport thermal breach probability, ambient cooling deficit, and vaccine/dairy preservation.",
+        "primary_concerns": ["Ambient thermal breach", "Grid refrigeration downtime", "Perishable cargo spoilage"],
+    },
+    {
+        "id": "tourism",
+        "title": "Tourism & Hospitality",
+        "category": "Hospitality & Leisure",
+        "icon": "Palmtree",
+        "description": "Outdoor tourist comfort index, pilgrimage mountain/monsoon route risk, and hotel cooling stress.",
+        "primary_concerns": ["Outdoor bioclimatic comfort", "Pilgrimage cloudburst safety", "Hotel power continuity"],
+    },
+]
+
+
 def create_app() -> FastAPI:
     """Application factory for Clima-Core FastAPI service."""
     app = FastAPI(
@@ -122,13 +230,47 @@ def create_app() -> FastAPI:
             "docs": "/docs",
             "endpoints": [
                 "/api/health",
+                "/api/cities",
+                "/api/personas",
                 "/api/predict/city",
                 "/api/predict/custom",
+                "/api/predict/water_quality",
                 "/api/monitoring/health",
                 "/api/monitoring/verify",
                 "/api/tournament/status",
                 "/api/gatekeeper/evaluate",
             ],
+        }
+
+    @app.get("/api/personas")
+    def list_personas() -> Dict[str, Any]:
+        """List all 13 canonical personas with metadata, icons, and sector descriptions."""
+        return {
+            "total": len(CANONICAL_PERSONAS),
+            "personas": CANONICAL_PERSONAS,
+        }
+
+    @app.get("/api/cities")
+    def list_cities(q: Optional[str] = Query(default=None, description="Optional search prefix or substring")) -> Dict[str, Any]:
+        """List standard Indian cities with coordinates, supporting optional prefix/substring filtering."""
+        from climacore.ingestion.geocoding import _load_standard_cities
+        raw_cities = _load_standard_cities()
+        unique_map = {}
+        for c in raw_cities.values():
+            if c.get("is_standard_50"):
+                unique_map[c["city"]] = {
+                    "city": c["city"],
+                    "state": c.get("state", "India"),
+                    "latitude": c["latitude"],
+                    "longitude": c["longitude"],
+                }
+        cities_list = sorted(list(unique_map.values()), key=lambda x: x["city"])
+        if q:
+            q_lower = q.strip().lower()
+            cities_list = [c for c in cities_list if q_lower in c["city"].lower() or q_lower in c["state"].lower()]
+        return {
+            "total": len(cities_list),
+            "cities": cities_list,
         }
 
     @app.get("/health")

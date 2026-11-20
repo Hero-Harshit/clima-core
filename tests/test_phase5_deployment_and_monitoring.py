@@ -271,6 +271,30 @@ def test_api_root_and_health(api_client: TestClient):
     assert len(data["flagship_champions"]) >= 5
 
 
+def test_api_personas_and_cities_endpoints(api_client: TestClient):
+    """Test /api/personas and /api/cities listing and filtering."""
+    r_personas = api_client.get("/api/personas")
+    assert r_personas.status_code == 200
+    p_data = r_personas.json()
+    assert p_data["total"] == 13
+    assert len(p_data["personas"]) == 13
+    assert any(p["id"] == "farmer" for p in p_data["personas"])
+    assert any(p["id"] == "maritime" for p in p_data["personas"])
+
+    r_cities = api_client.get("/api/cities")
+    assert r_cities.status_code == 200
+    c_data = r_cities.json()
+    assert c_data["total"] >= 50
+    assert any(c["city"] == "Mumbai" for c in c_data["cities"])
+
+    # Query filtering
+    r_search = api_client.get("/api/cities?q=chennai")
+    assert r_search.status_code == 200
+    s_data = r_search.json()
+    assert s_data["total"] >= 1
+    assert s_data["cities"][0]["city"] == "Chennai"
+
+
 def test_api_predict_city(api_client: TestClient):
     """Test /api/predict/city returns valid unified prediction contract v1.0.0."""
     r = api_client.post("/api/predict/city", json={"city": "delhi"})
