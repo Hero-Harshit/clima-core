@@ -323,11 +323,25 @@ function App() {
   const [isDisasterReplayOpen, setIsDisasterReplayOpen] = useState(false);
 
   useEffect(() => {
+    let lastScrollY = window.scrollY;
     const updateNavBarOnScroll = () => {
-      const scrolled = window.scrollY > 80;
-      setIsPageScrolled(scrolled);
-      setIsNavBarExpanded(false);
-      if (scrolled) setIsAssistantOpen(false);
+      const currentScrollY = window.scrollY;
+      setIsPageScrolled((prevScrolled) => {
+        if (!prevScrolled && currentScrollY > 90) {
+          setIsAssistantOpen(false);
+          setIsNavBarExpanded(false);
+          return true;
+        } else if (prevScrolled && currentScrollY <= 40) {
+          setIsNavBarExpanded(false);
+          return false;
+        }
+        return prevScrolled;
+      });
+
+      if (Math.abs(currentScrollY - lastScrollY) > 80) {
+        setIsNavBarExpanded(false);
+        lastScrollY = currentScrollY;
+      }
     };
 
     updateNavBarOnScroll();
@@ -641,9 +655,10 @@ function App() {
             }}
           >
             <img className="brand-logo" src={logoUrl} alt="ClimaCore" />
-            {!isCompactNavBar && (
-              <div><strong>Clima<span>Core</span></strong><small>SUPER SMART WEATHER ASSISTANT</small></div>
-            )}
+            <div className="topbar-brand-text">
+              <strong>Clima<span>Core</span></strong>
+              <small>SUPER SMART WEATHER ASSISTANT</small>
+            </div>
           </a>
           <form
             className="assistant-search"
@@ -675,28 +690,28 @@ function App() {
               <Send size={15} aria-hidden="true" />
             </button>
           </form>
-          {!isCompactNavBar && (
-            <div className="topbar-modal-triggers">
-              <button
-                type="button"
-                className="disaster-replay-circle-btn"
-                onClick={() => setIsDisasterReplayOpen(true)}
-                title="Disaster Replay Time Machine (Catastrophe Backtester)"
-                aria-label="Disaster Replay Time Machine"
-              >
-                <RotateCcw size={14} aria-hidden="true" />
-              </button>
-              <button
-                type="button"
-                className="war-room-circle-btn"
-                onClick={() => setIsCrisisCouncilOpen(true)}
-                title="Crisis Council War Room"
-                aria-label="Crisis Council War Room"
-              >
-                !
-              </button>
-            </div>
-          )}
+          <div className="topbar-modal-triggers">
+            <button
+              type="button"
+              className="disaster-replay-circle-btn"
+              onClick={() => setIsDisasterReplayOpen(true)}
+              title="Disaster Replay Time Machine (Catastrophe Backtester)"
+              aria-label="Disaster Replay Time Machine"
+              tabIndex={isCompactNavBar ? -1 : 0}
+            >
+              <RotateCcw size={14} aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="war-room-circle-btn"
+              onClick={() => setIsCrisisCouncilOpen(true)}
+              title="Crisis Council War Room"
+              aria-label="Crisis Council War Room"
+              tabIndex={isCompactNavBar ? -1 : 0}
+            >
+              !
+            </button>
+          </div>
           {isAssistantOpen && !isCompactNavBar && (
             <section className="assistant-panel" id="assistant-panel" aria-label="Clima-Core assistant">
               <div className="assistant-panel-header">

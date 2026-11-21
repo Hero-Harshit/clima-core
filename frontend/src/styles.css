@@ -1477,8 +1477,8 @@ button:focus-visible {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 10px 16px;
+  margin-bottom: 32px;
 }
 
 .persona-select-wrap,
@@ -2394,6 +2394,7 @@ button:focus-visible {
 
 .view-controls {
   justify-content: center;
+  margin-bottom: 32px;
 }
 
 .threat-banner {
@@ -2502,19 +2503,30 @@ button:focus-visible {
   position: sticky;
   top: 12px;
   z-index: 30;
-  width: calc(100% - var(--topbar-side-inset) - var(--topbar-side-inset));
-  margin: 0 var(--topbar-side-inset);
+  width: calc(100% - (var(--topbar-side-inset) * 2));
+  max-width: 1440px;
+  margin-left: var(--topbar-side-inset);
+  margin-right: auto;
   border: 1px solid #174e2d;
   border-radius: 999px;
   background: rgba(247, 255, 248, 0.62);
   -webkit-backdrop-filter: blur(16px) saturate(145%);
   backdrop-filter: blur(16px) saturate(145%);
+  box-shadow: 0 4px 20px rgba(18, 45, 25, 0.08);
+  display: flex;
+  align-items: center;
+  padding: 0 20px 0 16px;
+  overflow: hidden;
   transition:
-    width 380ms cubic-bezier(.2, .8, .2, 1),
-    padding 320ms ease,
-    border-radius 320ms ease,
-    background 220ms ease,
-    box-shadow 220ms ease;
+    width 480ms cubic-bezier(0.16, 1, 0.3, 1),
+    max-width 480ms cubic-bezier(0.16, 1, 0.3, 1),
+    height 480ms cubic-bezier(0.16, 1, 0.3, 1),
+    padding 480ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-radius 480ms cubic-bezier(0.16, 1, 0.3, 1),
+    background 350ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 350ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 350ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: width, max-width, height, border-radius, padding;
 }
 
 .app-shell {
@@ -2675,11 +2687,16 @@ button:focus-visible {
 
 :root {
   --glass-card-surface: rgba(247, 255, 248, 0.76);
-  --neon-green-border: rgba(57, 255, 20, 0.78);
-  --neon-green-glow: rgba(57, 255, 20, 0.14);
+  --dark-green-card-border: #174e2d;
+  --dark-green-card-glow: rgba(23, 78, 45, 0.08);
 }
 
 .card,
+.threat-banner,
+.threat-banner.low,
+.threat-banner.moderate,
+.threat-banner.high,
+.threat-banner.critical,
 .briefing-summary,
 .restriction-box,
 .restriction-box.no-restriction,
@@ -2689,33 +2706,33 @@ button:focus-visible {
 .model-perf-table-wrap,
 .model-perf-domain,
 .model-perf-domain[open] {
-  border: 1px solid var(--neon-green-border);
+  border: 1px solid var(--dark-green-card-border) !important;
   background: var(--glass-card-surface);
   box-shadow:
-    0 12px 30px rgba(20, 75, 38, 0.11),
-    0 0 16px var(--neon-green-glow),
+    0 12px 30px rgba(20, 75, 38, 0.09),
+    0 2px 8px var(--dark-green-card-glow),
     inset 0 1px 0 rgba(255, 255, 255, 0.86);
   -webkit-backdrop-filter: blur(16px) saturate(140%);
   backdrop-filter: blur(16px) saturate(140%);
 }
 
 .card:hover,
+.threat-banner:hover,
 .model-perf-summary-card:hover,
 .model-perf-holdouts > div:hover,
 .model-perf-domain:hover {
-  border-color: #39ff14;
+  border-color: #174e2d !important;
   box-shadow:
     0 14px 34px rgba(20, 75, 38, 0.13),
-    0 0 20px rgba(57, 255, 20, 0.22),
+    0 3px 10px rgba(23, 78, 45, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .top-grid > .card:hover {
-  border: 2px solid #39ff14;
+  border: 1px solid #174e2d !important;
   box-shadow:
-    0 0 0 1px rgba(57, 255, 20, 0.42),
     0 14px 34px rgba(20, 75, 38, 0.13),
-    0 0 20px rgba(57, 255, 20, 0.22),
+    0 3px 10px rgba(23, 78, 45, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
@@ -2742,15 +2759,15 @@ button:focus-visible {
 .interval-tabs button {
   min-height: 28px;
   padding: 0 11px;
-  border: 1px solid rgba(57, 255, 20, 0.35);
+  border: 1px solid rgba(23, 78, 45, 0.28);
   border-radius: 999px;
   background: rgba(247, 255, 248, 0.56);
   color: #63776a;
 }
 
 .interval-tabs button:hover {
-  border-color: rgba(57, 255, 20, 0.78);
-  background: rgba(57, 255, 20, 0.1);
+  border-color: #174e2d;
+  background: rgba(23, 78, 45, 0.08);
 }
 
 .interval-tabs button.active {
@@ -2791,14 +2808,20 @@ button:focus-visible {
   backdrop-filter: blur(14px) saturate(135%);
 }
 
-.topbar-brand > div {
+.topbar-brand > div,
+.topbar-brand-text {
   max-width: 280px;
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  transform-origin: left center;
   overflow: hidden;
   white-space: nowrap;
+  pointer-events: auto;
   transition:
-    max-width 320ms ease,
-    opacity 180ms ease,
-    transform 320ms ease;
+    max-width 440ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 280ms cubic-bezier(0.16, 1, 0.3, 1) 120ms,
+    transform 440ms cubic-bezier(0.16, 1, 0.3, 1) 60ms,
+    margin 440ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .topbar.is-compact {
@@ -2818,10 +2841,20 @@ button:focus-visible {
   gap: 0 !important;
   border-radius: 50% !important;
   border: 1.5px solid #174e2d !important;
-  background: rgba(247, 255, 248, 0.88) !important;
-  box-shadow: 0 4px 16px rgba(18, 45, 25, 0.16) !important;
+  background: rgba(247, 255, 248, 0.92) !important;
+  box-shadow: 0 6px 22px rgba(18, 45, 25, 0.18) !important;
   overflow: hidden !important;
   cursor: pointer;
+}
+
+.topbar.is-compact:hover {
+  transform: scale(1.06);
+  box-shadow: 0 8px 26px rgba(18, 45, 25, 0.24) !important;
+  background: rgba(247, 255, 248, 0.98) !important;
+}
+
+.topbar.is-compact:active {
+  transform: scale(0.97);
 }
 
 .topbar.is-compact .topbar-brand {
@@ -2846,24 +2879,71 @@ button:focus-visible {
   max-width: 44px !important;
   max-height: 44px !important;
   flex: 0 0 44px !important;
+  transform: scale(1) !important;
   object-fit: contain !important;
 }
 
 .topbar.is-compact .topbar-brand > div,
-.topbar.is-compact .assistant-search,
-.topbar.is-compact .topbar-modal-triggers,
-.topbar.is-compact .disaster-replay-circle-btn,
-.topbar.is-compact .war-room-circle-btn,
-.topbar.is-compact .war-room-nav-btn {
-  display: none !important;
+.topbar.is-compact .topbar-brand-text {
+  max-width: 0 !important;
+  opacity: 0 !important;
+  transform: translateX(-12px) scale(0.85) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden;
+  transition:
+    max-width 300ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 160ms ease,
+    transform 300ms cubic-bezier(0.16, 1, 0.3, 1),
+    margin 300ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0ms linear 300ms;
+}
+
+.topbar.is-compact .assistant-search {
+  max-width: 0 !important;
+  min-width: 0 !important;
   width: 0 !important;
   height: 0 !important;
+  opacity: 0 !important;
+  transform: scale(0.8) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-width: 0 !important;
+  border-color: transparent !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  visibility: hidden;
+  transition:
+    max-width 320ms cubic-bezier(0.16, 1, 0.3, 1),
+    width 320ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 160ms ease,
+    transform 320ms cubic-bezier(0.16, 1, 0.3, 1),
+    margin 320ms cubic-bezier(0.16, 1, 0.3, 1),
+    padding 320ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0ms linear 320ms;
+}
+
+.topbar.is-compact .topbar-modal-triggers {
+  max-width: 0 !important;
+  min-width: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  opacity: 0 !important;
+  transform: scale(0.7) !important;
   margin: 0 !important;
   padding: 0 !important;
   border: none !important;
-  opacity: 0 !important;
-  visibility: hidden !important;
+  overflow: hidden !important;
   pointer-events: none !important;
+  visibility: hidden;
+  transition:
+    max-width 280ms cubic-bezier(0.16, 1, 0.3, 1),
+    width 280ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 140ms ease,
+    transform 280ms cubic-bezier(0.16, 1, 0.3, 1),
+    margin 280ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0ms linear 280ms;
 }
 
 .assistant-search {
@@ -2882,6 +2962,18 @@ button:focus-visible {
   color: #174e2d;
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
+  opacity: 1;
+  transform: scale(1);
+  overflow: hidden;
+  pointer-events: auto;
+  transition:
+    max-width 440ms cubic-bezier(0.16, 1, 0.3, 1),
+    width 440ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 280ms cubic-bezier(0.16, 1, 0.3, 1) 120ms,
+    transform 440ms cubic-bezier(0.16, 1, 0.3, 1) 60ms,
+    margin 440ms cubic-bezier(0.16, 1, 0.3, 1),
+    padding 440ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 200ms ease;
 }
 
 .assistant-search > svg {
@@ -2944,9 +3036,6 @@ button:focus-visible {
   opacity: 0.55;
 }
 
-.topbar.is-compact .assistant-search {
-  display: none;
-}
 
 .assistant-panel {
   position: absolute;
@@ -3086,12 +3175,12 @@ button:focus-visible {
 .home-footer {
   margin-top: 24px;
   padding: 18px 20px 20px;
-  border: 1px solid rgba(57, 255, 20, 0.48);
+  border: 1px solid #174e2d;
   border-radius: 20px;
   background: rgba(247, 255, 248, 0.42);
   box-shadow:
     0 10px 28px rgba(20, 75, 38, 0.08),
-    0 0 16px rgba(57, 255, 20, 0.1);
+    0 2px 8px rgba(23, 78, 45, 0.06);
   -webkit-backdrop-filter: blur(14px) saturate(135%);
   backdrop-filter: blur(14px) saturate(135%);
 }
@@ -3131,7 +3220,7 @@ button:focus-visible {
   height: 48px;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(57, 255, 20, 0.58);
+  border: 1px solid #174e2d;
   border-radius: 50%;
   background: rgba(247, 255, 248, 0.64);
   color: #23633c;
@@ -3145,8 +3234,8 @@ button:focus-visible {
 
 .footer-page-button:hover .footer-page-icon {
   transform: translateY(-2px);
-  border-color: #39ff14;
-  background: rgba(57, 255, 20, 0.14);
+  border-color: #174e2d;
+  background: rgba(23, 78, 45, 0.12);
   box-shadow: 0 8px 18px rgba(29, 91, 48, 0.13);
 }
 
@@ -4230,6 +4319,17 @@ button:focus-visible {
   margin-left: 12px;
   margin-right: 2px;
   flex-shrink: 0;
+  max-width: 120px;
+  opacity: 1;
+  transform: scale(1);
+  overflow: hidden;
+  pointer-events: auto;
+  transition:
+    max-width 440ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 280ms cubic-bezier(0.16, 1, 0.3, 1) 120ms,
+    transform 440ms cubic-bezier(0.16, 1, 0.3, 1) 80ms,
+    margin 440ms cubic-bezier(0.16, 1, 0.3, 1),
+    gap 440ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .disaster-replay-circle-btn {
