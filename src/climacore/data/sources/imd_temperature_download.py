@@ -12,7 +12,7 @@ import concurrent.futures
 from pathlib import Path
 import ssl
 import time
-from typing import List, Optional
+from typing import Dict, List, Optional
 import urllib.parse
 import urllib.request
 
