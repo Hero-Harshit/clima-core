@@ -13,7 +13,7 @@ import {
   BatteryWarning, CalendarDays, Check, ChevronDown, ChevronRight,
   BarChart3, CircleHelp, CloudDrizzle, CloudSun, Database, Droplets, Factory, Flame,
   Globe2, History, Info, Layers, Send,
-  LocateFixed, LockKeyhole, MapPin,
+  LocateFixed, LockKeyhole, MapPin, RotateCcw,
   ShieldCheck, Sprout, Sun, Waves, Wind, X, Zap,
 } from "lucide-react";
 
@@ -22,6 +22,7 @@ const MapBackdrop = lazy(() => import("./MapBackdrop"));
 const ConformalChart = lazy(() => import("./ConformalChart"));
 const ModelPerformance = lazy(() => import("./ModelPerformance"));
 const CrisisCouncilModal = lazy(() => import("./CrisisCouncilModal"));
+const DisasterReplayModal = lazy(() => import("./DisasterReplayModal"));
 
 type Persona = { id: string; key?: string; title: string; icon?: string; description?: string };
 type PersonasResponse = Persona[] | { personas?: Persona[] };
@@ -319,6 +320,7 @@ function App() {
   const [isPageScrolled, setIsPageScrolled] = useState(false);
   const [isNavBarExpanded, setIsNavBarExpanded] = useState(false);
   const [isCrisisCouncilOpen, setIsCrisisCouncilOpen] = useState(false);
+  const [isDisasterReplayOpen, setIsDisasterReplayOpen] = useState(false);
 
   useEffect(() => {
     const updateNavBarOnScroll = () => {
@@ -638,8 +640,10 @@ function App() {
               setIsNavBarExpanded((expanded) => !expanded);
             }}
           >
-            <img className="brand-logo" src={logoUrl} alt="" />
-            <div><strong>Clima<span>Core</span></strong><small>SUPER SMART WEATHER ASSISTANT</small></div>
+            <img className="brand-logo" src={logoUrl} alt="ClimaCore" />
+            {!isCompactNavBar && (
+              <div><strong>Clima<span>Core</span></strong><small>SUPER SMART WEATHER ASSISTANT</small></div>
+            )}
           </a>
           <form
             className="assistant-search"
@@ -671,15 +675,28 @@ function App() {
               <Send size={15} aria-hidden="true" />
             </button>
           </form>
-          <button
-            type="button"
-            className="war-room-circle-btn"
-            onClick={() => setIsCrisisCouncilOpen(true)}
-            title="Crisis Council War Room"
-            aria-label="Crisis Council War Room"
-          >
-            !
-          </button>
+          {!isCompactNavBar && (
+            <div className="topbar-modal-triggers">
+              <button
+                type="button"
+                className="disaster-replay-circle-btn"
+                onClick={() => setIsDisasterReplayOpen(true)}
+                title="Disaster Replay Time Machine (Catastrophe Backtester)"
+                aria-label="Disaster Replay Time Machine"
+              >
+                <RotateCcw size={14} aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className="war-room-circle-btn"
+                onClick={() => setIsCrisisCouncilOpen(true)}
+                title="Crisis Council War Room"
+                aria-label="Crisis Council War Room"
+              >
+                !
+              </button>
+            </div>
+          )}
           {isAssistantOpen && !isCompactNavBar && (
             <section className="assistant-panel" id="assistant-panel" aria-label="Clima-Core assistant">
               <div className="assistant-panel-header">
@@ -969,6 +986,15 @@ function App() {
             initialRainfall={runoff}
             initialGridLoad={peakLoad}
             onClose={() => setIsCrisisCouncilOpen(false)}
+          />
+        </Suspense>
+      )}
+
+      {isDisasterReplayOpen && (
+        <Suspense fallback={null}>
+          <DisasterReplayModal
+            currentCity={selectedCityName}
+            onClose={() => setIsDisasterReplayOpen(false)}
           />
         </Suspense>
       )}
