@@ -517,11 +517,11 @@ async def call_gemini_agent_with_tools(
             "parts": [{"functionCall": fn_call_part}]
         })
         contents.append({
-            "role": "function",
+            "role": "user",
             "parts": [{
                 "functionResponse": {
                     "name": fn_name,
-                    "response": tool_result
+                    "response": {"output": tool_result}
                 }
             }]
         })
@@ -548,6 +548,102 @@ async def call_gemini_agent_with_tools(
                 for p in parts2:
                     if "text" in p:
                         return p["text"].strip(), dispatched_action, executed_tools
+
+        # Fallback formatting if second call is throttled or empty
+        if fn_name == "convene_crisis_council" and isinstance(tool_result, dict):
+            c_lines = [
+                f"### Autonomous Multi-Agent Crisis Council (ICS War Room): **{tool_result.get('city', '')}**\n",
+                f"* **Incident Command Reference:** `{tool_result.get('incident_id', '')}` ({tool_result.get('ics_form_reference', '')})",
+                f"* **Cryptographic Verification Hash:** `{tool_result.get('verification_hash', '')}` (SHA-256)",
+                f"* **Incident Type & Severity:** **{tool_result.get('incident_type', '').replace('_', ' ')}** | `{tool_result.get('severity_tier', '')}`",
+                f"* **Life Preservation Score:** **{tool_result.get('life_preservation_index', 0):.1f}/100** | **Economic Continuity Score:** **{tool_result.get('economic_continuity_index', 0):.1f}/100**\n",
+            ]
+            if tool_result.get("mermaid_sequence_diagram"):
+                c_lines.append("```mermaid")
+                c_lines.append(tool_result["mermaid_sequence_diagram"])
+                c_lines.append("```\n")
+
+            c_lines.append("\n**Executive Incident Commander Directives (Approved ICS-201 Policy):**")
+            for d in tool_result.get("executive_directives", []):
+                c_lines.append(f"- 📜 **{d.get('directive_id')} ({d.get('title')}):** {d.get('mandate')}")
+
+            return "\n".join(c_lines), dispatched_action, executed_tools
+
+        if fn_name == "replay_historical_disaster" and isinstance(tool_result, dict):
+            d_lines = [
+                f"### Historical Disaster Replay Time Machine: **{tool_result.get('name', '')}**\n",
+                f"* **Benchmark ID:** `{tool_result.get('disaster_id', '')}` | **Date:** {tool_result.get('historical_date', '')}",
+                f"* **Advance Warning Delivered:** **+{tool_result.get('total_advance_warning_hours', 0):.0f} Hours** in advance lead time",
+                f"* **Lives Preserved Estimate:** **{tool_result.get('lives_protected_estimate', 0):,} citizens**",
+                f"* **Parametric DBT Claims Disbursed:** **₹{tool_result.get('simulated_parametric_payout_inr_cr', 0):.0f} Crores** instant voucher\n",
+            ]
+            if tool_result.get("mermaid_timeline_chart"):
+                d_lines.append(f"\n```mermaid\n{tool_result['mermaid_timeline_chart']}\n```")
+            return "\n".join(d_lines), dispatched_action, executed_tools
+
+        if fn_name == "compare_cities_risk" and isinstance(tool_result, dict):
+            ca = tool_result.get("city_a", {})
+            cb = tool_result.get("city_b", {})
+            kd = tool_result.get("key_differences", {})
+            comp_lines = [
+                f"### Comparative Environmental Risk Evaluation: **{ca.get('name')}** vs **{cb.get('name')}**\n",
+                f"* **{ca.get('name')}:** Max Temp: {ca.get('temperature_max_c')}°C | Rain: {ca.get('rainfall_mm')} mm | PM2.5: {ca.get('pm25_ug_m3')} µg/m³ | Risk: **{ca.get('risk_category')}** ({ca.get('compound_risk_score')})",
+                f"* **{cb.get('name')}:** Max Temp: {cb.get('temperature_max_c')}°C | Rain: {cb.get('rainfall_mm')} mm | PM2.5: {cb.get('pm25_ug_m3')} µg/m³ | Risk: **{cb.get('risk_category')}** ({cb.get('compound_risk_score')})",
+                f"* **Key Differences:** Δ Temp: {kd.get('temp_delta_c')}°C | Δ Rain: {kd.get('rain_delta_mm')} mm | Δ PM2.5: {kd.get('pm25_delta')} µg/m³\n",
+            ]
+            return "\n".join(comp_lines), dispatched_action, executed_tools
+
+        if fn_name == "simulate_what_if_scenario" and isinstance(tool_result, dict):
+            city = tool_result.get("city", "")
+            inputs = tool_result.get("inputs", {})
+            impacts = tool_result.get("simulated_impacts", {})
+            w_lines = [
+                f"### Counterfactual Simulation: **{city}**\n",
+                f"* **Physical Inputs:** Max Temp: {inputs.get('temperature_max_c')}°C | Rainfall: {inputs.get('rainfall_mm')} mm | PM2.5: {inputs.get('pm25_ug_m3')} µg/m³",
+                f"* **SCS Surface Runoff:** {impacts.get('effective_surface_runoff_mm', 0):.1f} mm ({impacts.get('runoff_surge_multiplier', '')})",
+                f"* **Hydrological Hazard Probability:** {impacts.get('flood_hazard_probability', 0):.1%}",
+                f"* **Wet-Bulb Temperature:** {impacts.get('wet_bulb_temp_c', 0):.1f}°C (Apparent Heat Index: {impacts.get('apparent_heat_index_c', 0):.1f}°C)",
+                f"* **Power Grid Stress & Peak Load:** {impacts.get('peak_grid_load_mw', 0):,.0f} MW (Δ: {impacts.get('grid_load_delta_mw', 0):+,.0f} MW | Blackout Risk: {impacts.get('blackout_stress_probability', 0):.1%})",
+                f"* **Air Quality Category:** `{impacts.get('air_quality_category', 'MODERATE')}`\n",
+            ]
+            persona_sim = tool_result.get("persona_simulation")
+            if persona_sim:
+                w_lines.append(f"**Persona Impact Level:** `{persona_sim.get('status_level')}` (Score: {persona_sim.get('impact_score')}/100)")
+                for adv in persona_sim.get("advisories", []):
+                    w_lines.append(f"- {adv}")
+            return "\n".join(w_lines), dispatched_action, executed_tools
+
+        if fn_name == "evaluate_parametric_crop_claim" and isinstance(tool_result, dict):
+            v_lines = [
+                f"### Parametric Insurance Settlement Voucher: **{tool_result.get('voucher_id', '')}**\n",
+                f"* **Payout Status:** `{tool_result.get('payout_status', '')}`",
+                f"* **Crop & Season:** **{tool_result.get('crop', '')}** ({tool_result.get('season', '')})",
+                f"* **Net Claim Payout:** **₹{tool_result.get('net_claim_payout_inr', 0):,.2f}** ({tool_result.get('payout_percentage', 0)}% of sum insured)",
+                f"* **Statistical Guarantee:** {tool_result.get('statistical_guarantee', '')}",
+                f"* **Cryptographic Verification Hash:** `{tool_result.get('verification_hash', '')}` (SHA-256)\n",
+            ]
+            return "\n".join(v_lines), dispatched_action, executed_tools
+
+        if fn_name == "simulate_compound_domino_cascade" and isinstance(tool_result, dict):
+            dom_lines = [
+                f"### Compound Domino Cascade Simulation: **{tool_result.get('city', '')}**\n",
+                f"* **System Vulnerability Index:** **{tool_result.get('system_vulnerability_index', 0):.1f}/100**",
+                f"* **Cascade Stages:** {len(tool_result.get('stages', []))} Sequential Failure Propagation steps\n",
+            ]
+            if tool_result.get("mermaid_flowchart"):
+                dom_lines.append(f"```mermaid\n{tool_result['mermaid_flowchart']}\n```\n")
+            return "\n".join(dom_lines), dispatched_action, executed_tools
+
+        if fn_name == "explain_risk_attribution_shap" and isinstance(tool_result, dict):
+            shap_lines = [
+                f"### TreeSHAP Mathematical Risk Attribution: **{tool_result.get('city', '')}**\n",
+                f"* **Model ID:** `{tool_result.get('model_id', '')}` | Target: `{tool_result.get('target_unit', '')}`",
+                f"* **Additivity Error:** `{tool_result.get('additivity_error', '0.0')}`",
+                f"\n**Top Amplifying Risk Drivers:**",
+            ]
+            for feat in tool_result.get("top_amplifying_features", []):
+                shap_lines.append(f"- **{feat.get('feature_name')}:** +{feat.get('shap_value', 0):.3f} (Val: {feat.get('feature_value')})")
+            return "\n".join(shap_lines), dispatched_action, executed_tools
 
         return str(tool_result), dispatched_action, executed_tools
 

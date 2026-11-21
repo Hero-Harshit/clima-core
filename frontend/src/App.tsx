@@ -21,6 +21,7 @@ const MapCanvas = lazy(() => import("./MapCanvas"));
 const MapBackdrop = lazy(() => import("./MapBackdrop"));
 const ConformalChart = lazy(() => import("./ConformalChart"));
 const ModelPerformance = lazy(() => import("./ModelPerformance"));
+const CrisisCouncilModal = lazy(() => import("./CrisisCouncilModal"));
 
 type Persona = { id: string; key?: string; title: string; icon?: string; description?: string };
 type PersonasResponse = Persona[] | { personas?: Persona[] };
@@ -317,6 +318,7 @@ function App() {
   const [showAllAdvisories, setShowAllAdvisories] = useState(false);
   const [isPageScrolled, setIsPageScrolled] = useState(false);
   const [isNavBarExpanded, setIsNavBarExpanded] = useState(false);
+  const [isCrisisCouncilOpen, setIsCrisisCouncilOpen] = useState(false);
 
   useEffect(() => {
     const updateNavBarOnScroll = () => {
@@ -669,6 +671,15 @@ function App() {
               <Send size={15} aria-hidden="true" />
             </button>
           </form>
+          <button
+            type="button"
+            className="war-room-circle-btn"
+            onClick={() => setIsCrisisCouncilOpen(true)}
+            title="Crisis Council War Room"
+            aria-label="Crisis Council War Room"
+          >
+            !
+          </button>
           {isAssistantOpen && !isCompactNavBar && (
             <section className="assistant-panel" id="assistant-panel" aria-label="Clima-Core assistant">
               <div className="assistant-panel-header">
@@ -949,6 +960,18 @@ function App() {
             </EmptyInfoPageModal>
               : null}
       </div>}
+
+      {isCrisisCouncilOpen && (
+        <Suspense fallback={null}>
+          <CrisisCouncilModal
+            city={selectedCityName}
+            initialTempMax={dryBulb}
+            initialRainfall={runoff}
+            initialGridLoad={peakLoad}
+            onClose={() => setIsCrisisCouncilOpen(false)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
