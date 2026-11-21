@@ -93,6 +93,16 @@ class VerificationRecordRequest(BaseModel):
     interval_upper: float = Field(..., description="Conformal interval upper bound")
 
 
+class CrisisCouncilRequest(BaseModel):
+    city: str = Field(..., description="Target Indian city for emergency incident command")
+    temp_max_c: Optional[float] = Field(default=None, description="Optional simulated maximum temperature in Celsius")
+    temp_min_c: Optional[float] = Field(default=None, description="Optional simulated minimum temperature in Celsius")
+    rainfall_mm: Optional[float] = Field(default=None, description="Optional simulated 24h rainfall in millimeters")
+    wet_bulb_c: Optional[float] = Field(default=None, description="Optional wet-bulb temperature in Celsius")
+    pm25: Optional[float] = Field(default=None, description="Optional PM2.5 in ug/m3")
+    peak_grid_load_mw: Optional[float] = Field(default=None, description="Optional baseline grid peak demand in MW")
+
+
 class GatekeeperEvaluationRequest(BaseModel):
     model_name: str
     champion_metric: float
@@ -253,6 +263,7 @@ def create_app() -> FastAPI:
                 "/api/monitoring/verify",
                 "/api/tournament/status",
                 "/api/gatekeeper/evaluate",
+                "/api/crisis-council/deliberate",
             ],
         }
 
@@ -359,6 +370,59 @@ def create_app() -> FastAPI:
             monitor.latency_profiler.record(lat_ms, is_error=True)
             logger.error(f"Error in assistant chat for {req.city}: {e}")
             raise HTTPException(status_code=500, detail=f"Assistant chat failed: {str(e)}")
+
+    @app.post("/api/crisis-council/deliberate")
+    def deliberate_crisis_council(req: CrisisCouncilRequest) -> Dict[str, Any]:
+        """Autonomous multi-agent Crisis Council War Room deliberation."""
+        from climacore.analytics.crisis_council import simulate_crisis_council_deliberation
+        monitor = get_monitoring_service()
+        t0 = time.perf_counter()
+        try:
+            live_engine = get_live_engine()
+            t_max = req.temp_max_c
+            t_min = req.temp_min_c
+            rain = req.rainfall_mm
+            tw = req.wet_bulb_c
+            pm25 = req.pm25
+            grid_mw = req.peak_grid_load_mw
+
+            if t_max is None or rain is None:
+                pred = live_engine.predict(query=req.city, persona="city_official")
+                today = pred.daily_predictions[0]
+                m = today.forecast_metrics
+                if t_max is None:
+                    t_max = float(m.get("temp_max", 35.0))
+                if t_min is None:
+                    t_min = float(m.get("temp_min", 25.0))
+                if rain is None:
+                    rain = float(m.get("precipitation_mm", 0.0))
+                if tw is None:
+                    tw = float(m.get("wet_bulb_temp_c", 26.0) or 26.0)
+                if pm25 is None:
+                    pm25 = float(m.get("pm2_5", 55.0))
+                if grid_mw is None:
+                    grid_info = today.flagship_intelligence.get("power_grid_stress", {}) if today.flagship_intelligence else {}
+                    grid_mw = float(grid_info.get("peak_load_mw", 8500.0) or 8500.0)
+
+            res = simulate_crisis_council_deliberation(
+                city=req.city,
+                temp_max_c=t_max,
+                temp_min_c=t_min or max(15.0, t_max - 10.0),
+                rainfall_mm=rain,
+                wet_bulb_c=tw,
+                pm25=pm25,
+                peak_grid_load_mw=grid_mw,
+            )
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=False)
+            data = res.model_dump()
+            data["latency_ms"] = round(lat_ms, 2)
+            return data
+        except Exception as e:
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=True)
+            logger.error(f"Error in crisis council deliberation for {req.city}: {e}")
+            raise HTTPException(status_code=500, detail=f"Crisis Council deliberation failed: {str(e)}")
 
     @app.post("/api/predict/custom")
     def predict_custom(req: CustomPredictionRequest) -> Dict[str, Any]:

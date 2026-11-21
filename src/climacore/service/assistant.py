@@ -189,6 +189,7 @@ You have access to specialized simulation and control tools:
 5. `evaluate_parametric_insurance_claim`: Call this whenever the user inquires about crop insurance payouts, PMFBY, WBCIS compensation, or agricultural loss settlements.
 6. `simulate_compound_domino_cascade`: Call this whenever the user asks about compound failure, cascading disaster impacts across grid/cold-chain/transit, or systemic infrastructure collapse.
 7. `explain_risk_attribution_shap`: Call this whenever the user asks WHY a risk score or probability was predicted, requesting mathematical TreeSHAP explainability and key amplifying/mitigating drivers.
+8. `convene_crisis_council`: Call this whenever the user asks to convene a Crisis Council, War Room deliberation, Incident Command debate, or resolve conflicting operational policies between Public Health, Power Grid, and Cold-Chain Logistics under severe climate stress.
 
 STRICT PHYSICAL GROUNDING & INSTRUCTIONS:
 - Ground all advice strictly in the provided verified data and physical laws.

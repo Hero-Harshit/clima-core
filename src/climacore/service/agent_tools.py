@@ -201,6 +201,32 @@ AGENT_FUNCTION_DECLARATIONS = [
             },
             "required": ["city"]
         }
+    },
+    {
+        "name": "convene_crisis_council",
+        "description": "Convene an autonomous multi-agent Crisis Council War Room debate between NDMA Public Health, SLDC Grid Operations Chief, and Cold-Chain Logistics Director to resolve conflicting operational constraints and formulate an optimal Incident Command (ICS-201) compromise directive.",
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "city": {
+                    "type": "STRING",
+                    "description": "Target Indian city for emergency incident command"
+                },
+                "temp_max_c": {
+                    "type": "NUMBER",
+                    "description": "Optional simulated maximum temperature in Celsius (e.g. 45.0)"
+                },
+                "rainfall_mm": {
+                    "type": "NUMBER",
+                    "description": "Optional simulated 24h rainfall in millimeters (e.g. 110.0)"
+                },
+                "wet_bulb_c": {
+                    "type": "NUMBER",
+                    "description": "Optional wet-bulb temperature in Celsius"
+                }
+            },
+            "required": ["city"]
+        }
     }
 ]
 
@@ -263,6 +289,15 @@ class AgentToolExecutor:
             return self.explain_risk_attribution_shap(
                 city=args.get("city", "Mumbai"),
                 target_risk=args.get("target_risk", "flood"),
+            )
+        elif name == "convene_crisis_council":
+            return self.convene_crisis_council(
+                city=args.get("city", "Delhi"),
+                temp_max_c=args.get("temp_max_c"),
+                temp_min_c=args.get("temp_min_c"),
+                rainfall_mm=args.get("rainfall_mm"),
+                wet_bulb_c=args.get("wet_bulb_c"),
+                pm25=args.get("pm25"),
             )
         else:
             return {"error": f"Unknown tool: '{name}'"}
@@ -621,6 +656,49 @@ class AgentToolExecutor:
             "disclaimer": explanation.non_causal_disclaimer,
         }
 
+    def convene_crisis_council(
+        self,
+        city: str,
+        temp_max_c: Optional[float] = None,
+        temp_min_c: Optional[float] = None,
+        rainfall_mm: Optional[float] = None,
+        wet_bulb_c: Optional[float] = None,
+        pm25: Optional[float] = None,
+    ) -> Dict[str, Any]:
+        """Convene multi-agent crisis council deliberation across Public Health, Power Grid, and Cold-Chain Logistics."""
+        from climacore.analytics.crisis_council import simulate_crisis_council_deliberation
+
+        # If parameters not provided, fetch current day's live baseline metrics
+        if temp_max_c is None or rainfall_mm is None:
+            pred = self.engine.predict(query=city, persona="city_official")
+            today = pred.daily_predictions[0]
+            m = today.forecast_metrics
+            t_max = float(temp_max_c if temp_max_c is not None else m.get("temp_max", 35.0))
+            t_min = float(temp_min_c if temp_min_c is not None else m.get("temp_min", 25.0))
+            rain = float(rainfall_mm if rainfall_mm is not None else m.get("precipitation_mm", 0.0))
+            p_pm = float(pm25 if pm25 is not None else m.get("pm2_5", 60.0))
+            grid_info = today.flagship_intelligence.get("power_grid_stress", {}) if today.flagship_intelligence else {}
+            grid_load = float(grid_info.get("peak_load_mw", 8500.0) or 8500.0)
+            tw_val = wet_bulb_c if wet_bulb_c is not None else float(m.get("wet_bulb_temp_c", 26.0) or 26.0)
+        else:
+            t_max = float(temp_max_c)
+            t_min = float(temp_min_c if temp_min_c is not None else max(15.0, t_max - 12.0))
+            rain = float(rainfall_mm)
+            p_pm = float(pm25 if pm25 is not None else 65.0)
+            grid_load = 9200.0
+            tw_val = wet_bulb_c
+
+        council_res = simulate_crisis_council_deliberation(
+            city=city,
+            temp_max_c=t_max,
+            temp_min_c=t_min,
+            rainfall_mm=rain,
+            wet_bulb_c=tw_val,
+            pm25=p_pm,
+            peak_grid_load_mw=grid_load,
+        )
+        return council_res.model_dump()
+
 
 # -------------------------------------------------------------------------
 # 3. Deterministic Fallback Parser (For Offline / Zero-Key Execution)
@@ -778,7 +856,53 @@ def detect_and_execute_offline_scenario(
         shap_lines.append(f"\n*{shap_data['disclaimer']}*")
         return "\n".join(shap_lines), None, shap_data
 
-    # 5. Multi-City Comparison
+    # 5. Autonomous Multi-Agent Crisis Council (Incident Command War Room)
+    if any(k in q for k in ["crisis council", "war room", "multi-agent debate", "deliberation", "incident command", "ics-201", "resolve conflict", "council debate"]):
+        m_temp = re.search(r"(\d+(?:\.\d+)?)\s*(?:c|deg|degree|°c)", q)
+        sim_temp = float(m_temp.group(1)) if m_temp else None
+
+        m_rain = re.search(r"(\d+(?:\.\d+)?)\s*(?:mm|millimeter)", q)
+        sim_rain = float(m_rain.group(1)) if m_rain else None
+
+        council_data = executor.convene_crisis_council(
+            city=current_city,
+            temp_max_c=sim_temp,
+            rainfall_mm=sim_rain,
+        )
+
+        c_lines = [
+            f"### Autonomous Multi-Agent Crisis Council (ICS War Room): **{council_data['city']}**\n",
+            f"* **Incident Command Reference:** `{council_data['incident_id']}` ({council_data['ics_form_reference']})",
+            f"* **Cryptographic Verification Hash:** `{council_data['verification_hash']}` (SHA-256)",
+            f"* **Incident Type & Severity:** **{council_data['incident_type'].replace('_', ' ')}** | `{council_data['severity_tier']}`",
+            f"* **Life Preservation Score:** **{council_data['life_preservation_index']:.1f}/100** | **Economic Continuity Score:** **{council_data['economic_continuity_index']:.1f}/100**\n",
+            "```mermaid",
+            council_data["mermaid_sequence_diagram"],
+            "```\n",
+            "**Sector Authority Positions & Key Demands:**",
+        ]
+        for p in council_data["member_proposals"]:
+            c_lines.append(f"- 🏛️ **{p['title']}:** *{p['core_priority']}*")
+            for d in p["demands"][:2]:
+                c_lines.append(f"  * {d}")
+
+        if council_data.get("friction_matrix"):
+            c_lines.append("\n**Core Inter-Sector Friction & Trade-offs:**")
+            for sec_pair, f_list in council_data["friction_matrix"].items():
+                c_lines.append(f"- ⚡ **{sec_pair.replace('_', ' ')}:** {f_list[0]}")
+
+        c_lines.append("\n**Executive Incident Commander Directives (Approved ICS-201 Policy):**")
+        for d in council_data["executive_directives"]:
+            c_lines.append(f"- 📜 **{d['directive_id']} ({d['title']}):** {d['mandate']}")
+
+        if council_data.get("accepted_tradeoffs"):
+            c_lines.append("\n**Declared Residual Trade-offs:**")
+            for tr in council_data["accepted_tradeoffs"]:
+                c_lines.append(f"- ⚖️ {tr}")
+
+        return "\n".join(c_lines), None, council_data
+
+    # 6. Multi-City Comparison
     # e.g. "compare Delhi and Jaipur" or "compare Delhi and Jaipur for travel tomorrow"
     from climacore.ingestion.geocoding import _load_standard_cities, INDIAN_CITY_ALIASES
     reg_cities = _load_standard_cities()
