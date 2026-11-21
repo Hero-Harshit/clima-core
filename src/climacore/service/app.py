@@ -74,6 +74,12 @@ class CustomPredictionRequest(BaseModel):
     requested_personas: Optional[List[str]] = None
 
 
+class PersonaBriefingRequest(BaseModel):
+    city: str = Field(..., description="Target Indian city")
+    persona: str = Field(..., description="Persona / occupation key (e.g. gig_worker, farmer, student)")
+    day_offset: int = Field(default=0, ge=0, le=13, description="Forecast day offset index (0 for today)")
+
+
 class WaterQualityRequest(BaseModel):
     latitude: float = Field(default=19.0760, ge=-90.0, le=90.0)
     longitude: float = Field(default=72.8777, ge=-180.0, le=180.0)
@@ -264,6 +270,7 @@ def create_app() -> FastAPI:
                 "/api/health",
                 "/api/cities",
                 "/api/personas",
+                "/api/persona/briefing",
                 "/api/assistant/chat",
                 "/api/predict/city",
                 "/api/predict/custom",
@@ -352,6 +359,41 @@ def create_app() -> FastAPI:
             monitor.latency_profiler.record(lat_ms, is_error=True)
             logger.error(f"Error predicting city {req.city}: {e}")
             raise HTTPException(status_code=500, detail=f"Prediction failed for city {req.city}: {str(e)}")
+
+    @app.post("/api/persona/briefing")
+    async def get_persona_briefing(req: PersonaBriefingRequest) -> Dict[str, Any]:
+        """Generate Gemini-grounded occupational briefing, advisories, hydration protocol, and guidance."""
+        from climacore.personas.gemini_briefing import generate_gemini_persona_briefing, generate_deterministic_briefing
+        try:
+            live_engine = get_live_engine()
+            pred = live_engine.predict(query=req.city, persona=req.persona, days=7, force_refresh=False)
+            target_day = pred.daily_predictions[min(req.day_offset, len(pred.daily_predictions) - 1)] if pred.daily_predictions else None
+
+            metrics = {}
+            if target_day:
+                m = target_day.forecast_metrics or {}
+                metrics = {
+                    "temp_max": m.get("temperature_max_c") or m.get("temp_max") or 32.0,
+                    "temp_min": m.get("temperature_min_c") or m.get("temp_min") or 24.0,
+                    "feels_like": m.get("apparent_temperature_max_c") or m.get("apparent_temp_max") or 34.0,
+                    "wbgt": m.get("wet_bulb_temp_c") or 28.0,
+                    "precipitation_mm": m.get("precipitation_mm") or 0.0,
+                    "rain_probability": m.get("rain_probability") or 0.0,
+                    "relative_humidity": m.get("relative_humidity_pct") or m.get("relative_humidity") or 65.0,
+                    "pm2_5": m.get("pm2_5_ug_m3") or m.get("pm2_5") or 40.0,
+                    "wind_speed_kmh": m.get("wind_speed_kmh") or 12.0,
+                }
+
+            briefing = await generate_gemini_persona_briefing(
+                city=req.city,
+                persona_id=req.persona,
+                metrics=metrics,
+                date_str=target_day.date if target_day else ""
+            )
+            return briefing
+        except Exception as e:
+            logger.error(f"Error generating persona briefing for {req.city}/{req.persona}: {e}")
+            return generate_deterministic_briefing(req.city, req.persona, {})
 
     @app.post("/api/assistant/chat", response_model=AssistantChatResponse)
     async def chat_with_assistant(req: AssistantChatRequest) -> AssistantChatResponse:

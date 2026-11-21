@@ -63,25 +63,42 @@ def evaluate_gig_worker_persona(inp: PersonaInput) -> PersonaResult:
     # 3. Hydration Requirement
     if wbgt >= 30.0:
         water_rate = "1.0 Litre/hour with oral rehydration salts (ORS)"
-        advisories.append(f"Drink at least {water_rate}. Do not wait until thirsty.")
+        advisories.append(f"Drink at least {water_rate} (consume 250ml every 20-25 minutes). Do not wait until thirsty.")
     elif wbgt >= 26.0:
         water_rate = "750 ml/hour"
-        advisories.append(f"Drink at least {water_rate} to replace sweat losses.")
+        advisories.append(f"Drink at least {water_rate} to replace sweat losses with regular 30-minute hydration gaps.")
     else:
         water_rate = "500 ml/hour"
+        advisories.append(f"Maintain steady hydration with at least {water_rate} across your delivery shift.")
 
-    # 4. Two-Wheeler / Delivery Road Flash Flood Warning
+    # 4. Work-Rest Gap & Recovery Window
+    if wbgt >= 31.0 or inp.imd_heatwave_alert >= 1:
+        advisories.append("Take mandatory 15-30 minute shaded recovery gaps between delivery batches during peak sun (12:00 PM – 4:00 PM).")
+    elif wbgt >= 28.0:
+        advisories.append("Take a 15-minute rest interval in canopy shade or air-conditioned hubs every hour.")
+    else:
+        advisories.append("Schedule 10-minute micro-breaks between delivery trips to stretch and avoid rider fatigue.")
+
+    # 5. Protective Gear & Rider Attire
+    if wbgt >= 28.0:
+        advisories.append("Wear breathable UV-blocking riding sleeves, polarized visor, and cooling neck gaiters to minimize thermal strain.")
+    else:
+        advisories.append("Equip standard rider safety gear, including high-visibility reflective jacket and ventilated helmet.")
+
+    # 6. Two-Wheeler / Delivery Road Flash Flood Warning & Route Safety
     road_hazard = "LOW"
     if precip >= 35.0 and inp.rain_probability >= 0.5:
         road_hazard = "CRITICAL_FLOODING"
         restrictions.append("Avoid low-lying underpasses and arterial roads with high waterlogging risk.")
-        advisories.append("Delivery riders: waterproof electronics and seek safe elevated shelter.")
+        advisories.append("Delivery riders: waterproof electronics, reduce speed to 25 km/h, and seek safe elevated shelter.")
     elif precip >= 15.0:
         road_hazard = "MODERATE_WATERLOGGING"
-        advisories.append("Slick road conditions and reduced braking efficiency.")
+        advisories.append("Slick road conditions and reduced braking efficiency; increase braking distance by 3 vehicle lengths.")
+    else:
+        advisories.append("Inspect tire tread depth and brake pads; monitor road asphalt temperature during afternoon runs.")
 
-    # 5. Air Pollution Respiratory Burden
-    if inp.pm2_5 >= 150.0:
+    # 7. Air Pollution Respiratory Burden
+    if inp.pm2_5 >= 120.0:
         advisories.append("Severe particulate exposure for outdoor delivery riders. Wear well-fitted N95 masks.")
 
     # Overall Labor Vulnerability Score (0 to 100)

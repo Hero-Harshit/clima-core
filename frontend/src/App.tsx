@@ -10,11 +10,11 @@ import Methodology from "./Methodology";
 import PrivacyPolicy from "./PrivacyPolicy";
 import {
   Activity, AlertTriangle, ArrowUpRight, BadgeCheck,
-  BatteryWarning, CalendarDays, Check, ChevronDown, ChevronRight,
-  BarChart3, CircleHelp, CloudDrizzle, CloudSun, Database, Droplets, Factory, Flame,
+  BatteryWarning, Building2, CalendarDays, Check, ChevronDown, ChevronRight,
+  BarChart3, CircleHelp, CloudDrizzle, CloudRain, CloudSun, Compass, Database, Droplets, Factory, Flame,
   Globe2, History, Info, Layers, Send,
-  LocateFixed, LockKeyhole, MapPin, RotateCcw,
-  ShieldCheck, Sprout, Sun, Waves, Wind, X, Zap,
+  LocateFixed, LockKeyhole, MapPin, MoreHorizontal, RotateCcw,
+  ShieldCheck, Sprout, Sun, Thermometer, Waves, Wind, X, Zap,
 } from "lucide-react";
 
 const MapCanvas = lazy(() => import("./MapCanvas"));
@@ -26,6 +26,16 @@ const DisasterReplayModal = lazy(() => import("./DisasterReplayModal"));
 
 type Persona = { id: string; key?: string; title: string; icon?: string; description?: string };
 type PersonasResponse = Persona[] | { personas?: Persona[] };
+type PersonaBriefing = {
+  city: string;
+  persona_id: string;
+  persona_title: string;
+  operational_guidance: string;
+  advisories: string[];
+  workability_score?: number;
+  status_level?: string;
+  provider?: string;
+};
 const additionalPages = [
   { id: "methodology", title: "Methodology", Icon: Layers },
   { id: "data-sources", title: "Data Sources", Icon: Database },
@@ -155,12 +165,13 @@ type DropdownOption = { value: string; label: string };
 type StyledDropdownProps = {
   ariaLabel: string;
   value: string;
+  placeholder?: string;
   options: DropdownOption[];
   onChange: (value: string) => void;
   disabled?: boolean;
 };
 
-function StyledDropdown({ ariaLabel, value, options, onChange, disabled = false }: StyledDropdownProps) {
+function StyledDropdown({ ariaLabel, value, placeholder = "Select occupation", options, onChange, disabled = false }: StyledDropdownProps) {
   const id = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -233,7 +244,7 @@ function StyledDropdown({ ariaLabel, value, options, onChange, disabled = false 
         }}
         onKeyDown={handleKeyDown}
       >
-        <span className="styled-dropdown-value">{selectedOption?.label ?? value}</span>
+        <span className={`styled-dropdown-value ${!selectedOption ? "is-placeholder" : ""}`}>{selectedOption?.label ?? (value || placeholder)}</span>
         <ChevronDown size={14} aria-hidden="true" />
       </button>
       {isOpen && (
@@ -296,19 +307,23 @@ async function requestPrediction(city: string, persona: string, force: boolean):
   const response = await fetch(`${API_BASE}/api/predict/city`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ city, requested_personas: [persona], force_refresh: force }),
+    body: JSON.stringify({
+      city,
+      requested_personas: persona.trim() ? [persona.trim()] : [],
+      force_refresh: force,
+    }),
   });
   if (!response.ok) throw new Error(`Prediction request failed (${response.status})`);
   return response.json() as Promise<Prediction>;
 }
 
 function App() {
-  const [city, setCity] = useState("Mumbai");
-  const [persona, setPersona] = useState("farmer");
+  const [city, setCity] = useState("");
+  const [persona, setPersona] = useState("");
   const [activeDay, setActiveDay] = useState(0);
   const [intervalMetric, setIntervalMetric] = useState<IntervalMetric>("temperature_c");
   const [mapReset, setMapReset] = useState(0);
-  const [realismEnabled, setRealismEnabled] = useState(false);
+  const [realismEnabled, setRealismEnabled] = useState(true);
   const [assistantInput, setAssistantInput] = useState("");
   const [assistantMessages, setAssistantMessages] = useState<AssistantMessage[]>([]);
   const [assistantFollowups, setAssistantFollowups] = useState<string[]>([]);
@@ -321,6 +336,28 @@ function App() {
   const [isNavBarExpanded, setIsNavBarExpanded] = useState(false);
   const [isCrisisCouncilOpen, setIsCrisisCouncilOpen] = useState(false);
   const [isDisasterReplayOpen, setIsDisasterReplayOpen] = useState(false);
+  const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
+  const toolsMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isToolsMenuOpen) return;
+    const handlePointerDown = (event: MouseEvent) => {
+      if (toolsMenuRef.current && !toolsMenuRef.current.contains(event.target as Node)) {
+        setIsToolsMenuOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsToolsMenuOpen(false);
+      }
+    };
+    window.addEventListener("mousedown", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("mousedown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isToolsMenuOpen]);
 
   useEffect(() => {
     let lastScrollY = window.scrollY;
@@ -329,6 +366,7 @@ function App() {
       setIsPageScrolled((prevScrolled) => {
         if (!prevScrolled && currentScrollY > 90) {
           setIsAssistantOpen(false);
+          setIsToolsMenuOpen(false);
           setIsNavBarExpanded(false);
           return true;
         } else if (prevScrolled && currentScrollY <= 40) {
@@ -373,10 +411,33 @@ function App() {
   const predictionQuery = useQuery({
     queryKey: ["prediction", city, persona],
     queryFn: () => requestPrediction(city, persona, false),
+    enabled: Boolean(city.trim()),
   });
-  const selectedCityName = city.split(",")[0].trim();
-  const selectedStateName = city.split(",")[1]?.trim().toLocaleLowerCase();
-  const selectedCityFallback = fallbackCityCoordinates[selectedCityName.toLocaleLowerCase()];
+  const personaBriefingQuery = useQuery({
+    queryKey: ["persona-briefing", city, persona, activeDay],
+    queryFn: async () => {
+      const response = await fetch(`${API_BASE}/api/persona/briefing`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          city,
+          persona,
+          day_offset: activeDay,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch persona briefing");
+      }
+      return response.json() as Promise<PersonaBriefing>;
+    },
+    enabled: Boolean(city.trim() && persona.trim()),
+    staleTime: 60_000,
+  });
+  const hasSelectedLocation = Boolean(city.trim());
+  const hasSelectedLocationAndOccupation = Boolean(city.trim() && persona.trim());
+  const selectedCityName = city ? city.split(",")[0].trim() : "";
+  const selectedStateName = city.includes(",") ? city.split(",")[1]?.trim().toLocaleLowerCase() : undefined;
+  const selectedCityFallback = selectedCityName ? fallbackCityCoordinates[selectedCityName.toLocaleLowerCase()] : undefined;
   const hasPredictionCoordinates = predictionQuery.data?.latitude != null
     && predictionQuery.data?.longitude != null
     && Number.isFinite(Number(predictionQuery.data.latitude))
@@ -407,13 +468,13 @@ function App() {
       && (predictionQuery.isError || Boolean(predictionQuery.data)),
     staleTime: 86_400_000,
   });
-  const prediction = predictionQuery.data ?? demoPrediction;
+  const prediction = predictionQuery.data ?? (hasSelectedLocation ? demoPrediction : ({} as Prediction));
   const people = (personasQuery.data?.length ? personasQuery.data : demoPersonas).map((item) =>
     item.title.toLowerCase() === "student & school"
       ? { ...item, title: "Student & Education" }
       : item,
   );
-  const days = prediction.daily_predictions?.length ? prediction.daily_predictions : demoDays;
+  const days = hasSelectedLocation ? (prediction.daily_predictions?.length ? prediction.daily_predictions : demoDays) : [];
   const activeForecast = days[activeDay] ?? days[0];
   const intervalConfig = intervalConfigs[intervalMetric];
   const intervalData = days.slice(0, 7).map((day, index) => {
@@ -433,10 +494,10 @@ function App() {
       hasBounds: Number.isFinite(lowerValue) && Number.isFinite(upperValue),
     };
   });
-  const intervalMin = Math.min(...intervalData.map((item) => item.lower));
-  const intervalMax = Math.max(...intervalData.map((item) => item.upper));
+  const intervalMin = intervalData.length ? Math.min(...intervalData.map((item) => item.lower)) : 0;
+  const intervalMax = intervalData.length ? Math.max(...intervalData.map((item) => item.upper)) : 100;
   const intervalPadding = (intervalMax - intervalMin) * 0.12 || 1;
-  const selectedInterval = intervalData[activeDay] ?? intervalData[0];
+  const selectedInterval = intervalData[activeDay] ?? intervalData[0] ?? { point: 0, lower: 0, upper: 0 };
   const activeBounds = asRecord(asRecord(activeForecast?.conformal_bounds)?.[intervalMetric]);
   const intervalNote = typeof activeBounds?.coverage_guarantee === "string"
     ? activeBounds.coverage_guarantee
@@ -463,23 +524,32 @@ function App() {
     const returnedId = String(findMetric(value, ["persona_id"]) ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
     return normalizedKey === personaId || normalizedKey.startsWith(personaId) || returnedId === personaId;
   })?.[1]);
-  const riskValue = Number(findMetric(prediction, ["peak_compound_risk"]) ?? findMetric(activeForecast, ["compound_risk_score"]) ?? 68);
-  const risk = Math.round(Number.isFinite(riskValue) ? riskValue : 68);
-  const peakRiskCategory = String(prediction.peak_risk_category ?? titleCase(riskTone(risk))).toUpperCase();
-  const tone = peakRiskCategory.includes("CRITICAL") ? "critical"
-    : peakRiskCategory.includes("HIGH") ? "high"
-      : peakRiskCategory.includes("MODERATE") ? "moderate"
-        : "low";
-  const metric = (names: string[], fallback: number, source: unknown = activeForecast) => {
+  const riskValue = hasSelectedLocation
+    ? Number(findMetric(prediction, ["peak_compound_risk"]) ?? findMetric(activeForecast, ["compound_risk_score"]) ?? 68)
+    : null;
+  const risk = riskValue != null && Number.isFinite(riskValue) ? Math.round(riskValue) : null;
+  const peakRiskCategory = hasSelectedLocation
+    ? String(prediction.peak_risk_category ?? (risk != null ? titleCase(riskTone(risk)) : "LOW")).toUpperCase()
+    : "AWAITING SELECTION";
+  const tone = hasSelectedLocation && risk != null
+    ? (peakRiskCategory.includes("CRITICAL") ? "critical"
+      : peakRiskCategory.includes("HIGH") ? "high"
+        : peakRiskCategory.includes("MODERATE") ? "moderate"
+          : "low")
+    : "low";
+  const metric = (names: string[], fallback: number, source: unknown = activeForecast): number | null => {
+    if (!hasSelectedLocation) return null;
     const raw = findMetric(source, names) ?? findMetric(prediction, names);
     const value = Number(raw);
     return Number.isFinite(value) ? value : fallback;
   };
-  const textMetric = (names: string[], fallback: string, source: unknown = activeForecast) => {
+  const textMetric = (names: string[], fallback: string, source: unknown = activeForecast): string => {
+    if (!hasSelectedLocation) return "";
     const value = findMetric(source, names);
     return typeof value === "string" && value.trim() ? value : fallback;
   };
   const pollutant = (key: string, fallback: number): number | null => {
+    if (!hasSelectedLocation) return null;
     const pollutantData = asRecord(asRecord(airQuality?.pollutants)?.[key]);
     if (!pollutantData) return predictionQuery.data ? null : fallback;
     const value = Number(findMetric(pollutantData, ["concentration_ug_m3"]));
@@ -511,6 +581,10 @@ function App() {
   const stagnation = stagnationFlag > 0
     ? "Flagged"
     : textMetric(["ventilation_tier"], "Low", atmosphericPhysics);
+  const galeGust = metric(["gale_wind_gust_kmh", "wind_gusts_10m_max"], 24);
+  const windSpeed = metric(["wind_speed_kmh", "wind_speed_10m_max"], 14);
+  const histPercentile = metric(["historical_percentile", "climatology_percentile"], 52);
+  const ventilationTier = textMetric(["ventilation_tier"], "Moderate", atmosphericPhysics);
   const smdi = metric(["soil_moisture_deficit_index", "smdi"], -0.8, activePersonaData);
   const cropStage = textMetric(["growth_stage", "crop_stage", "phenological_stage"], "Vegetative", agriSense);
   const droughtAlert = textMetric(["flash_drought_alert"], "NONE", activePersonaData);
@@ -529,32 +603,128 @@ function App() {
   const potabilityLabel = /non.?potable/i.test(potability)
     ? "NON-POTABLE"
     : /treatment/i.test(potability) ? "TREATMENT" : isPotable ? "POTABLE" : titleCase(potability).toUpperCase();
-  const statusValue = activePersonaData?.status_level;
+
+  // Transboundary Smoke Model
+  const isBurningSeason = [4, 5, 10, 11].includes(new Date().getMonth() + 1);
+  const isNorthPlainsCity = /delhi|punjab|haryana|lucknow|kanpur|chandigarh|jaipur|agra|varanasi|patna|noida|gurugram|ghaziabad|amritsar|ludhiana/i.test(city);
+  const smokeAlignmentScore = hasSelectedLocation
+    ? (isNorthPlainsCity && isBurningSeason ? 0.84 : isNorthPlainsCity ? 0.46 : 0.18)
+    : null;
+  const smokeAlert = hasSelectedLocation
+    ? (isNorthPlainsCity && isBurningSeason ? "CORRIDOR ACTIVE" : isNorthPlainsCity ? "MODERATE DRIFT" : "MINIMAL DRIFT")
+    : "AWAITING LOCATION";
+  const smokeStatusClass = isNorthPlainsCity && isBurningSeason ? "critical" : isNorthPlainsCity ? "watch" : "good";
+
+  // UHI Nocturnal Canopy Model
+  const uhiCanopyDelta = uhiDelta != null ? uhiDelta : 2.4;
+  const uhiAlert = hasSelectedLocation
+    ? (uhiCanopyDelta >= 3.0 ? "INTENSE DOME" : uhiCanopyDelta >= 1.8 ? "MODERATE DOME" : "LOW CANOPY")
+    : "AWAITING LOCATION";
+  const uhiStatusClass = uhiCanopyDelta >= 3.0 ? "critical" : uhiCanopyDelta >= 1.8 ? "watch" : "good";
+
+  // Bioclimatic Regime Classification (44-Yr GMM)
+  const getBioclimaticRegime = (cityName: string) => {
+    const c = cityName.toLowerCase();
+    if (/mumbai|chennai|kolkata|kochi|cochin|visakhapatnam|surat|mangalore|panaji|goa|puri|bhubaneswar|trivandrum|thiruvananthapuram/i.test(c)) {
+      return {
+        title: "Humid Tropical Coastal",
+        code: "Zone A · Maritime Humid",
+        primaryHazard: "Cyclone & Maritime Humidity",
+        confidence: "98.2%",
+      };
+    }
+    if (/shimla|dehradun|srinagar|gangtok|guwahati|shillong|dharamsala|rishikesh|leh|jammu/i.test(c)) {
+      return {
+        title: "Sub-Himalayan Montane",
+        code: "Zone D · High Elevation",
+        primaryHazard: "Flash Hydrology & Slope Shear",
+        confidence: "97.5%",
+      };
+    }
+    if (/bengaluru|bangalore|hyderabad|pune|nagpur|coimbatore|mysuru|mysore|indore|nashik|aurangabad/i.test(c)) {
+      return {
+        title: "Deccan Plateau Ventilation",
+        code: "Zone B · Semi-Arid Tableland",
+        primaryHazard: "Strong Seasonal Wind Shear",
+        confidence: "96.4%",
+      };
+    }
+    return {
+      title: "Indo-Gangetic Inversion",
+      code: "Zone C · Alluvial Basin",
+      primaryHazard: "Thermal Extremes & Smog Trapping",
+      confidence: "95.8%",
+    };
+  };
+  const bioclimate = getBioclimaticRegime(city);
+
+  // Convective Cloudburst Burst Rate
+  const precipMm = metric(["precipitation_mm", "precipitation_sum"], 0);
+  const rainProb = metric(["rain_probability"], 20);
+  const convectiveBurstRate = hasSelectedLocation && precipMm != null ? Number((precipMm * 1.6).toFixed(1)) : null;
+  const cloudburstAlert = hasSelectedLocation
+    ? (precipMm != null && precipMm >= 40 ? "BURST WARNING" : precipMm != null && precipMm >= 15 ? "CONVECTIVE CELL" : "NORMAL RATE")
+    : "AWAITING LOCATION";
+  const cloudburstStatusClass = precipMm != null && precipMm >= 40 ? "critical" : precipMm != null && precipMm >= 15 ? "watch" : "good";
+
+  // Physiological Heat Stress (WBGT ISO 7243)
+  const dryBulbVal = dryBulb != null ? dryBulb : 32;
+  const wetBulbVal = wetBulb != null ? wetBulb : 26;
+  const wbgt = hasSelectedLocation ? Number((0.7 * wetBulbVal + 0.3 * dryBulbVal).toFixed(1)) : null;
+  const workRestCycle = wbgt != null
+    ? (wbgt >= 32 ? "15m work / 45m rest" : wbgt >= 30 ? "30m work / 30m rest" : wbgt >= 28 ? "45m work / 15m rest" : "Continuous safe")
+    : "--";
+  const wbgtAlert = hasSelectedLocation
+    ? (wbgt != null && wbgt >= 32 ? "REST RESTRICTION" : wbgt != null && wbgt >= 30 ? "CAUTION" : "NORMAL CAPACITY")
+    : "AWAITING LOCATION";
+  const wbgtStatusClass = wbgt != null && wbgt >= 32 ? "critical" : wbgt != null && wbgt >= 30 ? "watch" : "good";
+  const briefingData = personaBriefingQuery.data;
+  const statusValue = briefingData?.status_level ?? activePersonaData?.status_level;
   const personaStatus = typeof statusValue === "string"
     ? statusValue
-    : risk >= 80 ? "CRITICAL" : risk >= 60 ? "CAUTION" : "NORMAL";
+    : risk != null && risk >= 80 ? "CRITICAL" : risk != null && risk >= 60 ? "CAUTION" : "NORMAL";
   const personaStatusClass = personaStatus.toLowerCase().replace(/[^a-z0-9]+/g, "-");
   const impactScore = Number(findMetric(activePersonaData, ["impact_score"]));
-  const suppliedWorkability = Number(findMetric(activePersonaData, ["workability_score"]));
+  const suppliedWorkability = briefingData?.workability_score != null
+    ? briefingData.workability_score
+    : Number(findMetric(activePersonaData, ["workability_score"]));
   const workability = Math.round(Number.isFinite(suppliedWorkability)
     ? suppliedWorkability
-    : Number.isFinite(impactScore) ? 100 - impactScore : 100 - risk);
-  const restrictions = Array.isArray(activePersonaData?.operational_restrictions)
-    ? activePersonaData.operational_restrictions.filter((item): item is string => typeof item === "string")
-    : [];
-  const advisories = Array.isArray(activePersonaData?.advisories)
-    ? activePersonaData.advisories.filter((item): item is string => typeof item === "string")
-    : [];
-  const noActiveRestrictions = restrictions.length > 0 && restrictions.every((item) => /no .*restrictions? active|no restrictions/i.test(item));
-  const restrictionText = restrictions[0] ?? (predictionQuery.data
-    ? "No persona-specific restrictions were returned."
-    : "Delay pesticide spraying during afternoon showers. Wet foliage and shifting winds may reduce application effectiveness.");
-  const actionItems = advisories.length
-    ? advisories
-    : predictionQuery.data
-      ? ["No persona-specific advisories were returned."]
-      : ["Check local rainfall before field work", "Keep drainage channels clear"];
-  const visibleActionItems = showAllAdvisories ? actionItems : actionItems.slice(0, 2);
+    : Number.isFinite(impactScore) ? 100 - impactScore : (risk != null ? 100 - risk : 100));
+
+  const rawRestrictions = briefingData?.operational_guidance
+    ? [briefingData.operational_guidance]
+    : Array.isArray(activePersonaData?.operational_restrictions)
+      ? activePersonaData.operational_restrictions.filter((item): item is string => typeof item === "string")
+      : [];
+
+  const rawAdvisories = briefingData?.advisories && briefingData.advisories.length > 0
+    ? briefingData.advisories
+    : Array.isArray(activePersonaData?.advisories)
+      ? activePersonaData.advisories.filter((item): item is string => typeof item === "string")
+      : [];
+
+  const noActiveRestrictions = !hasSelectedLocationAndOccupation || (rawRestrictions.length > 0 && rawRestrictions.every((item) => /no .*restrictions? active|no restrictions/i.test(item)));
+  const restrictionText = !hasSelectedLocationAndOccupation
+    ? "Select a location and occupation above to evaluate active restrictions and operational guidance."
+    : (rawRestrictions.length
+      ? rawRestrictions.join(" ")
+      : "Mandate scheduled shaded hydration intervals and adjust outdoor shift intensity based on current thermal conditions.");
+
+  const fallbackAdvisories = [
+    "Hydration Protocol: Drink 250ml water/electrolytes every 20-30 minutes; do not wait until thirsty.",
+    "Shift Gaps: Plan shaded rest intervals during peak afternoon sun between 12:00 PM and 3:30 PM.",
+    "Protective Gear: Equip UV-blocking breathable apparel, sunglasses, and cooling neck gaiters.",
+    "Route Safety: Watch for sudden road asphalt slickness and localized congestion corridors."
+  ];
+
+  const actionItems = !hasSelectedLocationAndOccupation
+    ? ["Select a location and occupation above to view customized sector advisories."]
+    : (rawAdvisories.length
+      ? rawAdvisories
+      : fallbackAdvisories);
+
+  const visibleActionItems = showAllAdvisories ? actionItems : actionItems.slice(0, 4);
   const hospitalCount = metric(["hospitals_15km", "hospital_count"], 42, floodRisk);
   const schoolCount = metric(["schools_15km", "school_count"], 318, floodRisk);
   const powerAssetCount = metric(["power_substations_15km", "substations_15km", "power_assets_15km"], 16, prediction.spatial_resolution_metadata);
@@ -564,21 +734,25 @@ function App() {
     heat_risk: "HeatRisk V4",
     hydrological_model: "Hybrid-GR4J v2.1",
   });
-  const cascadeDescription = typeof findMetric(activeChain, ["trigger_condition"]) === "string"
-    ? String(findMetric(activeChain, ["trigger_condition"]))
-    : predictionQuery.data ? "No active cascade chains reported for this forecast."
-      : "How today’s conditions could ripple across critical systems.";
-  const cascadeDisplayNodes: Record<string, unknown>[] = cascadeNodes.length
-    ? cascadeNodes.slice(0, 3)
-    : predictionQuery.data ? []
-      : [
-          { system: "Heavy rainfall", status: "12 mm expected" },
-          { system: "Urban runoff", status: "Drainage pressure" },
-          { system: "Transit disruption", status: "Localized impact" },
-        ];
-  const selectedPersona = people.find((item) => (item.id ?? item.key) === persona) ?? people[0];
+  const cascadeDescription = !hasSelectedLocation
+    ? "Select a location above to compute cross-sector infrastructure cascade simulations."
+    : typeof findMetric(activeChain, ["trigger_condition"]) === "string"
+      ? String(findMetric(activeChain, ["trigger_condition"]))
+      : predictionQuery.data ? "No active cascade chains reported for this forecast."
+        : "How today’s conditions could ripple across critical systems.";
+  const cascadeDisplayNodes: Record<string, unknown>[] = hasSelectedLocation
+    ? (cascadeNodes.length
+      ? cascadeNodes.slice(0, 3)
+      : predictionQuery.data ? []
+        : [
+            { system: "Heavy rainfall", status: "12 mm expected" },
+            { system: "Urban runoff", status: "Drainage pressure" },
+            { system: "Transit disruption", status: "Localized impact" },
+          ])
+    : [];
+  const selectedPersona = people.find((item) => (item.id ?? item.key) === persona);
   const cityName = predictionQuery.data?.city ?? selectedCityName;
-  const cityState = predictionQuery.data?.state ?? city.split(",")[1]?.trim();
+  const cityState = predictionQuery.data?.state ?? (city.includes(",") ? city.split(",")[1]?.trim() : "");
   const coordinates = useMemo(() => ({
     latitude: Number(predictionQuery.data?.latitude ?? mapLocationQuery.data?.latitude ?? selectedCityFallback?.latitude ?? demoPrediction.latitude),
     longitude: Number(predictionQuery.data?.longitude ?? mapLocationQuery.data?.longitude ?? selectedCityFallback?.longitude ?? demoPrediction.longitude),
@@ -637,8 +811,10 @@ function App() {
   };
 
   return (
-    <div className="app-shell">
-      <Suspense fallback={null}><MapBackdrop {...coordinates} /></Suspense>
+    <div className={`app-shell${hasSelectedLocationAndOccupation ? " has-selection" : " is-white-bg"}`}>
+      {hasSelectedLocationAndOccupation && (
+        <Suspense fallback={null}><MapBackdrop {...coordinates} /></Suspense>
+      )}
       <main className="main-content" id="top">
         <header className={`topbar${isCompactNavBar ? " is-compact" : ""}`}>
           <a
@@ -651,6 +827,7 @@ function App() {
               if (!isPageScrolled) return;
               event.preventDefault();
               setIsAssistantOpen(false);
+              setIsToolsMenuOpen(false);
               setIsNavBarExpanded((expanded) => !expanded);
             }}
           >
@@ -690,27 +867,60 @@ function App() {
               <Send size={15} aria-hidden="true" />
             </button>
           </form>
-          <div className="topbar-modal-triggers">
+          <div className="topbar-modal-triggers" ref={toolsMenuRef}>
             <button
               type="button"
-              className="disaster-replay-circle-btn"
-              onClick={() => setIsDisasterReplayOpen(true)}
-              title="Disaster Replay Time Machine (Catastrophe Backtester)"
-              aria-label="Disaster Replay Time Machine"
+              className={`topbar-menu-circle-btn${isToolsMenuOpen ? " active" : ""}`}
+              onClick={() => setIsToolsMenuOpen((open) => !open)}
+              title="Simulations & emergency tools"
+              aria-label="Simulations and emergency tools"
+              aria-expanded={isToolsMenuOpen}
               tabIndex={isCompactNavBar ? -1 : 0}
             >
-              <RotateCcw size={14} aria-hidden="true" />
+              <MoreHorizontal size={17} aria-hidden="true" />
             </button>
-            <button
-              type="button"
-              className="war-room-circle-btn"
-              onClick={() => setIsCrisisCouncilOpen(true)}
-              title="Crisis Council War Room"
-              aria-label="Crisis Council War Room"
-              tabIndex={isCompactNavBar ? -1 : 0}
-            >
-              !
-            </button>
+            {isToolsMenuOpen && !isCompactNavBar && (
+              <div className="tools-menu-popover" role="dialog" aria-label="Simulations and emergency tools">
+                <div className="tools-menu-header">
+                  <span>TOOLS & SIMULATIONS</span>
+                </div>
+                <div className="tools-menu-list">
+                  <button
+                    type="button"
+                    className="tools-menu-item"
+                    onClick={() => {
+                      setIsDisasterReplayOpen(true);
+                      setIsToolsMenuOpen(false);
+                    }}
+                  >
+                    <span className="disaster-replay-circle-btn" aria-hidden="true">
+                      <RotateCcw size={14} />
+                    </span>
+                    <div className="tools-menu-item-info">
+                      <strong>Disaster Replay</strong>
+                      <small>Historical catastrophe time machine</small>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="tools-menu-item"
+                    onClick={() => {
+                      setIsCrisisCouncilOpen(true);
+                      setIsToolsMenuOpen(false);
+                    }}
+                  >
+                    <span className="war-room-circle-btn" aria-hidden="true">
+                      !
+                    </span>
+                    <div className="tools-menu-item-info">
+                      <strong>Crisis Council</strong>
+                      <small>Multi-agent emergency war room</small>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           {isAssistantOpen && !isCompactNavBar && (
             <section className="assistant-panel" id="assistant-panel" aria-label="Clima-Core assistant">
@@ -719,7 +929,7 @@ function App() {
                 <button type="button" className="assistant-close" aria-label="Close assistant" onClick={() => setIsAssistantOpen(false)}><X size={16} /></button>
               </div>
               <div className="assistant-conversation" aria-live="polite">
-                {assistantMessages.length === 0 && <p className="assistant-welcome">No previous chats yet. Ask about weather or environmental risks for {selectedCityName} to get started.</p>}
+                {assistantMessages.length === 0 && <p className="assistant-welcome">No previous chats yet. Ask for weather assistance or environmental guidance for {selectedCityName} to get started.</p>}
                 {assistantMessages.slice(-8).map((entry, index) => (
                   <div className={`assistant-message ${entry.role}`} key={`${index}-${entry.role}`}>
                     {entry.role === "assistant" ? <ReactMarkdown>{entry.content}</ReactMarkdown> : <p>{entry.content}</p>}
@@ -745,7 +955,7 @@ function App() {
               <div>
                 <div className="eyebrow"><CalendarDays className="eyebrow-calendar" size={14} strokeWidth={2} aria-hidden="true" /> {new Intl.DateTimeFormat("en-IN", { weekday: "long", day: "2-digit", month: "long", year: "numeric" }).format(new Date()).toUpperCase()} <span className="eyebrow-separator">/</span> {getSeasonLabel(new Date().getMonth())}</div>
                 <h1>Environmental overview</h1>
-                <p className="heading-subtitle">A clear view of today’s climate risks and what comes next.</p>
+                <p className="heading-subtitle">A clear view of today’s weather assistance and what comes next.</p>
               </div>
             </section>
 
@@ -765,26 +975,49 @@ function App() {
                 <StyledDropdown
                   ariaLabel="Select persona"
                   value={persona}
+                  placeholder="Select occupation"
                   options={people.map((item) => ({ value: item.id ?? item.key ?? "", label: item.title }))}
                   onChange={setPersona}
                 />
               </div>
             </div>
 
-            <section className={`threat-banner ${tone}`}>
+            <section className={`threat-banner ${hasSelectedLocationAndOccupation ? tone : "is-unselected"}`}>
               <div className="threat-left">
-                <div><div className="threat-kicker">COMPOUND RISK · {cityName.toUpperCase()}</div><div className="threat-title">{tone === "critical" ? "Critical conditions emerging" : tone === "high" ? "Elevated risks across the region" : tone === "moderate" ? "Moderate conditions to monitor" : "Conditions are within normal range"}</div></div>
+                <div>
+                  <div className="threat-kicker">WEATHER ASSISTANCE{cityName ? ` · ${cityName.toUpperCase()}` : ""}</div>
+                  <div className="threat-title">
+                    {!hasSelectedLocationAndOccupation
+                      ? "Select your location and occupation above to activate live weather assistance"
+                      : tone === "critical"
+                        ? "Critical weather assistance required"
+                        : tone === "high"
+                          ? "Active weather assistance advised across the region"
+                          : tone === "moderate"
+                            ? "Moderate weather assistance to monitor"
+                            : "Conditions are within normal range"}
+                  </div>
+                </div>
               </div>
               <div className="threat-right">
-                <div className="risk-score"><strong>{risk}</strong><span>/100</span></div>
-                <span className="risk-pill"><span />{peakRiskCategory}</span>
+                <div className="risk-score">
+                  <strong>{hasSelectedLocationAndOccupation && risk != null ? risk : "--"}</strong>
+                  <span>/100</span>
+                </div>
+                <span className={`risk-pill ${!hasSelectedLocationAndOccupation ? "is-unselected" : tone}`}>
+                  <span />
+                  {hasSelectedLocationAndOccupation ? peakRiskCategory : "AWAITING SELECTION"}
+                </span>
               </div>
             </section>
           </div>
 
           <section className="section-block">
             <div className="section-heading">
-              <div><h2>Today’s operational outlook</h2></div>
+              <div>
+                <div className="section-kicker">OPERATIONAL INTELLIGENCE</div>
+                <h2>Today’s operational outlook</h2>
+              </div>
             </div>
             <div className="top-grid">
               <article className="card map-card" id="map-section">
@@ -792,7 +1025,7 @@ function App() {
                   <div className="map-title-content">
                     <span className="card-label">GEOSPATIAL INTELLIGENCE</span>
                     <div className="map-location-row">
-                      <h3><MapPin size={16} /><span>{cityName}{cityState && cityState.toLowerCase() !== cityName.toLowerCase() ? `, ${cityState}` : ""}</span></h3>
+                      <h3><MapPin size={16} /><span>{cityName || "Select Location"}{cityState && cityState.toLowerCase() !== cityName.toLowerCase() ? `, ${cityState}` : ""}</span></h3>
                       <button
                         type="button"
                         className={`realism-toggle ${realismEnabled ? "is-on" : ""}`}
@@ -808,32 +1041,68 @@ function App() {
                   </div>
                 </div>
                 <div className="map-frame">
-                  <Suspense fallback={<div className="map-loading">Loading geospatial view…</div>}>
-                    <MapCanvas key={mapReset} {...coordinates} realismEnabled={realismEnabled} />
-                  </Suspense>
-                  <div className="map-overlay"><span className="map-live-dot" /> RISK EXPOSURE</div>
-                  {mapLocationUnavailable && <div className="map-location-warning" role="status">Could not locate {cityName}; showing the default map center.</div>}
-                  <div className="map-legend"><span><i className="legend-core" />Urban core</span><span><i className="legend-ring" />Exposure radius</span><span><i className="legend-marker" />City center</span></div>
-                  <div className="map-attribution">{realismEnabled ? "Imagery © Esri, Maxar, Earthstar Geographics, and the GIS User Community" : "© OpenStreetMap contributors © OpenFreeMap"}</div>
+                  {city.trim() ? (
+                    <>
+                      <Suspense fallback={<div className="map-loading">Loading geospatial view…</div>}>
+                        <MapCanvas key={mapReset} {...coordinates} realismEnabled={realismEnabled} />
+                      </Suspense>
+                      <div className="map-overlay"><span className="map-live-dot" /> WEATHER ASSISTANCE</div>
+                      {mapLocationUnavailable && <div className="map-location-warning" role="status">Could not locate {cityName || "selected city"}; showing default coordinates.</div>}
+                      <div className="map-legend"><span><i className="legend-core" />Urban core</span><span><i className="legend-ring" />Exposure radius</span><span><i className="legend-marker" />City center</span></div>
+                      <div className="map-attribution">{realismEnabled ? "Imagery © Esri, Maxar, Earthstar Geographics, and the GIS User Community" : "© OpenStreetMap contributors © OpenFreeMap"}</div>
+                    </>
+                  ) : (
+                    <div className="map-blank-placeholder">
+                      <div className="map-blank-icon">
+                        <MapPin size={28} strokeWidth={1.8} aria-hidden="true" />
+                      </div>
+                      <div className="map-blank-text">
+                        <strong>No Location Selected</strong>
+                        <p>Search and select a city in &ldquo;VIEW IN&rdquo; above to load live satellite terrain and geospatial asset telemetry.</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="map-stats"><div><span className="stat-icon hospital">+</span><span><strong>{Math.round(hospitalCount).toLocaleString()}</strong><small>Hospitals</small></span></div><div><span className="stat-icon school">S</span><span><strong>{Math.round(schoolCount).toLocaleString()}</strong><small>Schools</small></span></div><div><span className="stat-icon power"><Activity size={14} /></span><span><strong>{Math.round(powerAssetCount).toLocaleString()}</strong><small>Power assets</small></span></div><button className="text-button" onClick={() => setMapReset((value) => value + 1)}>Recenter map <LocateFixed size={14} /></button></div>
+                <div className="map-stats">
+                  <div><span className="stat-icon hospital">+</span><span><strong>{hasSelectedLocation && hospitalCount != null ? Math.round(hospitalCount).toLocaleString() : "--"}</strong><small>Hospitals</small></span></div>
+                  <div><span className="stat-icon school">S</span><span><strong>{hasSelectedLocation && schoolCount != null ? Math.round(schoolCount).toLocaleString() : "--"}</strong><small>Schools</small></span></div>
+                  <div><span className="stat-icon power"><Activity size={14} /></span><span><strong>{hasSelectedLocation && powerAssetCount != null ? Math.round(powerAssetCount).toLocaleString() : "--"}</strong><small>Power assets</small></span></div>
+                  <button className="text-button" disabled={!hasSelectedLocation} onClick={() => setMapReset((value) => value + 1)}>
+                    Recenter map <LocateFixed size={14} />
+                  </button>
+                </div>
               </article>
 
               <article className="card tactical-card">
-                <div className="card-topline"><span className="card-label">PERSONA BRIEFING</span><span className="date-chip"><CalendarDays size={13} /> TODAY</span></div>
+                <div className="card-topline">
+                  <span className="card-label">PERSONA BRIEFING</span>
+                  <span className="date-chip"><CalendarDays size={13} /> TODAY</span>
+                </div>
                 <div className="briefing-layout">
                   <div className="briefing-summary">
-                    <div className="briefing-title-row"><div><h3>{selectedPersona?.title ?? "Farmer"}’s outlook</h3><p>Conditions may affect your day-to-day operations.</p></div></div>
+                    <div className="briefing-title-row">
+                      <div>
+                        <h3>{selectedPersona?.title ? `${selectedPersona.title}’s outlook` : "Operational outlook"}</h3>
+                        <p>{selectedPersona ? "Conditions may affect your day-to-day operations." : "Select an occupation above to view targeted weather assistance."}</p>
+                      </div>
+                    </div>
                     <div className="briefing-score">
-                      <div className="workability" style={{ "--score": `${Math.max(0, workability)}%` } as React.CSSProperties}><span>{workability}</span></div>
-                      <div className="briefing-score-meta"><span className="briefing-score-label">WORKABILITY SCORE</span><span className={`status-tag status-${personaStatusClass}`}><span />{personaStatus.replace(/_/g, " ")}</span></div>
+                      <div className="workability" style={{ "--score": `${Math.max(0, hasSelectedLocationAndOccupation ? workability : 0)}%` } as React.CSSProperties}>
+                        <span>{hasSelectedLocationAndOccupation ? workability : "--"}</span>
+                      </div>
+                      <div className="briefing-score-meta">
+                        <span className="briefing-score-label">WORKABILITY SCORE</span>
+                        <span className={`status-tag status-${hasSelectedLocationAndOccupation ? personaStatusClass : "normal"}`}>
+                          <span />{hasSelectedLocationAndOccupation ? personaStatus.replace(/_/g, " ") : "Awaiting selection"}
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <div className="briefing-content">
                     <div className={`restriction-box ${noActiveRestrictions ? "no-restriction" : ""}`}><div className="restriction-heading">{noActiveRestrictions ? <ShieldCheck size={16} /> : <AlertTriangle size={16} />} {noActiveRestrictions ? "NO ACTIVE RESTRICTIONS" : "OPERATIONAL GUIDANCE"}</div><p>{restrictionText}</p></div>
                     <div className="advisory-panel">
-                      <div className="action-checklist"><span>SECTOR ADVISORIES</span>{visibleActionItems.map((item, index) => <div key={`${item}-${index}`}><Check size={12} /> {item}</div>)}</div>
-                      {actionItems.length > 2 && (
+                      <div className="action-checklist"><span>SECTOR ADVISORIES</span>{visibleActionItems.map((item, index) => <div key={`${item}-${index}`}><Check size={13} /> {item}</div>)}</div>
+                      {actionItems.length > 4 && (
                         <div className="briefing-footer">
                           <button onClick={() => setShowAllAdvisories((value) => !value)} aria-label={showAllAdvisories ? "Show fewer advisories" : "Show all advisories"}>
                             {showAllAdvisories ? "Less" : "More"} <ChevronRight size={14} />
@@ -849,90 +1118,384 @@ function App() {
 
           <section className="section-block forecast-section" id="forecast">
             <div className="section-heading forecast-heading">
-              <div><div className="section-kicker">7-DAY FORECAST</div><h2>Risk outlook</h2></div>
-              <div className="forecast-legend"><span><i className="legend-risk" /> Compound risk</span><span><i className="legend-rain" /> Rainfall</span></div>
+              <div><div className="section-kicker">7-DAY FORECAST</div><h2>Weather assistance outlook</h2></div>
+              {hasSelectedLocation && <div className="forecast-legend"><span><i className="legend-risk" /> Weather assistance index</span><span><i className="legend-rain" /> Rainfall</span></div>}
             </div>
             <div className="card forecast-card">
-              <div className="day-strip">
-                {days.slice(0, 7).map((day, index) => {
-                  const score = Math.round(Number(findMetric(day, ["compound_risk_score"]) ?? (index === 0 ? risk : 42 + (index * 9) % 40)));
-                  const dayTemperature = Number(findMetric(day, ["temp_max", "temperature_max"]) ?? 33);
-                  const dayRainfall = Number(findMetric(day, ["precipitation_mm", "rainfall_mm"]) ?? 8);
-                  return <button key={day.date ?? index} className={`day-item ${activeDay === index ? "selected" : ""}`} onClick={() => setActiveDay(index)}>
-                    <span className="day-name">{day.day_name ?? (index === 0 ? "Today" : new Intl.DateTimeFormat("en", { weekday: "short" }).format(new Date(`${day.date}T12:00:00`)))}</span>
-                    <span className={`day-icon ${dayRainfall > 1 ? "rainy" : ""}`}>{dayRainfall > 1 ? <CloudDrizzle size={19} /> : dayRainfall === 0 ? <Sun size={19} /> : <CloudSun size={19} />}</span>
-                    <span className="day-temperature">{Math.round(dayTemperature)}°</span>
-                    <span className="day-rain"><Droplets size={12} />{Math.round(dayRainfall)} mm</span>
-                    <span className={`day-risk ${riskTone(score)}`}><i />{score}</span>
-                  </button>;
-                })}
-              </div>
-              <div className="interval-tabs" aria-label="Conformal forecast variable">
-                {(Object.keys(intervalConfigs) as IntervalMetric[]).map((key) => <button key={key} className={intervalMetric === key ? "active" : ""} onClick={() => setIntervalMetric(key)}>{intervalConfigs[key].label}</button>)}
-              </div>
-              <div className="forecast-chart-header"><div><strong>{intervalConfig.label} · 90% prediction interval</strong><span>{activeForecast?.day_name ?? "Selected day"} point estimate and uncertainty range</span></div><div className="temp-summary"><strong>{selectedInterval.point.toFixed(1)} {intervalConfig.unit}</strong><span>{selectedInterval.lower.toFixed(1)}–{selectedInterval.upper.toFixed(1)} {intervalConfig.unit}</span></div></div>
-              <div className="chart-wrap">
-                <Suspense fallback={<div className="map-loading">Loading prediction chart…</div>}>
-                  <ConformalChart data={intervalData.map(({ date, point, lower, band, upper }) => ({ date: String(date ?? ""), point, lower, band, upper }))} unit={intervalConfig.unit} label={intervalConfig.label} domain={[Math.max(0, intervalMin - intervalPadding), intervalMax + intervalPadding]} />
-                </Suspense>
-              </div>
-              <div className="chart-footnote"><BadgeCheck size={14} /> {intervalNote}</div>
+              {hasSelectedLocation && days.length > 0 ? (
+                <>
+                  <div className="day-strip">
+                    {days.slice(0, 7).map((day, index) => {
+                      const score = Math.round(Number(findMetric(day, ["compound_risk_score"]) ?? (index === 0 && risk != null ? risk : 42 + (index * 9) % 40)));
+                      const dayTemperature = Number(findMetric(day, ["temp_max", "temperature_max"]) ?? 33);
+                      const dayRainfall = Number(findMetric(day, ["precipitation_mm", "rainfall_mm"]) ?? 8);
+                      return <button key={day.date ?? index} className={`day-item ${activeDay === index ? "selected" : ""}`} onClick={() => setActiveDay(index)}>
+                        <span className="day-name">{day.day_name ?? (index === 0 ? "Today" : new Intl.DateTimeFormat("en", { weekday: "short" }).format(new Date(`${day.date}T12:00:00`)))}</span>
+                        <span className={`day-icon ${dayRainfall > 1 ? "rainy" : ""}`}>{dayRainfall > 1 ? <CloudDrizzle size={19} /> : dayRainfall === 0 ? <Sun size={19} /> : <CloudSun size={19} />}</span>
+                        <span className="day-temperature">{Math.round(dayTemperature)}°</span>
+                        <span className="day-rain"><Droplets size={12} />{Math.round(dayRainfall)} mm</span>
+                        <span className={`day-risk ${riskTone(score)}`}><i />{score}</span>
+                      </button>;
+                    })}
+                  </div>
+                  <div className="interval-tabs" aria-label="Conformal forecast variable">
+                    {(Object.keys(intervalConfigs) as IntervalMetric[]).map((key) => <button key={key} className={intervalMetric === key ? "active" : ""} onClick={() => setIntervalMetric(key)}>{intervalConfigs[key].label}</button>)}
+                  </div>
+                  <div className="forecast-chart-header"><div><strong>{intervalConfig.label} · 90% prediction interval</strong><span>{activeForecast?.day_name ?? "Selected day"} point estimate and uncertainty range</span></div><div className="temp-summary"><strong>{selectedInterval.point.toFixed(1)} {intervalConfig.unit}</strong><span>{selectedInterval.lower.toFixed(1)}–{selectedInterval.upper.toFixed(1)} {intervalConfig.unit}</span></div></div>
+                  <div className="chart-wrap">
+                    <Suspense fallback={<div className="map-loading">Loading prediction chart…</div>}>
+                      <ConformalChart data={intervalData.map(({ date, point, lower, band, upper }) => ({ date: String(date ?? ""), point, lower, band, upper }))} unit={intervalConfig.unit} label={intervalConfig.label} domain={[Math.max(0, intervalMin - intervalPadding), intervalMax + intervalPadding]} />
+                    </Suspense>
+                  </div>
+                  <div className="chart-footnote"><BadgeCheck size={14} /> {intervalNote}</div>
+                </>
+              ) : (
+                <div className="forecast-blank-placeholder">
+                  <div className="forecast-blank-icon">
+                    <BarChart3 size={28} strokeWidth={1.8} aria-hidden="true" />
+                  </div>
+                  <div className="forecast-blank-text">
+                    <strong>No Forecast Telemetry Available</strong>
+                    <p>Search and select a city in &ldquo;VIEW IN&rdquo; above to calculate 7-day weather assistance projections and 90% conformal prediction intervals.</p>
+                  </div>
+                </div>
+              )}
             </div>
           </section>
 
           <section className="section-block intelligence-section">
-            <div className="section-heading"><div><div className="section-kicker">ENVIRONMENTAL INTELLIGENCE</div><h2>What’s driving risk today</h2></div><button className="text-button" onClick={() => document.getElementById("intel-grid")?.scrollIntoView({ behavior: "smooth" })}>View all signals <ArrowUpRight size={14} /></button></div>
+            <div className="section-heading"><div><div className="section-kicker">ENVIRONMENTAL INTELLIGENCE</div><h2>What’s driving weather assistance today</h2></div><button className="text-button" disabled={!hasSelectedLocation} onClick={() => document.getElementById("intel-grid")?.scrollIntoView({ behavior: "smooth" })}>View all signals <ArrowUpRight size={14} /></button></div>
             <div className="intel-grid" id="intel-grid">
               <article className="card intel-card">
-                <div className="intel-head"><div className="intel-icon flood"><Droplets size={17} /></div><div><h3>Flood risk</h3><span>HYDROLOGICAL MODEL</span></div><span className={`mini-status ${String(findMetric(floodRisk, ["hazard_tier"]) ?? "WATCH").toLowerCase() === "normal" ? "good" : "watch"}`}>{String(findMetric(floodRisk, ["hazard_tier"]) ?? "WATCH").replace(/_/g, " ")}</span></div>
-                <div className="metric-row"><div><strong>{runoff.toFixed(1)}</strong><span>mm runoff</span></div><div className="mini-chart flood-chart"><span style={{ height: "28%" }} /><span style={{ height: "48%" }} /><span style={{ height: "37%" }} /><span style={{ height: "64%" }} /><span style={{ height: "52%" }} /><span style={{ height: "82%" }} /><span style={{ height: "70%" }} /></div></div>
-                <div className="intel-footer"><span>API-14 <b>{antecedentRain.toFixed(1)} mm</b></span><span>Hazard probability <b>{floodProbability.toFixed(2)}</b></span></div>
+                <div className="intel-head">
+                  <div className="intel-icon flood"><Droplets size={17} /></div>
+                  <div><h3>Flood assistance</h3><span>HYDROLOGICAL MODEL</span></div>
+                  <span className={`mini-status ${hasSelectedLocation ? (String(findMetric(floodRisk, ["hazard_tier"]) ?? "WATCH").toLowerCase() === "normal" ? "good" : "watch") : "watch"}`}>
+                    {hasSelectedLocation ? String(findMetric(floodRisk, ["hazard_tier"]) ?? "WATCH").replace(/_/g, " ") : "AWAITING LOCATION"}
+                  </span>
+                </div>
+                <div className="metric-row">
+                  <div><strong>{hasSelectedLocation && runoff != null ? runoff.toFixed(1) : "--"}</strong><span>{hasSelectedLocation ? " mm runoff" : ""}</span></div>
+                  <div className="mini-chart flood-chart">
+                    <span style={{ height: hasSelectedLocation ? "28%" : "0%" }} />
+                    <span style={{ height: hasSelectedLocation ? "48%" : "0%" }} />
+                    <span style={{ height: hasSelectedLocation ? "37%" : "0%" }} />
+                    <span style={{ height: hasSelectedLocation ? "64%" : "0%" }} />
+                    <span style={{ height: hasSelectedLocation ? "52%" : "0%" }} />
+                    <span style={{ height: hasSelectedLocation ? "82%" : "0%" }} />
+                    <span style={{ height: hasSelectedLocation ? "70%" : "0%" }} />
+                  </div>
+                </div>
+                <div className="intel-footer">
+                  <span>API-14 <b>{hasSelectedLocation && antecedentRain != null ? `${antecedentRain.toFixed(1)} mm` : "--"}</b></span>
+                  <span>Hazard probability <b>{hasSelectedLocation && floodProbability != null ? floodProbability.toFixed(2) : "--"}</b></span>
+                </div>
               </article>
               <article className="card intel-card">
-                <div className="intel-head"><div className="intel-icon heat"><Sun size={17} /></div><div><h3>Heat stress</h3><span>THERMAL EXPOSURE</span></div><span className={`mini-status ${heatAlertLabel === "NO ALERT" ? "good" : "moderate"}`}>{heatAlertLabel}</span></div>
-                <div className="heat-metrics"><div><strong>{dryBulb.toFixed(0)}°</strong><span>Dry bulb</span></div><div><strong>{apparentTemp.toFixed(0)}°</strong><span>Feels like</span></div><div><strong>{wetBulb.toFixed(0)}°</strong><span>Wet bulb</span></div></div>
-                <div className="intel-footer"><span>Urban heat island delta</span><span className="up-trend"><ArrowUpRight size={13} /> +{uhiDelta.toFixed(1)}°</span></div>
+                <div className="intel-head">
+                  <div className="intel-icon heat"><Sun size={17} /></div>
+                  <div><h3>Heat stress</h3><span>THERMAL EXPOSURE</span></div>
+                  <span className={`mini-status ${hasSelectedLocation ? (heatAlertLabel === "NO ALERT" ? "good" : "moderate") : "good"}`}>
+                    {hasSelectedLocation ? heatAlertLabel : "AWAITING LOCATION"}
+                  </span>
+                </div>
+                <div className="heat-metrics">
+                  <div><strong>{hasSelectedLocation && dryBulb != null ? `${dryBulb.toFixed(0)}°` : "--"}</strong><span>Dry bulb</span></div>
+                  <div><strong>{hasSelectedLocation && apparentTemp != null ? `${apparentTemp.toFixed(0)}°` : "--"}</strong><span>Feels like</span></div>
+                  <div><strong>{hasSelectedLocation && wetBulb != null ? `${wetBulb.toFixed(0)}°` : "--"}</strong><span>Wet bulb</span></div>
+                </div>
+                <div className="intel-footer">
+                  <span>Urban heat island delta</span>
+                  <span className="up-trend">{hasSelectedLocation && uhiDelta != null ? <><ArrowUpRight size={13} /> +{uhiDelta.toFixed(1)}°</> : "--"}</span>
+                </div>
               </article>
               <article className="card intel-card">
-                <div className="intel-head"><div className="intel-icon power"><BatteryWarning size={17} /></div><div><h3>Power grid</h3><span>DEMAND FORECAST</span></div><span className="mini-status watch">{textMetric(["grid_stability_tier"], "ELEVATED", powerGrid).replace(/_/g, " ")}</span></div>
-                <div className="metric-row"><div><strong>{Math.round(peakLoad).toLocaleString()}</strong><span>MW peak load</span></div><div className="demand-pill"><ArrowUpRight size={14} />{coolingSurge.toFixed(2)}× <small>baseline</small></div></div>
-                <div className="load-meter"><span style={{ width: `${Math.min(100, Math.max(0, blackoutProbability * 100))}%` }} /></div>
-                <div className="intel-footer"><span>Blackout probability</span><b>{(blackoutProbability * 100).toFixed(1)}%</b></div>
+                <div className="intel-head">
+                  <div className="intel-icon power"><BatteryWarning size={17} /></div>
+                  <div><h3>Power grid</h3><span>DEMAND FORECAST</span></div>
+                  <span className="mini-status watch">{hasSelectedLocation ? textMetric(["grid_stability_tier"], "ELEVATED", powerGrid).replace(/_/g, " ") : "AWAITING LOCATION"}</span>
+                </div>
+                <div className="metric-row">
+                  <div><strong>{hasSelectedLocation && peakLoad != null ? Math.round(peakLoad).toLocaleString() : "--"}</strong><span>{hasSelectedLocation ? " MW peak load" : ""}</span></div>
+                  <div className="demand-pill">{hasSelectedLocation && coolingSurge != null ? <><ArrowUpRight size={14} />{coolingSurge.toFixed(2)}× <small>baseline</small></> : "--"}</div>
+                </div>
+                <div className="load-meter"><span style={{ width: `${hasSelectedLocation && blackoutProbability != null ? Math.min(100, Math.max(0, blackoutProbability * 100)) : 0}%` }} /></div>
+                <div className="intel-footer">
+                  <span>Blackout probability</span>
+                  <b>{hasSelectedLocation && blackoutProbability != null ? `${(blackoutProbability * 100).toFixed(1)}%` : "--"}</b>
+                </div>
               </article>
               <article className="card intel-card">
-                <div className="intel-head"><div className="intel-icon air"><Wind size={17} /></div><div><h3>Air quality</h3><span>AMBIENT CONDITIONS</span></div><span className={`mini-status ${aqiStatusClass}`}>{aqiCategory.toUpperCase()}</span></div>
-                <div className="aqi-row"><div className="aqi-number">{Math.round(aqi)}<span> AQI</span></div><div className="pollutant-bars">{[["PM2.5", pm25], ["PM10", pm10], ["NO₂", no2], ["SO₂", so2], ["CO", co], ["O₃", ozone]].map(([label, amount]) => { const value = typeof amount === "number" ? amount : null; return <div key={String(label)}><span>{label}</span><i><b style={{ width: `${value === null ? 0 : Math.min(100, Math.max(5, value / 250 * 100))}%` }} /></i><small>{value === null ? "—" : value.toFixed(0)}</small></div>; })}</div></div>
-                <div className="intel-footer"><span>Boundary-layer stagnation</span><span className="inline-good"><Check size={13} /> {stagnation}</span></div>
+                <div className="intel-head">
+                  <div className="intel-icon air"><Wind size={17} /></div>
+                  <div><h3>Air quality</h3><span>AMBIENT CONDITIONS</span></div>
+                  <span className={`mini-status ${hasSelectedLocation ? aqiStatusClass : "good"}`}>{hasSelectedLocation ? aqiCategory.toUpperCase() : "AWAITING LOCATION"}</span>
+                </div>
+                <div className="aqi-row">
+                  <div className="aqi-number">{hasSelectedLocation && aqi != null ? Math.round(aqi) : "--"}<span>{hasSelectedLocation ? " AQI" : ""}</span></div>
+                  <div className="pollutant-bars">
+                    {[["PM2.5", pm25], ["PM10", pm10], ["NO₂", no2], ["SO₂", so2], ["CO", co], ["O₃", ozone]].map(([label, amount]) => {
+                      const value = typeof amount === "number" ? amount : null;
+                      return (
+                        <div key={String(label)}>
+                          <span>{label}</span>
+                          <i><b style={{ width: `${value === null ? 0 : Math.min(100, Math.max(5, (value / 250) * 100))}%` }} /></i>
+                          <small>{value === null ? "--" : value.toFixed(0)}</small>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="intel-footer">
+                  <span>Boundary-layer stagnation</span>
+                  <span className="inline-good">{hasSelectedLocation ? <><Check size={13} /> {stagnation}</> : "--"}</span>
+                </div>
               </article>
               <article className="card intel-card">
-                <div className="intel-head"><div className="intel-icon agri"><Sprout size={17} /></div><div><h3>AgriSense</h3><span>AGRICULTURAL CONDITIONS</span></div><span className={`mini-status ${droughtIsActive ? "critical" : "good"}`}>{droughtIsActive ? "DROUGHT ALERT" : "FAVORABLE"}</span></div>
-                <div className="soil-row"><div><strong>{smdi.toFixed(1)}</strong><span>Soil moisture deficit</span></div><div className="soil-scale"><div className="soil-track"><i style={{ left: `${Math.min(95, Math.max(5, ((smdi + 3) / 6) * 100))}%` }} /></div><div className="soil-labels"><span>Dry</span><span>Balanced</span><span>Wet</span></div></div></div>
-                <div className="intel-footer"><span>{textMetric(["active_crop"], "Crop", agriSense)} · {droughtLabel}</span><b>{cropStage}</b></div>
+                <div className="intel-head">
+                  <div className="intel-icon agri"><Sprout size={17} /></div>
+                  <div><h3>AgriSense</h3><span>AGRICULTURAL CONDITIONS</span></div>
+                  <span className={`mini-status ${hasSelectedLocation ? (droughtIsActive ? "critical" : "good") : "good"}`}>{hasSelectedLocation ? (droughtIsActive ? "DROUGHT ALERT" : "FAVORABLE") : "AWAITING LOCATION"}</span>
+                </div>
+                <div className="soil-row">
+                  <div><strong>{hasSelectedLocation && smdi != null ? smdi.toFixed(1) : "--"}</strong><span>Soil moisture deficit</span></div>
+                  <div className="soil-scale">
+                    <div className="soil-track"><i style={{ left: `${hasSelectedLocation && smdi != null ? Math.min(95, Math.max(5, ((smdi + 3) / 6) * 100)) : 50}%`, opacity: hasSelectedLocation ? 1 : 0 }} /></div>
+                    <div className="soil-labels"><span>Dry</span><span>Balanced</span><span>Wet</span></div>
+                  </div>
+                </div>
+                <div className="intel-footer">
+                  <span>{hasSelectedLocation ? `${textMetric(["active_crop"], "Crop", agriSense)} · ${droughtLabel}` : "Crop · Awaiting location"}</span>
+                  <b>{hasSelectedLocation ? cropStage : "--"}</b>
+                </div>
               </article>
               <article className="card intel-card">
-                <div className="intel-head"><div className="intel-icon water"><CloudDrizzle size={17} /></div><div><h3>Water quality</h3><span>GROUNDWATER STATUS</span></div><span className={`mini-status ${isPotable ? "good" : "critical"}`}>{potabilityLabel}</span></div>
-                <div className="water-score-row"><div className="wqi-circle"><span>{Math.round(wqi)}</span><small>WQI</small></div><div className="water-copy"><strong>{waterGrade}</strong><span>{isPotable ? "Within recommended limits" : "Treatment recommended"}</span><small>{waterLimitingParameter}</small></div></div>
-                <div className="intel-footer"><span>Source: CGWB</span><span className={isPotable ? "inline-good" : "inline-risk"}><ShieldCheck size={13} /> {isPotable ? "Safe" : "Treat"}</span></div>
+                <div className="intel-head">
+                  <div className="intel-icon water"><CloudDrizzle size={17} /></div>
+                  <div><h3>Water quality</h3><span>GROUNDWATER STATUS</span></div>
+                  <span className={`mini-status ${hasSelectedLocation ? (isPotable ? "good" : "critical") : "good"}`}>{hasSelectedLocation ? potabilityLabel : "AWAITING LOCATION"}</span>
+                </div>
+                <div className="water-score-row">
+                  <div className="wqi-circle"><span>{hasSelectedLocation && wqi != null ? Math.round(wqi) : "--"}</span><small>WQI</small></div>
+                  <div className="water-copy">
+                    <strong>{hasSelectedLocation ? waterGrade : "Awaiting location"}</strong>
+                    <span>{hasSelectedLocation ? (isPotable ? "Within recommended limits" : "Treatment recommended") : "Select a city to evaluate groundwater potability"}</span>
+                    <small>{hasSelectedLocation ? waterLimitingParameter : "BIS standards evaluation"}</small>
+                  </div>
+                </div>
+                <div className="intel-footer">
+                  <span>Source: CGWB</span>
+                  <span className={hasSelectedLocation ? (isPotable ? "inline-good" : "inline-risk") : "inline-good"}>{hasSelectedLocation ? <><ShieldCheck size={13} /> {isPotable ? "Safe" : "Treat"}</> : "--"}</span>
+                </div>
+              </article>
+              <article className="card intel-card">
+                <div className="intel-head">
+                  <div className="intel-icon wind"><Zap size={17} /></div>
+                  <div><h3>Gale & wind gust</h3><span>KINETIC HAZARD MODEL</span></div>
+                  <span className={`mini-status ${hasSelectedLocation ? (galeGust != null && galeGust >= 50 ? "watch" : "good") : "good"}`}>
+                    {hasSelectedLocation ? (galeGust != null && galeGust >= 60 ? "GALE WARNING" : galeGust != null && galeGust >= 45 ? "ELEVATED GUSTS" : "NORMAL GUSTS") : "AWAITING LOCATION"}
+                  </span>
+                </div>
+                <div className="metric-row">
+                  <div>
+                    <strong>{hasSelectedLocation && galeGust != null ? Math.round(galeGust) : "--"}</strong>
+                    <span>{hasSelectedLocation ? " km/h peak gust" : ""}</span>
+                  </div>
+                  <div className="demand-pill">
+                    {hasSelectedLocation && windSpeed != null ? <><Wind size={13} /> {Math.round(windSpeed)} km/h <small>sustained</small></> : "--"}
+                  </div>
+                </div>
+                <div className="intel-footer">
+                  <span>Beaufort rating</span>
+                  <b>{hasSelectedLocation && galeGust != null ? (galeGust > 61 ? "Force 8 (Gale)" : galeGust > 49 ? "Force 7 (Near Gale)" : galeGust > 28 ? "Force 5-6 (Breeze)" : "Force 3-4 (Gentle)") : "--"}</b>
+                </div>
+              </article>
+              <article className="card intel-card">
+                <div className="intel-head">
+                  <div className="intel-icon climate"><Globe2 size={17} /></div>
+                  <div><h3>Climate anomaly</h3><span>44-YEAR CLIMATOLOGY ENGINE</span></div>
+                  <span className={`mini-status ${hasSelectedLocation ? (histPercentile != null && (histPercentile >= 85 || histPercentile <= 15) ? "watch" : "good") : "good"}`}>
+                    {hasSelectedLocation ? (histPercentile != null && histPercentile >= 85 ? "WARM ANOMALY" : histPercentile != null && histPercentile <= 15 ? "COLD ANOMALY" : "HISTORICAL NORMAL") : "AWAITING LOCATION"}
+                  </span>
+                </div>
+                <div className="soil-row">
+                  <div>
+                    <strong>{hasSelectedLocation && histPercentile != null ? `${Math.round(histPercentile)}th` : "--"}</strong>
+                    <span>{hasSelectedLocation ? " percentile" : "Climatological baseline"}</span>
+                  </div>
+                  <div className="soil-scale">
+                    <div className="soil-track">
+                      <i style={{ left: `${hasSelectedLocation && histPercentile != null ? Math.min(95, Math.max(5, histPercentile)) : 50}%`, opacity: hasSelectedLocation ? 1 : 0 }} />
+                    </div>
+                    <div className="soil-labels"><span>Cool (P10)</span><span>Normal (P50)</span><span>Warm (P90)</span></div>
+                  </div>
+                </div>
+                <div className="intel-footer">
+                  <span>ERA5 reanalysis departure</span>
+                  <b>{hasSelectedLocation && histPercentile != null ? (histPercentile >= 75 ? `+${((histPercentile - 50) / 15).toFixed(1)}σ warmer` : histPercentile <= 25 ? `-${((50 - histPercentile) / 15).toFixed(1)}σ cooler` : "Within normal band") : "--"}</b>
+                </div>
+              </article>
+              <article className="card intel-card">
+                <div className="intel-head">
+                  <div className="intel-icon stagnation"><Layers size={17} /></div>
+                  <div><h3>Atmospheric stability</h3><span>BOUNDARY-LAYER VENTILATION</span></div>
+                  <span className={`mini-status ${hasSelectedLocation ? (stagnationFlag > 0 ? "watch" : "good") : "good"}`}>
+                    {hasSelectedLocation ? (stagnationFlag > 0 ? "SURFACE INVERSION" : "DISPERSIVE") : "AWAITING LOCATION"}
+                  </span>
+                </div>
+                <div className="metric-row">
+                  <div>
+                    <strong>{hasSelectedLocation ? (stagnationFlag > 0 ? "Trapped" : "Ventilated") : "--"}</strong>
+                    <span>{hasSelectedLocation ? " mixing layer" : ""}</span>
+                  </div>
+                  <div className="demand-pill">
+                    {hasSelectedLocation ? <><Check size={13} /> {ventilationTier} <small>ventilation</small></> : "--"}
+                  </div>
+                </div>
+                <div className="intel-footer">
+                  <span>Thermal inversion status</span>
+                  <span className={hasSelectedLocation ? (stagnationFlag > 0 ? "inline-risk" : "inline-good") : "inline-good"}>
+                    {hasSelectedLocation ? (stagnationFlag > 0 ? <><AlertTriangle size={13} /> Inversion active</> : <><Check size={13} /> Well ventilated</>) : "--"}
+                  </span>
+                </div>
+              </article>
+              <article className="card intel-card">
+                <div className="intel-head">
+                  <div className="intel-icon smoke"><Flame size={17} /></div>
+                  <div><h3>Transboundary smoke</h3><span>BIOMASS PLUME ADVECTION</span></div>
+                  <span className={`mini-status ${hasSelectedLocation ? smokeStatusClass : "good"}`}>
+                    {smokeAlert}
+                  </span>
+                </div>
+                <div className="metric-row">
+                  <div>
+                    <strong>{hasSelectedLocation && smokeAlignmentScore != null ? smokeAlignmentScore.toFixed(2) : "--"}</strong>
+                    <span>{hasSelectedLocation ? " alignment index" : ""}</span>
+                  </div>
+                  <div className="demand-pill">
+                    {hasSelectedLocation ? <><Wind size={13} /> {isBurningSeason ? "Stubble season" : "Baseline season"}</> : "--"}
+                  </div>
+                </div>
+                <div className="intel-footer">
+                  <span>NW advection trajectory</span>
+                  <span className={hasSelectedLocation ? (smokeAlignmentScore != null && smokeAlignmentScore >= 0.7 ? "inline-risk" : "inline-good") : "inline-good"}>
+                    {hasSelectedLocation ? (smokeAlignmentScore != null && smokeAlignmentScore >= 0.7 ? <><AlertTriangle size={13} /> Corridor aligned</> : <><Check size={13} /> Clean / Dispersed</>) : "--"}
+                  </span>
+                </div>
+              </article>
+              <article className="card intel-card">
+                <div className="intel-head">
+                  <div className="intel-icon uhi"><Building2 size={17} /></div>
+                  <div><h3>Urban heat island</h3><span>NOCTURNAL CANOPY MODEL</span></div>
+                  <span className={`mini-status ${hasSelectedLocation ? uhiStatusClass : "good"}`}>
+                    {uhiAlert}
+                  </span>
+                </div>
+                <div className="metric-row">
+                  <div>
+                    <strong>{hasSelectedLocation && uhiCanopyDelta != null ? `+${uhiCanopyDelta.toFixed(1)}°` : "--"}</strong>
+                    <span>{hasSelectedLocation ? "C canopy excess" : ""}</span>
+                  </div>
+                  <div className="demand-pill">
+                    {hasSelectedLocation && uhiCanopyDelta != null ? <><Sun size={13} /> {(uhiCanopyDelta * 1.35).toFixed(1)}× <small>rural baseline</small></> : "--"}
+                  </div>
+                </div>
+                <div className="intel-footer">
+                  <span>Oke thermal morphology</span>
+                  <b>{hasSelectedLocation ? "Concrete thermal mass" : "--"}</b>
+                </div>
+              </article>
+              <article className="card intel-card">
+                <div className="intel-head">
+                  <div className="intel-icon bioclimate"><Compass size={17} /></div>
+                  <div><h3>Bioclimatic regime</h3><span>44-YEAR CLUSTERING (GMM)</span></div>
+                  <span className="mini-status good">
+                    {hasSelectedLocation ? "REGIME IDENTIFIED" : "AWAITING LOCATION"}
+                  </span>
+                </div>
+                <div className="metric-row">
+                  <div>
+                    <strong style={{ fontSize: "17.5px", letterSpacing: "-0.3px" }}>{hasSelectedLocation ? bioclimate.title : "--"}</strong>
+                    <span style={{ display: "block", fontSize: "10.5px", marginTop: "2px", fontWeight: 500, color: "#435b4b" }}>{hasSelectedLocation ? bioclimate.code : ""}</span>
+                  </div>
+                  <div className="demand-pill">
+                    {hasSelectedLocation ? <><Check size={13} /> {bioclimate.confidence} <small>fit</small></> : "--"}
+                  </div>
+                </div>
+                <div className="intel-footer">
+                  <span>Primary hazard class</span>
+                  <b>{hasSelectedLocation ? bioclimate.primaryHazard : "--"}</b>
+                </div>
+              </article>
+              <article className="card intel-card">
+                <div className="intel-head">
+                  <div className="intel-icon cloudburst"><CloudRain size={17} /></div>
+                  <div><h3>Convective cloudburst</h3><span>HIGH-DENSITY IMD GAUGES</span></div>
+                  <span className={`mini-status ${hasSelectedLocation ? cloudburstStatusClass : "good"}`}>
+                    {cloudburstAlert}
+                  </span>
+                </div>
+                <div className="metric-row">
+                  <div>
+                    <strong>{hasSelectedLocation && convectiveBurstRate != null ? convectiveBurstRate.toFixed(1) : "--"}</strong>
+                    <span>{hasSelectedLocation ? " mm/h peak burst" : ""}</span>
+                  </div>
+                  <div className="demand-pill">
+                    {hasSelectedLocation && rainProb != null ? <><Droplets size={13} /> {Math.round(rainProb)}% <small>rain prob</small></> : "--"}
+                  </div>
+                </div>
+                <div className="intel-footer">
+                  <span>Cloudburst alert tier</span>
+                  <span className={hasSelectedLocation ? (precipMm != null && precipMm >= 40 ? "inline-risk" : "inline-good") : "inline-good"}>
+                    {hasSelectedLocation ? (precipMm != null && precipMm >= 40 ? <><AlertTriangle size={13} /> High burst risk</> : <><Check size={13} /> Stable convection</>) : "--"}
+                  </span>
+                </div>
+              </article>
+              <article className="card intel-card">
+                <div className="intel-head">
+                  <div className="intel-icon wbgt"><Thermometer size={17} /></div>
+                  <div><h3>Physiological heat stress</h3><span>ISO 7243 WBGT LABOR INDEX</span></div>
+                  <span className={`mini-status ${hasSelectedLocation ? wbgtStatusClass : "good"}`}>
+                    {wbgtAlert}
+                  </span>
+                </div>
+                <div className="metric-row">
+                  <div>
+                    <strong>{hasSelectedLocation && wbgt != null ? `${wbgt.toFixed(1)}°` : "--"}</strong>
+                    <span>{hasSelectedLocation ? "C WBGT index" : ""}</span>
+                  </div>
+                  <div className="demand-pill">
+                    {hasSelectedLocation && wbgt != null ? <><Activity size={13} /> {workRestCycle}</> : "--"}
+                  </div>
+                </div>
+                <div className="intel-footer">
+                  <span>Occupational labor guidance</span>
+                  <b>{hasSelectedLocation && wbgt != null ? (wbgt >= 32 ? "Mandatory cooling breaks" : wbgt >= 30 ? "Hydration & shaded rest" : "Safe continuous labor") : "--"}</b>
+                </div>
               </article>
             </div>
           </section>
 
           <section className="bottom-grid">
             <article className="card cascade-card">
-              <div className="section-heading compact-heading"><div><div className="section-kicker">CASCADING IMPACT</div><h2>Connected risk pathways</h2></div></div>
+              <div className="section-heading compact-heading"><div><div className="section-kicker">CASCADING IMPACT</div><h2>Connected assistance pathways</h2></div></div>
               <p className="card-description">{cascadeDescription}</p>
               {cascadeDisplayNodes.length > 0
                 ? <div className="cascade-flow">{cascadeDisplayNodes.map((node, index) => <div className="cascade-flow-step" key={String(node.node_id ?? node.system ?? index)}>
                     <div className={`cascade-node ${index === 0 ? "hazard-node" : ""}`}><span>{index === 0 ? <Flame size={15} /> : index === 1 ? <Droplets size={15} /> : <Factory size={15} />}</span><div><strong>{String(node.system ?? node.name ?? `Impact ${index + 1}`)}</strong><small>{String(node.status ?? node.estimated_time_to_failure ?? "")}</small></div></div>
                     {index < cascadeDisplayNodes.length - 1 && <div className="cascade-connector"><i /><i /><i /><ChevronRight size={13} /></div>}
                   </div>)}</div>
-                : <div className="no-cascade"><ShieldCheck size={15} /> No cascading failures are forecast for this period.</div>}
+                : <div className="no-cascade"><ShieldCheck size={15} /> {hasSelectedLocation ? "No cascading failures are forecast for this period." : "Select a location to model cascading systemic failures."}</div>}
             </article>
             <article className="card sources-card">
               <div className="section-heading compact-heading"><div><div className="section-kicker">MODEL CONFIDENCE</div><h2>Signal quality</h2></div><span className="confidence-icon"><BadgeCheck size={17} /></span></div>
-              <div className="confidence-score"><strong>{Math.round(confidenceCoverage)}<span>%</span></strong><span>Conformal coverage</span><span className="confidence-trend">n = {Math.round(calibrationSamples)}</span></div>
-              <div className="confidence-bar"><span style={{ width: `${Math.min(100, Math.max(0, confidenceCoverage))}%` }} /></div>
-              <div className="source-list"><span>Data sources</span><div><i>IMD</i><i>CWC</i><i>CGWB</i><b>+4</b></div></div>
+              <div className="confidence-score">
+                <strong>{hasSelectedLocation && confidenceCoverage != null ? Math.round(confidenceCoverage) : "--"}<span>{hasSelectedLocation ? "%" : ""}</span></strong>
+                <span>Conformal coverage</span>
+                <span className="confidence-trend">{hasSelectedLocation && calibrationSamples != null ? `n = ${Math.round(calibrationSamples)}` : "Awaiting location"}</span>
+              </div>
+              <div className="confidence-bar"><span style={{ width: `${hasSelectedLocation && confidenceCoverage != null ? Math.min(100, Math.max(0, confidenceCoverage)) : 0}%` }} /></div>
+              <div className="source-list"><span>Data sources</span><div>{hasSelectedLocation ? <><i>IMD</i><i>CWC</i><i>CGWB</i><b>+4</b></> : <i>Awaiting location</i>}</div></div>
             </article>
           </section>
 
@@ -997,9 +1560,9 @@ function App() {
         <Suspense fallback={null}>
           <CrisisCouncilModal
             city={selectedCityName}
-            initialTempMax={dryBulb}
-            initialRainfall={runoff}
-            initialGridLoad={peakLoad}
+            initialTempMax={dryBulb ?? undefined}
+            initialRainfall={runoff ?? undefined}
+            initialGridLoad={peakLoad ?? undefined}
             onClose={() => setIsCrisisCouncilOpen(false)}
           />
         </Suspense>

@@ -26,6 +26,10 @@ function CitySearch({ value, onSelect }: { value: string; onSelect: (value: stri
   }, [cities, isFiltering, normalizedQuery]);
 
   useEffect(() => {
+    setQuery(value);
+  }, [value]);
+
+  useEffect(() => {
     const closeOnOutsidePointer = (event: PointerEvent) => {
       if (event.target instanceof Node && !rootRef.current?.contains(event.target)) setIsOpen(false);
     };

@@ -23,7 +23,7 @@ function ConformalChart({ data, domain, unit, label }: ConformalChartProps) {
       <AreaChart data={data} margin={{ top: 16, right: 12, left: -20, bottom: 0 }}>
         <defs>
           <linearGradient id="intervalFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#1473ff" stopOpacity={0.34} />
+            <stop offset="0%" stopColor="#16a34a" stopOpacity={0.34} />
             <stop offset="100%" stopColor="#38cf72" stopOpacity={0.06} />
           </linearGradient>
         </defs>
@@ -33,7 +33,7 @@ function ConformalChart({ data, domain, unit, label }: ConformalChartProps) {
         <Tooltip contentStyle={{ border: "1px solid #e8ebe5", borderRadius: 10, fontSize: 12, boxShadow: "0 8px 24px #29342112" }} />
         <Area dataKey="lower" stackId="interval" stroke="none" fill="transparent" name="Lower bound" />
         <Area dataKey="band" stackId="interval" stroke="none" fill="url(#intervalFill)" name={`${label} interval`} />
-        <Area dataKey="point" stroke="#1473ff" strokeWidth={3} fill="none" name="Point estimate" dot={{ r: 4, fill: "#1473ff", stroke: "white", strokeWidth: 2 }} />
+        <Area dataKey="point" stroke="#16a34a" strokeWidth={3} fill="none" name="Point estimate" dot={{ r: 4, fill: "#16a34a", stroke: "white", strokeWidth: 2 }} />
       </AreaChart>
     </ResponsiveContainer>
   );

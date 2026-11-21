@@ -41,8 +41,8 @@ function MapCanvas({ latitude, longitude, realismEnabled }: MapCanvasProps) {
       attributionControl={false}
     >
       <Source id="risk-rings" type="geojson" data={{ type: "FeatureCollection", features: [30, 15, 5].map((km) => ({ type: "Feature" as const, properties: { km }, geometry: { type: "Polygon" as const, coordinates: [circleRing(longitude, latitude, km)] } })) }}>
-        <Layer id="rings-fill" type="fill" paint={{ "fill-color": "#1473ff", "fill-opacity": ["match", ["get", "km"], 5, 0.1, 15, 0.045, 30, 0.018, 0.03] }} />
-        <Layer id="rings-outline" type="line" paint={{ "line-color": "#58a4ef", "line-opacity": 0.6, "line-width": 1.5 }} />
+        <Layer id="rings-fill" type="fill" paint={{ "fill-color": "#16a34a", "fill-opacity": ["match", ["get", "km"], 5, 0.1, 15, 0.045, 30, 0.018, 0.03] }} />
+        <Layer id="rings-outline" type="line" paint={{ "line-color": "#34d399", "line-opacity": 0.6, "line-width": 1.5 }} />
       </Source>
       <Marker longitude={longitude} latitude={latitude} anchor="center"><div className="map-marker"><span /><i /></div></Marker>
     </Map>

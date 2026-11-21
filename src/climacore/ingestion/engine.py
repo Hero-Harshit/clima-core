@@ -439,6 +439,8 @@ class LiveForecastEngine:
                         "pm2_5": day.pm2_5,
                         "pm10": day.pm10,
                         "wet_bulb_temp_c": day.wet_bulb_temp_c,
+                        "historical_percentile": day.historical_percentile,
+                        "atmospheric_stagnation": day.atmospheric_stagnation,
                     },
                     compound_risk=compound_res,
                     personas=p_results,
