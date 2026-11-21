@@ -227,6 +227,24 @@ AGENT_FUNCTION_DECLARATIONS = [
             },
             "required": ["city"]
         }
+    },
+    {
+        "name": "replay_historical_disaster",
+        "description": "Execute the Disaster Replay Time Machine backtester to evaluate how Clima-Core's predictive models, parametric insurance triggers, and civil defense lead times perform against landmark Indian climate catastrophes (e.g. 2005 Mumbai Deluge 944mm, 2015 Chennai Floods 494mm, 2022 North India 49.2C Heatwave).",
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "disaster_id": {
+                    "type": "STRING",
+                    "description": "Historical disaster identifier or name: 'MUMBAI_2005_CLOUDBURST', 'CHENNAI_2015_DELUGE', 'NORTH_INDIA_2022_HEATWAVE'"
+                },
+                "city": {
+                    "type": "STRING",
+                    "description": "Optional city override"
+                }
+            },
+            "required": ["disaster_id"]
+        }
     }
 ]
 
@@ -298,6 +316,11 @@ class AgentToolExecutor:
                 rainfall_mm=args.get("rainfall_mm"),
                 wet_bulb_c=args.get("wet_bulb_c"),
                 pm25=args.get("pm25"),
+            )
+        elif name == "replay_historical_disaster":
+            return self.replay_historical_disaster(
+                disaster_id=args.get("disaster_id", "MUMBAI_2005_CLOUDBURST"),
+                city=args.get("city"),
             )
         else:
             return {"error": f"Unknown tool: '{name}'"}
@@ -699,6 +722,16 @@ class AgentToolExecutor:
         )
         return council_res.model_dump()
 
+    def replay_historical_disaster(
+        self,
+        disaster_id: str = "MUMBAI_2005_CLOUDBURST",
+        city: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Execute historical disaster replay backtester."""
+        from climacore.analytics.disaster_replay import run_disaster_replay
+        res = run_disaster_replay(disaster_id=disaster_id, city_override=city)
+        return res.model_dump()
+
 
 # -------------------------------------------------------------------------
 # 3. Deterministic Fallback Parser (For Offline / Zero-Key Execution)
@@ -902,7 +935,41 @@ def detect_and_execute_offline_scenario(
 
         return "\n".join(c_lines), None, council_data
 
-    # 6. Multi-City Comparison
+    # 6. Historical Disaster Replay Time Machine
+    if any(k in q for k in ["replay", "backtest", "time machine", "2005 mumbai", "mumbai 2005", "2015 chennai", "chennai 2015", "2022 heatwave", "historical disaster", "what would happen in 2005", "what would happen in 2015"]):
+        target_event = "MUMBAI_2005_CLOUDBURST"
+        if "chennai" in q or "2015" in q:
+            target_event = "CHENNAI_2015_DELUGE"
+        elif "heatwave" in q or "2022" in q or "delhi" in q:
+            target_event = "NORTH_INDIA_2022_HEATWAVE"
+
+        replay_data = executor.replay_historical_disaster(disaster_id=target_event)
+
+        r_lines = [
+            f"### Disaster Replay Time Machine: **{replay_data['name']}**\n",
+            f"* **Historical Event Reference:** `{replay_data['disaster_id']}` ({replay_data['historical_date']})",
+            f"* **Impact Location & Peak Shock:** **{replay_data['city']}, {replay_data['state']}** | **{replay_data['historical_peak_metric']}**",
+            f"* **Historical Reality:** {replay_data['historical_tragedy_summary']}\n",
+            "**Clima-Core Autonomous Defense Performance:**",
+            f"* ⏱️ **Total Advance Warning Delivered:** **+{replay_data['total_advance_warning_hours']:.0f} Hours** before catastrophic peak",
+            f"* 🛡️ **Estimated Casualties Prevented:** **~{replay_data['lives_protected_estimate']:,} Citizens Protected**",
+            f"* 💰 **Instant Parametric DBT Claims Disbursed:** **₹{replay_data['simulated_parametric_payout_inr_cr']:,.1f} Crores** (Zero Paperwork Claim Voucher)\n",
+            "```mermaid",
+            replay_data["mermaid_timeline_chart"],
+            "```\n",
+            "**Chronological Timeline Progression & Model Defense:**",
+        ]
+        for ph in replay_data["timeline_phases"]:
+            r_lines.append(f"\n#### [{ph['phase_timestamp_relative']}] — `{ph['civil_defense_status']}`")
+            r_lines.append(f"* **Atmospheric Shock:** {', '.join([f'{k.replace('_', ' ').title()}: {v}' for k, v in ph['meteorological_conditions'].items()])}")
+            r_lines.append(f"* **Autonomous Interventions:**")
+            for act in ph["autonomous_actions_taken"]:
+                r_lines.append(f"  - ⚡ {act}")
+
+        r_lines.append(f"\n*{replay_data['conformal_coverage_guarantee']}*")
+        return "\n".join(r_lines), None, replay_data
+
+    # 7. Multi-City Comparison
     # e.g. "compare Delhi and Jaipur" or "compare Delhi and Jaipur for travel tomorrow"
     from climacore.ingestion.geocoding import _load_standard_cities, INDIAN_CITY_ALIASES
     reg_cities = _load_standard_cities()

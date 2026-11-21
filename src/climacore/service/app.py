@@ -103,6 +103,11 @@ class CrisisCouncilRequest(BaseModel):
     peak_grid_load_mw: Optional[float] = Field(default=None, description="Optional baseline grid peak demand in MW")
 
 
+class DisasterReplayRequest(BaseModel):
+    disaster_id: str = Field(default="MUMBAI_2005_CLOUDBURST", description="Historical disaster ID, e.g. 'MUMBAI_2005_CLOUDBURST', 'CHENNAI_2015_DELUGE', 'NORTH_INDIA_2022_HEATWAVE'")
+    city_override: Optional[str] = None
+
+
 class GatekeeperEvaluationRequest(BaseModel):
     model_name: str
     champion_metric: float
@@ -264,6 +269,8 @@ def create_app() -> FastAPI:
                 "/api/tournament/status",
                 "/api/gatekeeper/evaluate",
                 "/api/crisis-council/deliberate",
+                "/api/disaster-replay/events",
+                "/api/disaster-replay/run",
             ],
         }
 
@@ -423,6 +430,35 @@ def create_app() -> FastAPI:
             monitor.latency_profiler.record(lat_ms, is_error=True)
             logger.error(f"Error in crisis council deliberation for {req.city}: {e}")
             raise HTTPException(status_code=500, detail=f"Crisis Council deliberation failed: {str(e)}")
+
+    @app.get("/api/disaster-replay/events")
+    def get_disaster_replay_events() -> Dict[str, Any]:
+        """List all historical disaster benchmarks available for backtesting replay."""
+        from climacore.analytics.disaster_replay import list_historical_disasters
+        events = list_historical_disasters()
+        return {
+            "total_events": len(events),
+            "events": events,
+        }
+
+    @app.post("/api/disaster-replay/run")
+    def run_historical_disaster_replay(req: DisasterReplayRequest) -> Dict[str, Any]:
+        """Execute full chronological backtesting replay for a selected historical catastrophe."""
+        from climacore.analytics.disaster_replay import run_disaster_replay
+        monitor = get_monitoring_service()
+        t0 = time.perf_counter()
+        try:
+            res = run_disaster_replay(disaster_id=req.disaster_id, city_override=req.city_override)
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=False)
+            data = res.model_dump()
+            data["latency_ms"] = round(lat_ms, 2)
+            return data
+        except Exception as e:
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=True)
+            logger.error(f"Error running disaster replay for {req.disaster_id}: {e}")
+            raise HTTPException(status_code=500, detail=f"Disaster replay failed: {str(e)}")
 
     @app.post("/api/predict/custom")
     def predict_custom(req: CustomPredictionRequest) -> Dict[str, Any]:
