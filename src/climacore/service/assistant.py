@@ -33,7 +33,7 @@ from climacore.analytics.rag_retriever import (
 logger = get_logger("climacore.service.assistant")
 
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models"
-DEFAULT_MODEL = "gemini-2.0-flash"
+DEFAULT_MODEL = "gemini-3-flash-preview"
 
 
 class ChatMessage(BaseModel):

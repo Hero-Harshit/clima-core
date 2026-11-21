@@ -13,6 +13,10 @@ import numpy as np
 from pydantic import BaseModel, Field
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+
+# Load local environment variables from .env if present
+load_dotenv()
 
 from climacore.common.logging import get_logger
 from climacore.ingestion.engine import LiveForecastEngine

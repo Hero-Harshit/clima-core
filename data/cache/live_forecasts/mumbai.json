@@ -1,7 +1,7 @@
 {
   "city": "Mumbai",
-  "cached_at_utc": "2026-11-21T13:58:52.132497+00:00",
-  "expires_at_utc": "2026-11-21T15:58:52.132497+00:00",
+  "cached_at_utc": "2026-11-21T17:23:27.687333+00:00",
+  "expires_at_utc": "2026-11-21T19:23:27.687333+00:00",
   "ttl_seconds": 7200,
   "data": {
     "city": "Mumbai",
@@ -10,7 +10,7 @@
     "longitude": 72.8777,
     "elevation_m": 6.0,
     "timezone": "Asia/Kolkata",
-    "retrieved_at_utc": "2026-11-21T13:58:52.132497+00:00",
+    "retrieved_at_utc": "2026-11-21T17:23:27.687333+00:00",
     "is_cached": false,
     "cached_at_utc": null,
     "days": [
