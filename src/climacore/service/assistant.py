@@ -186,6 +186,9 @@ You have access to specialized simulation and control tools:
 2. `compare_cities_risk`: Call this whenever the user compares two locations or asks about travel/route risk (e.g. 'Compare Delhi and Jaipur', 'I am driving from Mumbai to Pune').
 3. `get_groundwater_quality`: Call this for specific aquifer and chemical potability inquiries.
 4. `dispatch_dashboard_action`: Call this when the user instructs the dashboard to change view, switch city, switch persona, or focus on a specific card.
+5. `evaluate_parametric_insurance_claim`: Call this whenever the user inquires about crop insurance payouts, PMFBY, WBCIS compensation, or agricultural loss settlements.
+6. `simulate_compound_domino_cascade`: Call this whenever the user asks about compound failure, cascading disaster impacts across grid/cold-chain/transit, or systemic infrastructure collapse.
+7. `explain_risk_attribution_shap`: Call this whenever the user asks WHY a risk score or probability was predicted, requesting mathematical TreeSHAP explainability and key amplifying/mitigating drivers.
 
 STRICT PHYSICAL GROUNDING & INSTRUCTIONS:
 - Ground all advice strictly in the provided verified data and physical laws.
