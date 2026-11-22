@@ -246,8 +246,8 @@ export default function RunwayCrosswindModal({ city, onClose }: RunwayCrosswindM
                     {data.crosswind_component_knots} kts
                   </div>
                   <div className="utility-kpi-meta">
-                    <span className={`hazard-badge ${getSafetyBadgeClass(data.crosswind_safety_status)}`}>
-                      {data.crosswind_safety_status.replace(/_/g, " ")}
+                    <span className={`hazard-badge ${getSafetyBadgeClass(data.crosswind_safety_status || "NORMAL")}`}>
+                      {(data.crosswind_safety_status || "NORMAL").replace(/_/g, " ")}
                     </span>
                   </div>
                 </div>
@@ -257,7 +257,7 @@ export default function RunwayCrosswindModal({ city, onClose }: RunwayCrosswindM
                     <Navigation size={14} /> Convective Divergence
                   </div>
                   <div className="utility-kpi-value" style={{ fontSize: 16, lineHeight: 1.25 }}>
-                    {data.convective_divergence_hazard.replace(/_/g, " ")}
+                    {(data.convective_divergence_hazard || "LOW").replace(/_/g, " ")}
                   </div>
                   <div className="utility-kpi-meta">
                     Headwind: {data.headwind_tailwind_component_knots} kts

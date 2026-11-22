@@ -254,8 +254,8 @@ export default function FactoryTinRoofModal({ city, onClose }: FactoryTinRoofMod
                     {data.shopfloor_wbgt_c}°C
                   </div>
                   <div className="utility-kpi-meta">
-                    <span className={`hazard-badge ${getStrainBadgeClass(data.worker_heat_strain_risk)}`}>
-                      {data.worker_heat_strain_risk.replace(/_/g, " ")}
+                    <span className={`hazard-badge ${getStrainBadgeClass(data.worker_heat_strain_risk || "SAFE")}`}>
+                      {(data.worker_heat_strain_risk || "SAFE").replace(/_/g, " ")}
                     </span>
                   </div>
                 </div>

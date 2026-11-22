@@ -243,8 +243,8 @@ export default function CorridorRadarModal({ city, onClose }: CorridorRadarModal
                   </div>
                   <div className="utility-dial-caption">
                     <span className="utility-dial-title">Corridor Risk</span>
-                    <span className={`utility-status-pill ${getStatusBadgeClass(data.status_level)}`}>
-                      {data.status_level.replace("_", " ")}
+                    <span className={`utility-status-pill ${getStatusBadgeClass(data.status_level || "MODERATE")}`}>
+                      {(data.status_level || "MODERATE").replace(/_/g, " ")}
                     </span>
                   </div>
                 </div>
@@ -305,7 +305,7 @@ export default function CorridorRadarModal({ city, onClose }: CorridorRadarModal
                           <span className="utility-segment-title">{seg.segment_name}</span>
                         </div>
                         <div className="utility-segment-badges">
-                          <span className="utility-hazard-tag">{seg.hazard_type.replace("_", " ")}</span>
+                          <span className="utility-hazard-tag">{(seg.hazard_type || "CLEAR").replace(/_/g, " ")}</span>
                           <span className={`utility-risk-pill ${getStatusBadgeClass(seg.risk_level)}`}>
                             {seg.risk_level}
                           </span>

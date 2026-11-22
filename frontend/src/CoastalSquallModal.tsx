@@ -206,8 +206,8 @@ export default function CoastalSquallModal({ city, onClose }: CoastalSquallModal
               <div className="utility-verdict-banner">
                 <div className="utility-verdict-title">
                   <Waves size={16} className="inline-icon" /> Sea State: Douglas Scale {data.sea_state_code} ({data.sea_state_label})
-                  <span className={`utility-status-pill ${getSafetyBadgeClass(data.fishermen_safety_status)}`} style={{ marginLeft: 8 }}>
-                    {data.fishermen_safety_status.replace(/_/g, " ")}
+                  <span className={`utility-status-pill ${getSafetyBadgeClass(data.fishermen_safety_status || "CLEAR_SEA")}`} style={{ marginLeft: 8 }}>
+                    {(data.fishermen_safety_status || "CLEAR_SEA").replace(/_/g, " ")}
                   </span>
                 </div>
               </div>

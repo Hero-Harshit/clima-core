@@ -266,7 +266,7 @@ export default function TouristOptimizerModal({ city, onClose }: TouristOptimize
               <div className="utility-section-card">
                 <div className="utility-card-kicker">CHRONOLOGICAL SIGHTSEEING SCHEDULE</div>
                 <div className="utility-timeline-container">
-                  {data.itinerary.map((slot, idx) => (
+                  {(data.itinerary || []).map((slot, idx) => (
                     <div key={idx} className="utility-timeline-slot">
                       <div className="utility-slot-sidebar">
                         <span className="utility-slot-time">
@@ -312,7 +312,7 @@ export default function TouristOptimizerModal({ city, onClose }: TouristOptimize
                     <Umbrella size={13} className="inline-icon" /> RECOMMENDED PACKING CHECKLIST
                   </div>
                   <ul className="utility-checklist">
-                    {data.packing_checklist.map((item, idx) => (
+                    {(data.packing_checklist || []).map((item, idx) => (
                       <li key={idx}>
                         <CheckCircle2 size={15} className="check-icon" />
                         <span>{item}</span>
@@ -326,7 +326,7 @@ export default function TouristOptimizerModal({ city, onClose }: TouristOptimize
                     <Droplet size={13} className="inline-icon" /> MUNICIPAL SHADE & HYDRATION HUBS
                   </div>
                   <ul className="utility-checklist">
-                    {data.local_hydrated_spots.map((spot, idx) => (
+                    {(data.local_hydrated_spots || []).map((spot, idx) => (
                       <li key={idx}>
                         <MapPin size={15} className="location-icon" />
                         <span>{spot}</span>

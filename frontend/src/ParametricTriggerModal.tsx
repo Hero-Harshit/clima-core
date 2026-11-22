@@ -210,8 +210,8 @@ export default function ParametricTriggerModal({ city, onClose }: ParametricTrig
                     <BadgeAlert size={14} /> Contract Strike Status
                   </div>
                   <div className="utility-kpi-value" style={{ fontSize: 16, lineHeight: 1.25 }}>
-                    <span className={`hazard-badge ${getStatusBadgeClass(data.trigger_status)}`}>
-                      {data.trigger_status.replace(/_/g, " ")}
+                    <span className={`hazard-badge ${getStatusBadgeClass(data.trigger_status || "MONITORING_NO_TRIGGER")}`}>
+                      {(data.trigger_status || "MONITORING_NO_TRIGGER").replace(/_/g, " ")}
                     </span>
                   </div>
                   <div className="utility-kpi-meta">

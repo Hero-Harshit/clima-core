@@ -267,7 +267,7 @@ export default function IceToFishRatioModal({ city, onClose }: IceToFishRatioMod
                 Cold Chain Chilling & Slurry Protocols
               </div>
               <div className="utility-checklist-grid">
-                {data.chilling_method_recommendations.map((rec, i) => (
+                {(data.chilling_method_recommendations || []).map((rec, i) => (
                   <div key={i} className="utility-checklist-item">
                     <CheckCircle2 size={15} className="utility-check-icon" />
                     <span>{rec}</span>

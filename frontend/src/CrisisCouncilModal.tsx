@@ -404,8 +404,8 @@ export default function CrisisCouncilModal({
                             <span className="turn-number">Turn {turn.turn_number}</span>
                             <strong>{turn.speaker_title}</strong>
                           </div>
-                          <span className={`stance-badge stance-${turn.stance.toLowerCase()}`}>
-                            {turn.stance.replace(/_/g, " ")}
+                          <span className={`stance-badge stance-${(turn.stance || "neutral").toLowerCase()}`}>
+                            {(turn.stance || "NEUTRAL").replace(/_/g, " ")}
                           </span>
                         </div>
                         <p className="bubble-argument">{turn.argument}</p>
@@ -428,7 +428,7 @@ export default function CrisisCouncilModal({
                     <div key={pair} className="friction-card">
                       <div className="friction-card-title">
                         <AlertTriangle size={15} />
-                        <h4>{pair.replace(/_/g, " ")}</h4>
+                        <h4>{(pair || "").replace(/_/g, " ")}</h4>
                       </div>
                       <ul>
                         {conflicts.map((conflict, i) => (

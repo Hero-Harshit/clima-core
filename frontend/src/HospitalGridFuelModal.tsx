@@ -186,8 +186,8 @@ export default function HospitalGridFuelModal({ city, onClose }: HospitalGridFue
               {/* Verdict Banner */}
               <div className="utility-verdict-banner">
                 <div className="utility-verdict-title">
-                  <Zap size={16} className="inline-icon" /> Grid Reliability: {data.grid_stability_level.replace(/_/g, " ")}
-                  <span className={`utility-status-pill ${getStabilityPillClass(data.grid_stability_level)}`} style={{ marginLeft: 8 }}>
+                  <Zap size={16} className="inline-icon" /> Grid Reliability: {(data.grid_stability_level || "STABLE").replace(/_/g, " ")}
+                  <span className={`utility-status-pill ${getStabilityPillClass(data.grid_stability_level || "STABLE")}`} style={{ marginLeft: 8 }}>
                     Grid Vulnerability {data.grid_failure_risk_score}/100
                   </span>
                 </div>

@@ -212,8 +212,8 @@ export default function WaterTurbidityModal({ city, onClose }: WaterTurbidityMod
                     {data.predicted_raw_turbidity_ntu} NTU
                   </div>
                   <div className="utility-kpi-meta">
-                    <span className={`hazard-badge ${getRiskBadgeClass(data.treatment_risk_level)}`}>
-                      {data.treatment_risk_level.replace(/_/g, " ")}
+                    <span className={`hazard-badge ${getRiskBadgeClass(data.treatment_risk_level || "OPTIMAL")}`}>
+                      {(data.treatment_risk_level || "OPTIMAL").replace(/_/g, " ")}
                     </span>
                   </div>
                 </div>

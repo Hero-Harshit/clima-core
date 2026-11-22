@@ -221,8 +221,8 @@ export default function CleanAirWorkoutModal({ city, onClose }: CleanAirWorkoutM
                   </div>
                   <div className="utility-dial-caption">
                     <span className="utility-dial-title">Athletic Index</span>
-                    <span className={`utility-status-pill ${getStatusBadgeClass(data.status_level)}`}>
-                      {data.status_level.replace("_", " ")}
+                    <span className={`utility-status-pill ${getStatusBadgeClass(data.status_level || "OPTIMAL_AEROBIC_WINDOW")}`}>
+                      {(data.status_level || "OPTIMAL_AEROBIC_WINDOW").replace(/_/g, " ")}
                     </span>
                   </div>
                 </div>

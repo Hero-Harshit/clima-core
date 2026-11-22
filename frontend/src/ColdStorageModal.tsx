@@ -247,8 +247,8 @@ export default function ColdStorageModal({ city, onClose }: ColdStorageModalProp
                     {data.passive_thermal_flywheel_hours} hrs
                   </div>
                   <div className="utility-kpi-meta">
-                    <span className={`hazard-badge ${getReadinessBadgeClass(data.blackout_defense_readiness_level)}`}>
-                      {data.blackout_defense_readiness_level.replace(/_/g, " ")}
+                    <span className={`hazard-badge ${getReadinessBadgeClass(data.blackout_defense_readiness_level || "ROBUST_BUFFER")}`}>
+                      {(data.blackout_defense_readiness_level || "ROBUST_BUFFER").replace(/_/g, " ")}
                     </span>
                   </div>
                 </div>

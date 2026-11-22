@@ -186,8 +186,8 @@ export default function HeatStrokeSurgeModal({ city, onClose }: HeatStrokeSurgeM
               {/* Verdict Banner */}
               <div className="utility-verdict-banner">
                 <div className="utility-verdict-title">
-                  <Thermometer size={16} className="inline-icon" /> Surge Alert Status: {data.surge_alert_level.replace(/_/g, " ")}
-                  <span className={`utility-status-pill ${getAlertBadgeClass(data.surge_alert_level)}`} style={{ marginLeft: 8 }}>
+                  <Thermometer size={16} className="inline-icon" /> Surge Alert Status: {(data.surge_alert_level || "MODERATE").replace(/_/g, " ")}
+                  <span className={`utility-status-pill ${getAlertBadgeClass(data.surge_alert_level || "MODERATE")}`} style={{ marginLeft: 8 }}>
                     Risk Index {data.surge_risk_score}/100
                   </span>
                 </div>

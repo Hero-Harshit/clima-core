@@ -206,7 +206,7 @@ export default function MetroVsRoadModal({ city, onClose }: MetroVsRoadModalProp
               {/* Verdict Banner */}
               <div className="utility-verdict-banner">
                 <div className="utility-verdict-title">
-                  <Train size={16} className="inline-icon" /> Recommended Mode: {data.recommended_mode.replace(/_/g, " ")}
+                  <Train size={16} className="inline-icon" /> Recommended Mode: {(data.recommended_mode || "METRO").replace(/_/g, " ")}
                   <span className="utility-status-pill hazard-badge-clear" style={{ marginLeft: 8 }}>
                     {data.confidence_score}% Confidence
                   </span>

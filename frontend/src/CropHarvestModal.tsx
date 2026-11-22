@@ -233,8 +233,8 @@ export default function CropHarvestModal({ city, onClose }: CropHarvestModalProp
                   <div className="utility-metric-main">
                     <span className="utility-metric-number">{data.spoilage_risk_score}</span>
                     <span className="utility-metric-unit">/100</span>
-                    <span className={`utility-status-pill ${getStatusBadgeClass(data.status_level)}`}>
-                      {data.status_level.replace(/_/g, " ")}
+                    <span className={`utility-status-pill ${getStatusBadgeClass(data.status_level || "FAVORABLE")}`}>
+                      {(data.status_level || "FAVORABLE").replace(/_/g, " ")}
                     </span>
                   </div>
                   <div className="utility-metric-sub">

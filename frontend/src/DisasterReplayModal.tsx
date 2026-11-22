@@ -297,8 +297,8 @@ export default function DisasterReplayModal({ currentCity, onClose }: DisasterRe
                   <div className="active-milestone-card">
                     <div className="milestone-topline">
                       <div className="milestone-badge-row">
-                        <span className={`milestone-status-tag ${getStatusBadgeClass(activePhase.civil_defense_status)}`}>
-                          <span className="dot" /> {activePhase.civil_defense_status.replace(/_/g, " ")}
+                        <span className={`milestone-status-tag ${getStatusBadgeClass(activePhase.civil_defense_status || "ACTIVE")}`}>
+                          <span className="dot" /> {(activePhase.civil_defense_status || "ACTIVE").replace(/_/g, " ")}
                         </span>
                         <span className="milestone-relative-time">{activePhase.phase_timestamp_relative}</span>
                       </div>
@@ -315,7 +315,7 @@ export default function DisasterReplayModal({ currentCity, onClose }: DisasterRe
                         <div className="meteo-chips-list">
                           {Object.entries(activePhase.meteorological_conditions).map(([k, v]) => (
                             <div key={k} className="meteo-chip">
-                              <span className="meteo-label">{k.replace(/_/g, " ").toUpperCase()}</span>
+                              <span className="meteo-label">{(k || "").replace(/_/g, " ").toUpperCase()}</span>
                               <b className="meteo-val">{String(v)}</b>
                             </div>
                           ))}
@@ -331,7 +331,7 @@ export default function DisasterReplayModal({ currentCity, onClose }: DisasterRe
                         <div className="meteo-chips-list">
                           {Object.entries(activePhase.climacore_predictions).map(([k, v]) => (
                             <div key={k} className="meteo-chip ml-chip">
-                              <span className="meteo-label">{k.replace(/_/g, " ").toUpperCase()}</span>
+                              <span className="meteo-label">{(k || "").replace(/_/g, " ").toUpperCase()}</span>
                               <b className="meteo-val">{typeof v === "number" ? v.toFixed(2) : String(v)}</b>
                             </div>
                           ))}
@@ -372,8 +372,8 @@ export default function DisasterReplayModal({ currentCity, onClose }: DisasterRe
                       <div className="playbook-step-header">
                         <div className="playbook-step-lead">
                           <span className="step-counter">Phase {idx + 1}</span>
-                          <span className={`milestone-status-tag ${getStatusBadgeClass(phase.civil_defense_status)}`}>
-                            {phase.civil_defense_status.replace(/_/g, " ")}
+                          <span className={`milestone-status-tag ${getStatusBadgeClass(phase.civil_defense_status || "ACTIVE")}`}>
+                            {(phase.civil_defense_status || "ACTIVE").replace(/_/g, " ")}
                           </span>
                           <span className="playbook-timestamp">{phase.phase_timestamp_relative}</span>
                         </div>
