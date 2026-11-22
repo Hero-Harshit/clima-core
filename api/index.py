@@ -519,10 +519,13 @@ if app is None:
             )
 
             models_to_try = [
-                "gemini-flash-lite-latest",
-                "gemini-3.1-flash-lite",
+                "gemini-3.8-flash",
+                "gemini-3.7-flash",
+                "gemini-3.6-flash",
+                "gemini-3.5-flash",
                 "gemini-3.5-flash-lite",
-                "gemini-3.1-flash-lite-preview",
+                "gemini-3.1-flash-lite",
+                "gemini-flash-lite-latest",
             ]
 
             payload = {
@@ -532,7 +535,7 @@ if app is None:
             }
 
             try:
-                async with httpx.AsyncClient(timeout=10.0) as client:
+                async with httpx.AsyncClient(timeout=4.0) as client:
                     for m in models_to_try:
                         u = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={api_key}"
                         r = await client.post(u, json=payload)
