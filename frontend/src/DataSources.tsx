@@ -2,8 +2,7 @@ import ReactMarkdown from "react-markdown";
 import source from "./data-sources.md?raw";
 
 const dataSources = source
-  .replace(/^# Data & Data Sources\r?\n+/, "")
-  .replace("[Insert Date]", "21 November 2026");
+  .replace(/^# Data & Data Sources\r?\n+/, "");
 
 function DataSources() {
   return (

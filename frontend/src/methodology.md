@@ -930,5 +930,5 @@ Our methodology brings these complementary disciplines together within a unified
 ---
 
 **Methodology Version:** 2.1
-**Last Updated:** [Insert Date]
+**Last Updated:** 22 November 2026
 **Related Pages:** Data Sources | Model Performance | About Us

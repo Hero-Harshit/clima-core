@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { Component, ReactNode, useLayoutEffect, useRef, useState } from "react";
 import Map from "react-map-gl/maplibre";
 import type { PaddingOptions } from "maplibre-gl";
 import { pageBackdropStyle } from "./satelliteMapStyles";
@@ -8,7 +8,29 @@ type MapBackdropProps = {
   longitude: number;
 };
 
-function MapBackdrop({ latitude, longitude }: MapBackdropProps) {
+class MapErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    console.warn("MapBackdrop caught rendering error, preserving UI layout:", error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return null;
+    }
+    return this.props.children;
+  }
+}
+
+function MapBackdropInner({ latitude, longitude }: MapBackdropProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [padding, setPadding] = useState<PaddingOptions>();
 
@@ -17,7 +39,12 @@ function MapBackdrop({ latitude, longitude }: MapBackdropProps) {
     if (!appShell) return;
 
     const updatePadding = () => {
-      const bottom = Math.max(0, appShell.scrollHeight - window.innerHeight);
+      // MapLibre requires containerHeight > padding.top + padding.bottom
+      // Clamping to a safe max prevents camera projection failures on tall layouts
+      const viewportH = window.innerHeight || 800;
+      const rawBottom = Math.max(0, appShell.scrollHeight - viewportH);
+      const safeMax = Math.max(0, Math.min(100, Math.floor((viewportH - 240) / 4)));
+      const bottom = Math.min(rawBottom, safeMax);
       setPadding((current) => current?.bottom === bottom ? current : { top: 0, right: 0, bottom, left: 0 });
     };
 
@@ -46,6 +73,14 @@ function MapBackdrop({ latitude, longitude }: MapBackdropProps) {
         maxCanvasSize={[4096, 4096]}
       />
     </div>
+  );
+}
+
+function MapBackdrop(props: MapBackdropProps) {
+  return (
+    <MapErrorBoundary>
+      <MapBackdropInner {...props} />
+    </MapErrorBoundary>
   );
 }
 

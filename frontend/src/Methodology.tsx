@@ -7,8 +7,7 @@ const methodology = source
   .replace(
     /(A simplified model structure can be expressed as:\r?\n\r?\n)([\s\S]*?)\r?\n\](?=\r?\n\r?\nWhere:)/,
     (_match, introduction: string, formula: string) => `${introduction}\`\`\`equation\n${formula.trim()}\n\`\`\``,
-  )
-  .replace("[Insert Date]", "21 November 2026");
+  );
 
 function Methodology() {
   return (

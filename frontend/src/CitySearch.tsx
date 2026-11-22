@@ -3,7 +3,15 @@ import { Search } from "lucide-react";
 
 type CitySuggestion = { city: string; state: string };
 
-function CitySearch({ value, onSelect }: { value: string; onSelect: (value: string) => void }) {
+function CitySearch({
+  value,
+  onSelect,
+  placeholder = "Search city or state",
+}: {
+  value: string;
+  onSelect: (value: string) => void;
+  placeholder?: string;
+}) {
   const id = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -106,7 +114,7 @@ function CitySearch({ value, onSelect }: { value: string; onSelect: (value: stri
         aria-controls={`city-suggestions-${id}`}
         aria-activedescendant={isOpen && activeIndex >= 0 ? `city-suggestion-${id}-${activeIndex}` : undefined}
         autoComplete="off"
-        placeholder="Search city or state"
+        placeholder={placeholder}
         value={query}
         onFocus={(event) => {
           setIsFiltering(false);

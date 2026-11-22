@@ -47,6 +47,7 @@ class AssistantChatRequest(BaseModel):
     persona: str = Field(default="general", description="Occupation / persona identifier (e.g. farmer, student, commuter)")
     history: List[ChatMessage] = Field(default_factory=list, description="Prior conversational turns")
     force_refresh: bool = Field(default=False, description="Force fresh fetch of upstream weather data")
+    language: Optional[str] = Field(default="en", description="Target language code (en, hi, bn, ta, te, mr, gu)")
 
 
 class AssistantChatResponse(BaseModel):
@@ -60,6 +61,7 @@ class AssistantChatResponse(BaseModel):
     retrieved_standards: List[Dict[str, Any]] = Field(default_factory=list, description="Verified institutional standards retrieved via local RAG")
     provider: str = Field(..., description="Model provider ('gemini-2.0-flash' or 'climacore-deterministic-agent')")
     latency_ms: float = Field(..., description="Total execution latency in milliseconds")
+    language: str = Field(default="en", description="Response language code")
 
 
 def build_metrics_summary(pred: LivePredictionResult, persona_id: str) -> Dict[str, Any]:
@@ -126,6 +128,7 @@ def build_grounded_system_prompt(
     pred: LivePredictionResult,
     persona_id: str,
     retrieved_standards: Optional[List[Dict[str, Any]]] = None,
+    language: str = "en",
 ) -> str:
     """Generate a zero-hallucination system prompt embedding Clima-Core's verified physical metrics and RAG standards."""
     metrics = build_metrics_summary(pred, persona_id)
@@ -151,6 +154,19 @@ def build_grounded_system_prompt(
     rag_section = ""
     if retrieved_standards:
         rag_section = f"\n\n{format_retrieved_standards_for_prompt(retrieved_standards)}"
+
+    localization_rule = ""
+    LANGUAGE_INSTRUCTIONS = {
+        "hi": "MANDATORY LOCALIZATION DIRECTIVE: You MUST respond in Hindi (हिन्दी) using the Devanagari script. Ensure numeric quantities and scientific units (°C, mm, µg/m³, km/h, MW) remain accurate.",
+        "bn": "MANDATORY LOCALIZATION DIRECTIVE: You MUST respond in Bengali (বাংলা) using the Bengali script. Ensure numeric quantities and scientific units (°C, mm, µg/m³, km/h, MW) remain accurate.",
+        "ta": "MANDATORY LOCALIZATION DIRECTIVE: You MUST respond in Tamil (தமிழ்) using the Tamil script. Ensure numeric quantities and scientific units (°C, mm, µg/m³, km/h, MW) remain accurate.",
+        "te": "MANDATORY LOCALIZATION DIRECTIVE: You MUST respond in Telugu (తెలుగు) using the Telugu script. Ensure numeric quantities and scientific units (°C, mm, µg/m³, km/h, MW) remain accurate.",
+        "mr": "MANDATORY LOCALIZATION DIRECTIVE: You MUST respond in Marathi (मराठी) using the Devanagari script. Ensure numeric quantities and scientific units (°C, mm, µg/m³, km/h, MW) remain accurate.",
+        "gu": "MANDATORY LOCALIZATION DIRECTIVE: You MUST respond in Gujarati (ગુજરાતી) using the Gujarati script. Ensure numeric quantities and scientific units (°C, mm, µg/m³, km/h, MW) remain accurate.",
+    }
+    lang = (language or "en").strip().lower()
+    if lang != "en" and lang in LANGUAGE_INSTRUCTIONS:
+        localization_rule = f"\n- {LANGUAGE_INSTRUCTIONS[lang]}"
 
     prompt = f"""You are the Clima-Core Cognitive Environmental Risk & Decision Agent, an autonomous AI system built on India's premier physics-guided environmental intelligence platform.
 
@@ -195,19 +211,29 @@ You have access to specialized simulation and control tools:
 STRICT PHYSICAL GROUNDING & INSTRUCTIONS:
 - Ground all advice strictly in the provided verified data and physical laws.
 - When answering a what-if question, cite the exact numbers returned by the simulation tool.
-- Answer directly in the first 1-2 sentences with clear, punchy guidance.
+- Answer directly in the first 1-2 sentences with clear, punchy guidance.{localization_rule}
 """
     return prompt.strip()
 
 
-def generate_suggested_followups(pred: LivePredictionResult, persona_id: str) -> List[str]:
-    """Generate 3 dynamic, context-relevant follow-up prompt pills."""
+def generate_suggested_followups(
+    pred: LivePredictionResult,
+    persona_id: str,
+    language: str = "en",
+) -> List[str]:
+    """Generate 3 dynamic, context-relevant follow-up prompt pills localized across 7 languages."""
+    lang = (language or "en").strip().lower()
     if not pred.daily_predictions:
-        return [
-            "What if rainfall doubles tomorrow?",
-            "Compare risk with another city",
-            "Are there any safety precautions for today?",
-        ]
+        defaults = {
+            "en": ["What if rainfall doubles tomorrow?", "Compare risk with another city", "Are there any safety precautions for today?"],
+            "hi": ["यदि कल बारिश दोगुनी हो जाए तो क्या होगा?", "किसी अन्य शहर के साथ जोखिम की तुलना करें", "क्या आज के लिए कोई सुरक्षा सावधानियां हैं?"],
+            "bn": ["কাল যদি বৃষ্টি দ্বিগুণ হয় তবে কী হবে?", "অন্য একটি শহরের সাথে ঝুঁকির তুলনা করুন", "আজকের জন্য কি কোনো নিরাপত্তা সতর্কতা আছে?"],
+            "ta": ["நாளை மழை இருமடங்கானால் என்ன நடக்கும்?", "மற்றொரு நகரத்துடன் அபாயத்தை ஒப்பிடுங்கள்", "இன்றைக்கு ஏதேனும் பாதுகாப்பு முன்னெச்சரிக்கைகள் உள்ளதா?"],
+            "te": ["రేపు వర్షపాతం రెట్టింపు అయితే ఏమిటి?", "మరొక నగరంతో ప్రమాదాన్ని పోల్చండి", "ఈరోజు కోసం ఏవైనా భద్రతా జాగ్రత్తలు ఉన్నాయా?"],
+            "mr": ["उद्या पाऊस दुप्पट झाल्यास काय होईल?", "दुसऱ्या शहराशी जोखमीची तुलना करा", "आजसाठी काही सुरक्षा खबरदारी आहे का?"],
+            "gu": ["જો આવતીકાલે વરસાદ બમણો થાય તો શું થશે?", "અન્ય શહેર સાથે જોખમની સરખામણી કરો", "શું આજના દિવસ માટે કોઈ સલામતી સાવચેતી છે?"],
+        }
+        return defaults.get(lang, defaults["en"])
 
     today = pred.daily_predictions[0]
     m = today.forecast_metrics
@@ -217,33 +243,272 @@ def generate_suggested_followups(pred: LivePredictionResult, persona_id: str) ->
     p_lower = persona_id.lower()
 
     if "farmer" in p_lower:
-        return [
-            "What if a 100mm cloudburst hits tomorrow?",
-            "Is tomorrow safe for pesticide spraying?",
-            "What is the 5-day crop heat-stress outlook?",
-        ]
+        farmer_pills = {
+            "en": [
+                "What if a 100mm cloudburst hits tomorrow?",
+                "Is tomorrow safe for pesticide spraying?",
+                "What is the 5-day crop heat-stress outlook?",
+            ],
+            "hi": [
+                "क्या कल 100 मिमी बादल फटने का खतरा है?",
+                "क्या कल सुबह कीटनाशक छिड़काव सुरक्षित है?",
+                "फसल पर 5 दिनों का ताप-तनाव पूर्वानुमान क्या है?",
+            ],
+            "bn": [
+                "কাল কি ১০০ মিমি মেঘভাঙা বৃষ্টির সম্ভাবনা আছে?",
+                "কাল সকালে কি কীটনাশক স্প্রে করা নিরাপদ?",
+                "ফসলের ৫ দিনের তাপ-চাপ পূর্বাভাস কী?",
+            ],
+            "ta": [
+                "நாளை 100 மி.மீ மேகவெடிப்பு மழை பெய்யுமா?",
+                "நாளை காலை பூச்சிக்கொல்லி தெளிப்பது பாதுகாப்பானதா?",
+                "அடுத்த 5 நாட்களுக்கான பயிர் வெப்ப அழுத்தம் என்ன?",
+            ],
+            "te": [
+                "రేపు 100 మి.మీ క్లౌడ్‌బర్స్ట్ వచ్చే అవకాశం ఉందా?",
+                "రేపు ఉదయం పురుగుమందుల పిచికారీ సురక్షితమేనా?",
+                "పంటపై 5 రోజుల వేడి ఒత్తిడి అంచనా ఏమిటి?",
+            ],
+            "mr": [
+                "उद्या १०० मिमी ढगफुटीची शक्यता आहे का?",
+                "उद्या सकाळी कीटकनाशक फवारणी सुरक्षित आहे का?",
+                "पिकांवरील ५ दिवसांचा उष्णता ताण अंदाज काय आहे?",
+            ],
+            "gu": [
+                "શું આવતીકાલે ૧૦૦ મીમી વાદળ ફાટવાનું જોખમ છે?",
+                "શું આવતીકાલે સવારે જંતુનાશક દવાનો છંટકાવ સુરક્ષિત છે?",
+                "પાક પર આગામી ૫ દિવસના તાપમાનના તણાવની આગાહી શું છે?",
+            ],
+        }
+        return farmer_pills.get(lang, farmer_pills["en"])
 
     if "student" in p_lower:
-        pills = []
-        pills.append("Should I carry an umbrella to school today?" if rain_p > 0.25 else "Is outdoor sports safe during afternoon heat?")
-        pills.append("What if rainfall surges to 120mm during school hours?")
-        pills.append("What is the commute weather forecast for tomorrow morning?")
-        return pills
+        if lang == "hi":
+            p1 = "क्या आज मुझे स्कूल के लिए छाता ले जाना चाहिए?" if rain_p > 0.25 else "क्या दोपहर की धूप में खेलकूद सुरक्षित है?"
+            return [p1, "यदि स्कूल के समय 120 मिमी बारिश हो जाए तो क्या होगा?", "कल सुबह स्कूल यात्रा का मौसम कैसा रहेगा?"]
+        elif lang == "bn":
+            p1 = "আজ কি স্কুলে ছাতা নিয়ে যাওয়া উচিত?" if rain_p > 0.25 else "দুপুরের রোদে কি খেলাধুলা করা নিরাপদ?"
+            return [p1, "স্কুলের সময় যদি ১২০ মিমি ভারী বৃষ্টি হয় তবে কী হবে?", "আগামীকাল সকালে স্কুল যাতায়াতের আবহাওয়া কেমন থাকবে?"]
+        elif lang == "ta":
+            p1 = "இன்று பள்ளிக்கு குடை எடுத்துச் செல்ல வேண்டுமா?" if rain_p > 0.25 else "மதிய வெயிலில் விளையாடுவது பாதுகாப்பானதா?"
+            return [p1, "பள்ளி நேரத்தில் மழை 120 மி.மீ ஆக உயர்ந்தால் என்ன செய்வது?", "நாளை காலை பள்ளிப் பயணத்திற்கான வானிலை முன்னறிவிப்பு என்ன?"]
+        elif lang == "te":
+            p1 = "ఈరోజు నేను పాఠశాలకు గొడుగు తీసుకెళ్లాలా?" if rain_p > 0.25 else "మధ్యాహ్నం ఎండలో ఆరుబయట ఆటలు ఆడటం సురక్షితమేనా?"
+            return [p1, "పాఠశాల సమయంలో వర్షం 120 మి.మీకి పెరిగితే ఏమిటి?", "రేపు ఉదయం ప్రయాణ వాతావరణ సూచన ఏమిటి?"]
+        elif lang == "mr":
+            p1 = "आज शाळेत जाताना छत्री सोबत न्यावी का?" if rain_p > 0.25 else "दुपारच्या उन्हात मैदानी खेळ खेळणे सुरक्षित आहे का?"
+            return [p1, "शाळेच्या वेळेत १२० मिमी मुसळधार पाऊस पडल्यास काय होईल?", "उद्या सकाळच्या प्रवासासाठी हवामानाचा अंदाज काय आहे?"]
+        elif lang == "gu":
+            p1 = "શું મારે આજે શાળાએ છત્રી લઈ જવી જોઈએ?" if rain_p > 0.25 else "બપોરના તડકામાં બહારની રમતો રમવી સલામત છે?"
+            return [p1, "જો શાળા સમય દરમિયાન ૧૨૦ મીમી વરસાદ પડે તો શું થશે?", "આવતીકાલે સવારે મુસાફરી માટે હવામાન કેવું રહેશે?"]
+        else:
+            pills = []
+            pills.append("Should I carry an umbrella to school today?" if rain_p > 0.25 else "Is outdoor sports safe during afternoon heat?")
+            pills.append("What if rainfall surges to 120mm during school hours?")
+            pills.append("What is the commute weather forecast for tomorrow morning?")
+            return pills
 
     if "commuter" in p_lower or "gig_worker" in p_lower:
-        return [
-            "What if rainfall causes arterial road waterlogging?",
-            "What hours have the lowest heat index for outdoor delivery?",
-            "Compare risk between my city and Pune",
-        ]
+        commuter_pills = {
+            "en": [
+                "What if rainfall causes arterial road waterlogging?",
+                "What hours have the lowest heat index for outdoor delivery?",
+                "Compare risk between my city and Pune",
+            ],
+            "hi": [
+                "क्या बारिश से मुख्य सड़कों पर जलभराव होगा?",
+                "आउटडोर डिलीवरी के लिए सबसे कम गर्मी के घंटे कौन से हैं?",
+                "मेरे शहर और पुणे के जोखिम की तुलना करें",
+            ],
+            "bn": [
+                "বৃষ্টিতে কি প্রধান সড়কে জলজট হতে পারে?",
+                "বাইরে ডেলিভারির জন্য সবচেয়ে কম তাপমাত্রার সময় কোনটি?",
+                "আমার শহর এবং পুনের ঝুঁকির তুলনা করুন",
+            ],
+            "ta": [
+                "மழையால் பிரதான சாலைகளில் வெள்ளம் தேங்குமா?",
+                "வெளிப்புற டெலிவரிக்கு உகந்த குறைந்த வெப்ப நேரம் எது?",
+                "என் நகரத்திற்கும் புனேவிற்கும் இடையிலான அபாயத்தை ஒப்பிடுங்கள்",
+            ],
+            "te": [
+                "వర్షం వల్ల ప్రధాన రహదారులపై నీరు నిలుస్తుందా?",
+                "డెలివరీల కోసం తక్కువ వేడి ఉండే సమయాలు ఏవి?",
+                "నా నగరానికి మరియు పూణేకు మధ్య ప్రమాదాలను పోల్చండి",
+            ],
+            "mr": [
+                "पावसामुळे मुख्य रस्त्यांवर पाणी साचेल का?",
+                "डिलिव्हरीसाठी सर्वात कमी उन्हाची वेळ कोणती?",
+                "माझ्या शहराची आणि पुण्याची जोखीम तुलना करा",
+            ],
+            "gu": [
+                "શું વરસાદથી મુખ્ય રસ્તાઓ પર પાણી ભરાશે?",
+                "ડિલિવરી માટે સૌથી ઓછા તાપમાનવાળા કલાકો કયા છે?",
+                "મારા શહેર અને પુણેના જોખમની સરખામણી કરો",
+            ],
+        }
+        return commuter_pills.get(lang, commuter_pills["en"])
 
     # General / Default
-    pills = [
+    if lang == "hi":
+        return ["यदि कल 100 मिमी बादल फटे तो क्या होगा?", f"यदि तापमान बढ़कर {int(t_max + 5)}°C हो जाए तो क्या प्रभाव होगा?", "अन्य भारतीय शहर के साथ मौसम और जोखिम की तुलना करें"]
+    elif lang == "bn":
+        return ["কাল যদি ১০০ মিমি মেঘভাঙা বৃষ্টি হয় তবে কী হবে?", f"তাপমাত্রা বেড়ে {int(t_max + 5)}°C হলে কী प्रभाव পড়বে?", "অন্য ভারতীয় শহরের সাথে আবহাওয়া ও ঝুঁকির তুলনা করুন"]
+    elif lang == "ta":
+        return ["நாளை 100 மி.மீ மேகவெடிப்பு மழை பெய்தால் என்ன நடக்கும்?", f"வெப்பநிலை {int(t_max + 5)}°C ஆக உயர்ந்தால் ஏற்படும் விளைவு என்ன?", "மற்றொரு இந்திய நகரத்துடன் வானிலை மற்றும் அபாயத்தை ஒப்பிடுங்கள்"]
+    elif lang == "te":
+        return ["రేపు 100 மி.మీ క్లౌడ్‌బర్స్ట్ సంభవిస్తే ఏమిటి?", f"ఉష్ణోగ్రత {int(t_max + 5)}°Cకి చేరితే ఎలాంటి ప్రభావం ఉంటుంది?", "మరొక భారతీయ నగరంతో వాతావరణం మరియు ప్రమాదాలను పోల్చండి"]
+    elif lang == "mr":
+        return ["उद्या १०० मिमी ढगफुटी झाल्यास काय होईल?", f"उष्णतेच्या लाटेत तापमान {int(t_max + 5)}°C पर्यंत पोहोचल्यास काय होईल?", "दुसऱ्या भारतीय शहराशी हवामान आणि जोखमीची तुलना करा"]
+    elif lang == "gu":
+        return ["જો આવતીકાલે ૧૦૦ મીમી વાદળ ફાટે તો શું થશે?", f"જો તાપમાન વધીને {int(t_max + 5)}°C થાય તો શું અસર થશે?", "અન્ય ભારતીય શહેર સાથે હવામાન અને જોખમની સરખામણી કરો"]
+
+    return [
         "What if rainfall hits 100mm tomorrow in a cloudburst?",
         f"What if temperatures reach {int(t_max + 5)}°C during a heatwave?",
         "Compare weather and risk with another Indian city",
     ]
-    return pills
+
+
+def _generate_localized_deterministic_synthesis(
+    query: str,
+    pred: LivePredictionResult,
+    persona_id: str,
+    metrics: Dict[str, Any],
+    is_rainy: bool,
+    language: str,
+) -> str:
+    lang = (language or "en").strip().lower()
+    if lang not in {"hi", "bn", "ta", "te", "mr", "gu"}:
+        return generate_deterministic_synthesis(
+            query=query,
+            pred=pred,
+            persona_id=persona_id,
+            language="en",
+        )
+    q_lower = query.strip().lower()
+    city = metrics["city"]
+    rain_mm = metrics["precipitation_mm"]
+    rain_prob_pct = int(metrics.get("rain_probability_pct", 0))
+    t_max = metrics["temperature_max_c"]
+    wet_bulb = metrics["wet_bulb_temp_c"]
+    pm25 = metrics["pm25_ug_m3"]
+    aqi_cat = metrics["air_quality_category"]
+
+    # 1. Umbrella / Rain Query
+    if re.search(r"\b(umbrella|rain|raining|rainy|shower|showers|monsoon|deluge|pour|downpour)\b", q_lower):
+        if is_rainy:
+            umbrella_yes = {
+                "hi": f"**हाँ, आज {city} में आपको निश्चित रूप से छाता ले जाना चाहिए।**\n\n* **वर्षा पूर्वानुमान:** {rain_mm:.1f} मिमी बारिश की **{rain_prob_pct}% संभावना** है।\n* **पूर्वानुमान 90% अंतराल:** वर्षा सीमा {metrics['conformal_intervals_90pct']['rainfall_range']} के बीच रहने की संभावना है।\n* **सतही जलभराव जोखिम:** लगभग {metrics['effective_runoff_mm']:.1f} मिमी जल अपवाह का अनुमान है। निचले इलाकों में जलभराव के प्रति सचेत रहें।",
+                "bn": f"**হ্যাঁ, আজ {city}-তে অবশ্যই আপনার সাথে ছাতা রাখা উচিত।**\n\n* **বৃষ্টির পূর্বাভাস:** {rain_mm:.1f} মিমি বৃষ্টিপাতের **{rain_prob_pct}% সম্ভাবনা** রয়েছে।\n* **৯০% কনফরমাল ইন্টারভাল:** সম্ভাব্য বৃষ্টিপাতের পরিসীমা {metrics['conformal_intervals_90pct']['rainfall_range']}।\n* **জলজট ঝুঁকি:** ভূপৃষ্ঠে আনুমানিক {metrics['effective_runoff_mm']:.1f} মিমি রানঅফ হতে পারে। নিচু এলাকায় চলাচলে সতর্কতা অবলম্বন করুন।",
+                "ta": f"**ஆம், இன்று {city}-ல் நீங்கள் கண்டிப்பாக குடை எடுத்துச் செல்ல வேண்டும்.**\n\n* **மழை முன்னறிவிப்பு:** {rain_mm:.1f} மி.மீ மழைப் பொழிவிற்கு **{rain_prob_pct}% வாய்ப்பு** உள்ளது.\n* **90% முன்னறிவிப்பு வரம்பு:** மழைப்பொழிவு {metrics['conformal_intervals_90pct']['rainfall_range']} இடையே இருக்கும்.\n* **வெள்ள அபாயம்:** பயனுள்ள மேற்பரப்பு நீர் ஓட்டம் {metrics['effective_runoff_mm']:.1f} மி.மீ என கணக்கிடப்பட்டுள்ளது. தாழ்வான பகுதிகளில் கவனமாக இருங்கள்.",
+                "te": f"**అవును, ఈరోజు {city}లో మీరు ఖచ్చితంగా గొడుగు తీసుకెళ్లాలి.**\n\n* **వర్షపాతం సూచన:** {rain_mm:.1f} మి.మీ వర్షపాతం పడేందుకు **{rain_prob_pct}% సంభావ్యత** ఉంది.\n* **90% విశ్వసనీయ పరిధి:** వర్షపాతం {metrics['conformal_intervals_90pct']['rainfall_range']} మధ్య ఉండే అవకాశం ఉంది.\n* **మురుగునీటి ముప్పు:** ఉపరితల ప్రవాహం {metrics['effective_runoff_mm']:.1f} మి.మీగా అంచనా వేయబడింది. లోతట్టు ప్రాంతాలలో జాగ్రత్తగా ఉండండి.",
+                "mr": f"**होय, आज {city} मध्ये तुम्ही नक्कीच छत्री सोबत घेतली पाहिजे.**\n\n* **पावसाचा अंदाज:** {rain_mm:.1f} मिमी पावसाची **{rain_prob_pct}% शक्यता** आहे.\n* **९०% कॉन्फॉर्मल श्रेणी:** पाऊस {metrics['conformal_intervals_90pct']['rainfall_range']} दरम्यान पडण्याची शक्यता आहे.\n* **पाणी साचण्याचा धोका:** पृष्ठभागावरील पाण्याचा निचरा {metrics['effective_runoff_mm']:.1f} मिमी अपेक्षित आहे. सखल भागात सावध राहा.",
+                "gu": f"**હા, આજે {city}માં તમારે ચોક્કસપણે છત્રી સાથે રાખવી જોઈએ.**\n\n* **વરસાદની આગાહી:** {rain_mm:.1f} મીમી વરસાદની **{rain_prob_pct}% સંભાવના** છે.\n* **૯૦% અનુમાન મર્યાદા:** વરસાદ {metrics['conformal_intervals_90pct']['rainfall_range']} વચ્ચે રહેવાની અપેક્ષા છે.\n* **પાણી ભરાવાનું જોખમ:** સપાટી પર {metrics['effective_runoff_mm']:.1f} મીમી પાણી વહેવાની ગણતરી છે. નીચાણવાળા વિસ્તારોમાં સાવચેતી રાખો.",
+            }
+            return umbrella_yes.get(lang, umbrella_yes["hi"])
+        else:
+            umbrella_no = {
+                "hi": f"**नहीं, आज {city} में छाते की आवश्यकता नहीं है।**\n\n* **वर्षा पूर्वानुमान:** केवल {rain_mm:.1f} मिमी और छिटपुट बूंदाबांदी की **{rain_prob_pct}% संभावना** है।\n* **मौसम की स्थिति:** आसमान मुख्य रूप से शुष्क रहेगा। आप बिना बारिश सुरक्षा के यात्रा कर सकते हैं।",
+                "bn": f"**না, আজ {city}-তে ছাতার প্রয়োজন নেই।**\n\n* **বৃষ্টির পূর্বাভাস:** মাত্র {rain_mm:.1f} মিমি এবং হালকা গুঁড়ি গুঁড়ি বৃষ্টির **{rain_prob_pct}% সম্ভাবনা** রয়েছে।\n* **পরিস্থিতি:** আকাশ প্রধানত শুষ্ক থাকবে। আপনি কোনো বৃষ্টি সুরক্ষা ছাড়াই যাতায়াত করতে পারেন।",
+                "ta": f"**இல்லை, இன்று {city}-ல் குடை தேவையில்லை.**\n\n* **மழை முன்னறிவிப்பு:** {rain_mm:.1f} மி.மீ மழை மற்றும் லேசான தூறலுக்கு **{rain_prob_pct}% மட்டுமே வாய்ப்பு** உள்ளது.\n* **வானிலை நிலை:** வானம் பெரும்பாலும் வறண்டு காணப்படும். நீங்கள் தாராளமாக பயணிக்கலாம்.",
+                "te": f"**లేదు, ఈరోజు {city}లో గొడుగు అవసరం లేదు.**\n\n* **వర్షపాతం సూచన:** కేవలం {rain_mm:.1f} మి.మీ మరియు తేలికపాటి జల్లులకు **{rain_prob_pct}% మాత్రమే అవకాశం** ఉంది.\n* **పరిస్థితులు:** వాతావరణం పొడిగా ఉంటుంది. వర్ష రక్షణ లేకుండా ప్రయాణించవచ్చు.",
+                "mr": f"**नाही, आज {city} मध्ये छत्रीची गरज नाही.**\n\n* **पावसाचा अंदाज:** केवळ {rain_mm:.1f} मिमी आणि तुरळक सरींची **{rain_prob_pct}% शक्यता** आहे.\n* **परिस्थिती:** हवामान मुख्यतः कोरडे राहील. आपण छत्रीशिवाय प्रवास करू शकता.",
+                "gu": f"**ના, આજે {city}માં છત્રીની જરૂર નથી.**\n\n* **વરસાદની આગાહી:** માત્ર {rain_mm:.1f} મીમી અને હળવા ઝાપટાંની **{rain_prob_pct}% સંભાવના** છે.\n* **પરિસ્થિતિ:** આકાશ મુખ્યત્વે સૂકું રહેશે. તમે વરસાદના સાધનો વિના મુસાફરી કરી શકો છો.",
+            }
+            return umbrella_no.get(lang, umbrella_no["hi"])
+
+    # 2. Agriculture / Pesticide / Crop Query
+    if re.search(r"\b(pesticide|spray|spraying|crop|crops|wheat|paddy|rice|cotton|mustard|potato|irrigate|irrigation|farming|sowing|soil)\b", q_lower):
+        if is_rainy:
+            pesticide_delay = {
+                "hi": f"**आज {city} में रासायनिक कीटनाशकों का छिड़काव रोक दें।**\n\n* **कारण:** {rain_mm:.1f} मिमी बारिश ({rain_prob_pct}% संभावना) का अनुमान है। कीटनाशक बह जाने से प्रभाव समाप्त हो जाएगा।\n* **सिफारिश:** शुष्क मौसम लौटने तक छिड़काव टालें।",
+                "bn": f"**আজ {city}-তে রাসায়নিক কীটনাশক স্প্রে করা স্থগিত রাখুন।**\n\n* **কারণ:** {rain_mm:.1f} মিমি বৃষ্টি ({rain_prob_pct}% সম্ভাবনা) পূর্বাভাসিত। রাসায়নিক ধুয়ে যাওয়ায় কার্যকারিতা নষ্ট হবে।\n* **সুপারিশ:** আবহাওয়া শুষ্ক না হওয়া পর্যন্ত প্রয়োগ বিলম্বিত করুন।",
+                "ta": f"**இன்று {city}-ல் ரசாயன பூச்சிக்கொல்லி தெளிப்பதைத் தவிர்க்கவும்.**\n\n* **காரணம்:** {rain_mm:.1f} மி.மீ மழை ({rain_prob_pct}% வாய்ப்பு) கணிக்கப்பட்டுள்ளது. மழைநீரில் மருந்து அடித்துச் செல்லப்படும்.\n* **பரிந்துரை:** வறண்ட வானிலை திரும்பும் வரை தெளிப்பதைத் தள்ளிப்போடுங்கள்.",
+                "te": f"**ఈరోజు {city}లో రసాయన పురుగుమందుల పిచికారీని వాయిదా వేయండి.**\n\n* **కారణం:** {rain_mm:.1f} మి.మీ వర్షం ({rain_prob_pct}% సంభావ్యత) అంచనా వేయబడింది. వర్షానికి మందు కొట్టుకుపోయే ప్రమాదం ఉంది.\n* **సిఫార్సు:** పొడి వాతావరణం ఏర్పడే వరకు పిచికారీ చేయవద్దు.",
+                "mr": f"**आज {city} मध्ये रासायनिक कीटकनाशक फवारणी थांबवा.**\n\n* **कारण:** {rain_mm:.1f} मिमी पाऊस ({rain_prob_pct}% शक्यता) अपेक्षित आहे. फवारलेले औषध वाहून जाऊन नुकसान होईल.\n* **शिफारस:** हवामान कोरडे होईपर्यंत फवारणी पुढे ढकला.",
+                "gu": f"**આજે {city}માં રાસાયણિક જંતુનાશકોનો છંટકાવ મોકૂફ રાખો.**\n\n* **કારણ:** {rain_mm:.1f} મીમી વરસાદ ({rain_prob_pct}% સંભાવના) ની આગાહી છે. દવા ધોવાઈ જવાથી અસર થશે નહીં.\n* **ભલામણ:** હવામાન સૂકું ન થાય ત્યાં સુધી છંટકાવ મોકૂફ રાખો.",
+            }
+            return pesticide_delay.get(lang, pesticide_delay["hi"])
+        else:
+            pesticide_ok = {
+                "hi": f"**आज {city} में खेत में कीटनाशक छिड़काव की स्थिति अनुकूल है।**\n\n* **पूर्वानुमान:** बारिश की संभावना कम ({rain_prob_pct}%) है और हवा की गति {metrics['wind_speed_kmh']} किमी/घंटा है (सुरक्षित सीमा < 15 किमी/घंटा)।\n* **मृदा नमी:** मृदा नमी घाटा सूचकांक {metrics['soil_moisture_deficit_index']} है।",
+                "bn": f"**আজ {city}-তে জমিতে স্প্রে করার অনুকূল পরিস্থিতি রয়েছে।**\n\n* **পূর্বাভাস:** বৃষ্টির সম্ভাবনা কম ({rain_prob_pct}%), বাতাসের গতি {metrics['wind_speed_kmh']} কিমি/ঘণ্টা যা নিরাপদ সীমার মধ্যে রয়েছে।\n* **মাটির আর্দ্রতা:** মাটির আর্দ্রতা ঘাটতি সূচক {metrics['soil_moisture_deficit_index']}।",
+                "ta": f"**இன்று {city}-ல் வயல்வெளி தெளிப்புக்கு சாதகமான சூழல் நிலவுகிறது.**\n\n* **முன்னறிவிப்பு:** மழைக்கான வாய்ப்பு குறைவு ({rain_prob_pct}%), காற்றின் வேகம் {metrics['wind_speed_kmh']} கி.மீ/மணி (பாதுகாப்பான வரம்பிற்குள் உள்ளது).\n* **மண் ஈரப்பதம்:** மண் ஈரப்பதம் பற்றாக்குறை குறியீடு {metrics['soil_moisture_deficit_index']} ஆகும்.",
+                "te": f"**ఈరోజు {city}లో పొలంలో పిచికారీ చేయడానికి అనుకూలమైన పరిస్థితులు ఉన్నాయి.**\n\n* **సూచన:** వర్షపాతం సంభావ్యత తక్కువ ({rain_prob_pct}%), గాలి వేగం {metrics['wind_speed_kmh']} కి.మీ/గం (సురక్షిత పరిమితిలో ఉంది).\n* **నేల తేమ:** నేల తేమ లోటు సూచిక {metrics['soil_moisture_deficit_index']}.",
+                "mr": f"**आज {city} मध्ये शेतात फवारणीसाठी अनुकूल परिस्थिती आहे.**\n\n* **अंदाज:** पावसाची शक्यता कमी ({rain_prob_pct}%) आहे आणि वाऱ्याचा वेग {metrics['wind_speed_kmh']} किमी/तास आहे (सुरक्षित मर्यादेत).\n* **जमिनीतील ओलावा:** मातीचा ओलावा निर्देशांक {metrics['soil_moisture_deficit_index']} आहे.",
+                "gu": f"**આજે {city}માં ખેતરમાં છંટકાવ માટે સાનુકૂળ પરિસ્થિતિ છે.**\n\n* **આગાહી:** વરસાદની શક્યતા ઓછી ({rain_prob_pct}%) છે અને પવનની ગતિ {metrics['wind_speed_kmh']} કિમી/કલાક છે (સલામત મર્યાદામાં).\n* **જમીનનો ભેજ:** જમીન ભેજ ખાધ સૂચકાંક {metrics['soil_moisture_deficit_index']} છે.",
+            }
+            return pesticide_ok.get(lang, pesticide_ok["hi"])
+
+    # 3. Heat / Outdoor Activity Query
+    if re.search(r"\b(heat|heatwave|hot|sun|outdoor|sports|jog|exercise)\b", q_lower):
+        if t_max >= 38.0 or (wet_bulb and wet_bulb >= 28.0):
+            heat_caution = {
+                "hi": f"**आज {city} में बाहरी गतिविधियों के लिए सावधानी बरतने की सलाह दी जाती है।**\n\n* **उच्चतम तापमान:** {t_max:.1f}°C (महसूस होने वाला तापमान: {metrics['apparent_temp_max_c']:.1f}°C)।\n* **वेट-बल्ब तनाव:** {wet_bulb:.1f}°C, जो अत्यधिक थर्मल तनाव का संकेत देता है।\n* **परामर्श:** भारी श्रम या खेलकूद सुबह 9:00 बजे से पहले या शाम 5:30 बजे के बाद पुनर्निर्धारित करें।",
+                "bn": f"**আজ {city}-তে বাইরের কর্মকাণ্ডের জন্য সতর্কতা অবলম্বন করার পরামর্শ দেওয়া হচ্ছে।**\n\n* **সর্বোচ্চ তাপমাত্রা:** {t_max:.1f}°C (অনুভূত তাপমাত্রা: {metrics['apparent_temp_max_c']:.1f}°C)।\n* **ওয়েট-বাল্ব চাপ:** {wet_bulb:.1f}°C, যা উচ্চ তাপজনিত চাপের ইঙ্গিত দেয়।\n* **পরামর্শ:** সকাল ৯:০০ এর আগে বা বিকেল ৫:৩০ এর পরে ভারী কাজকর্ম স্থানান্তর করুন।",
+                "ta": f"**இன்று {city}-ல் வெளிப்புற நடவடிக்கைகளுக்கு எச்சரிக்கை தேவை.**\n\n* **அதிகபட்ச வெப்பநிலை:** {t_max:.1f}°C (உணரப்படும் வெப்பம்: {metrics['apparent_temp_max_c']:.1f}°C).\n* **ஈரக்குமிழ் அழுத்தம்:** {wet_bulb:.1f}°C, இது கடுமையான வெப்ப அழுத்தத்தைக் குறிக்கிறது.\n* **பரிந்துரை:** கடினமான பணிகளை காலை 9:00 மணி அல்லது மாலை 5:30 மணிக்கு திட்டமிடுங்கள்.",
+                "te": f"**ఈరోజు {city}లో బహిరంగ కార్యకలాపాల కోసం జాగ్రత్త వహించాలని సూచించడమైనది.**\n\n* **గరిష్ట ఉష్ణోగ్రత:** {t_max:.1f}°C (అనిపించే వేడి: {metrics['apparent_temp_max_c']:.1f}°C).\n* **వెట్-బల్బ్ ఒత్తిడి:** {wet_bulb:.1f}°C, ఇది అధిక వేడి ఒత్తిడిని సూచిస్తుంది.\n* **సిఫార్సు:** కష్టమైన పనులను ఉదయం 9:00 లోపు లేదా సాయంత్రం 5:30 తర్వాత షెడ్యూల్ చేయండి.",
+                "mr": f"**आज {city} मध्ये बाहेरील कामांसाठी काळजी घेण्याचा सल्ला दिला जातो.**\n\n* **कमाल तापमान:** {t_max:.1f}°C (भासमान तापमान: {metrics['apparent_temp_max_c']:.1f}°C).\n* **वेट-बल्ब ताण:** {wet_bulb:.1f}°C, जे वाढत्या उष्णतेच्या ताणाचे संकेत देते.\n* **सल्ला:** कष्टाची कामे सकाळी ९:०० पूर्वी किंवा संध्याकाळी ५:३० नंतर ठेवावीत.",
+                "gu": f"**આજે {city}માં આઉટડોર પ્રવૃત્તિઓ માટે સાવચેતી રાખવાની સલાહ આપવામાં આવે છે.**\n\n* **મહત્તમ તાપમાન:** {t_max:.1f}°C (અનુભવાતું તાપમાન: {metrics['apparent_temp_max_c']:.1f}°C).\n* **વેટ-બલ્બ તણાવ:** {wet_bulb:.1f}°C, જે ઉચ્ચ થર્મલ તણાવ દર્શાવે છે.\n* **ભલામણ:** ભારે શ્રમ અથવા રમતગમત સવારે ૯:૦૦ પહેલાં અથવા સાંજે ૫:૩૦ પછી ગોઠવો.",
+            }
+            return heat_caution.get(lang, heat_caution["hi"])
+        else:
+            heat_ok = {
+                "hi": f"**आज {city} में बाहरी गतिविधियां करने के लिए मौसम आरामदायक है।**\n\n* **अधिकतम तापमान:** {t_max:.1f}°C और सापेक्ष आर्द्रता {metrics['relative_humidity_pct']}% है। थर्मल तनाव सामान्य सीमा में है।",
+                "bn": f"**আজ {city}-তে বাইরের কর্মকাণ্ডের জন্য আবহাওয়া আরামদায়ক।**\n\n* **সর্বোচ্চ তাপমাত্রা:** {t_max:.1f}°C এবং আপেক্ষিক আর্দ্রতা {metrics['relative_humidity_pct']}%। তাপীয় চাপ স্বাভাবিক সীমায় রয়েছে।",
+                "ta": f"**இன்று {city}-ல் வெளிப்புற நடவடிக்கைகளுக்கு வானிலை இதமாக உள்ளது.**\n\n* **அதிகபட்ச வெப்பநிலை:** {t_max:.1f}°C மற்றும் ஈரப்பதம் {metrics['relative_humidity_pct']}%. வெப்ப அழுத்தம் இயல்பான வரம்பில் உள்ளது.",
+                "te": f"**ఈరోజు {city}లో బహిరంగ కార్యకలాపాలకు వాతావరణం అనుకూలంగా ఉంది.**\n\n* **గరిష్ట ఉష్ణోగ్రత:** {t_max:.1f}°C మరియు తేమ {metrics['relative_humidity_pct']}%. వేడి ఒత్తిడి సాధారణ పరిమితిలోనే ఉంది.",
+                "mr": f"**आज {city} मध्ये बाहेरील कामांसाठी हवामान आल्हाददायक आहे.**\n\n* **कमाल तापमान:** {t_max:.1f}°C आणि हवेतील ओलावा {metrics['relative_humidity_pct']}% आहे. उष्णतेचा ताण नियंत्रणात आहे.",
+                "gu": f"**આજે {city}માં બહારની પ્રવૃત્તિઓ માટે હવામાન આરામદાયક છે.**\n\n* **મહત્તમ તાપમાન:** {t_max:.1f}°C અને સાપેક્ષ ભેજ {metrics['relative_humidity_pct']}% છે. ગરમી સામાન્ય મર્યાદામાં છે.",
+            }
+            return heat_ok.get(lang, heat_ok["hi"])
+
+    # 4. Default Environmental Risk Summary
+    summaries = {
+        "hi": (
+            f"### **{city}** के लिए पर्यावरणीय जोखिम सारांश ({persona_id} संदर्भ)\n\n"
+            f"* **थर्मल स्थिति:** अधिकतम तापमान **{t_max:.1f}°C** (वेट-बल्ब: {wet_bulb or 'N/A'}°C), 90% अंतराल: {metrics['conformal_intervals_90pct']['temperature_range']}।\n"
+            f"* **जल विज्ञान:** **{rain_mm:.1f} मिमी** वर्षा अपेक्षित है (**{rain_prob_pct}%** संभावना)।\n"
+            f"* **वायु गुणवत्ता:** PM2.5 स्तर **{pm25:.1f} µg/m³** ({aqi_cat}) है।\n"
+            f"* **समग्र जोखिम स्तर:** **{metrics['peak_risk_category']}** (कंपाउंड स्कोर {metrics['peak_compound_risk']:.1f}/100)।"
+        ),
+        "bn": (
+            f"### **{city}**-এর পরিবেশগত ঝুঁকি সারসংক্ষেপ ({persona_id} প্রেক্ষাপট)\n\n"
+            f"* **তাপমাত্রা:** সর্বোচ্চ **{t_max:.1f}°C** (ওয়েট-বাল্ব: {wet_bulb or 'N/A'}°C), ৯০% ইন্টারভাল: {metrics['conformal_intervals_90pct']['temperature_range']}।\n"
+            f"* **বৃষ্টিপাত:** **{rain_mm:.1f} মিমি** বৃষ্টিপাত প্রত্যাশিত (**{rain_prob_pct}%** সম্ভাবনা)।\n"
+            f"* **বাতাসের মান:** PM2.5 ঘনত্ব **{pm25:.1f} µg/m³** ({aqi_cat})।\n"
+            f"* **সামগ্রিক ঝুঁকি:** **{metrics['peak_risk_category']}** (যৌগিক স্কোর {metrics['peak_compound_risk']:.1f}/100)।"
+        ),
+        "ta": (
+            f"### **{city}**-க்கான சுற்றுச்சூழல் அபாய சுருக்கம் ({persona_id} சூழல்)\n\n"
+            f"* **வெப்ப நிலை:** அதிகபட்சம் **{t_max:.1f}°C** (ஈரக்குமிழ்: {wet_bulb or 'N/A'}°C), 90% வரம்பு: {metrics['conformal_intervals_90pct']['temperature_range']}.\n"
+            f"* **மழைப்பொழிவு:** **{rain_mm:.1f} மி.மீ** மழை எதிர்பார்க்கப்படுகிறது (**{rain_prob_pct}%** வாய்ப்பு).\n"
+            f"* **காற்றின் தரம்:** PM2.5 அளவு **{pm25:.1f} µg/m³** ({aqi_cat}).\n"
+            f"* **ஒட்டுமொத்த அபாய நிலை:** **{metrics['peak_risk_category']}** (கூட்டு மதிப்பெண் {metrics['peak_compound_risk']:.1f}/100)."
+        ),
+        "te": (
+            f"### **{city}** కోసం పర్యావరణ ప్రమాద సారాంశం ({persona_id} సందర్భం)\n\n"
+            f"* **ఉష్ణోగ్రత:** గరిష్టంగా **{t_max:.1f}°C** (వెట్-బల్బ్: {wet_bulb or 'N/A'}°C), 90% పరిధి: {metrics['conformal_intervals_90pct']['temperature_range']}.\n"
+            f"* **వర్షపాతం:** **{rain_mm:.1f} మి.మీ** వర్షం అంచనా వేయబడింది (**{rain_prob_pct}%** అవకాశం).\n"
+            f"* **గాలి నాణ్యత:** PM2.5 స్థాయి **{pm25:.1f} µg/m³** ({aqi_cat}).\n"
+            f"* **మొత్తం ముప్పు స్థాయి:** **{metrics['peak_risk_category']}** (కాంపౌండ్ స్కోర్ {metrics['peak_compound_risk']:.1f}/100)."
+        ),
+        "mr": (
+            f"### **{city}** साठी पर्यावरणीय जोखीम सारांश ({persona_id} संदर्भ)\n\n"
+            f"* **तापमान स्थिती:** कमाल **{t_max:.1f}°C** (वेट-बल्ब: {wet_bulb or 'N/A'}°C), ९०% श्रेणी: {metrics['conformal_intervals_90pct']['temperature_range']}.\n"
+            f"* **पाऊस:** **{rain_mm:.1f} मिमी** पाऊस अपेक्षित आहे (**{rain_prob_pct}%** शक्यता).\n"
+            f"* **हवेची गुणवत्ता:** PM2.5 पातळी **{pm25:.1f} µg/m³** ({aqi_cat}) आहे.\n"
+            f"* **एकूण जोखीम पातळी:** **{metrics['peak_risk_category']}** (संयुक्त स्कोअर {metrics['peak_compound_risk']:.1f}/100)."
+        ),
+        "gu": (
+            f"### **{city}** માટે પર્યાવરણીય જોખમ સારાંશ ({persona_id} સંદર્ભ)\n\n"
+            f"* **તાપમાન:** મહત્તમ **{t_max:.1f}°C** (વેટ-બલ્બ: {wet_bulb or 'N/A'}°C), ૯૦% મર્યાદા: {metrics['conformal_intervals_90pct']['temperature_range']}.\n"
+            f"* **વરસાદ:** **{rain_mm:.1f} મીમી** વરસાદની અપેક્ષા છે (**{rain_prob_pct}%** સંભાવના).\n"
+            f"* **હવાની ગુણવત્તા:** PM2.5 સ્તર **{pm25:.1f} µg/m³** ({aqi_cat}) છે.\n"
+            f"* **એકંદરે જોખમ સ્તર:** **{metrics['peak_risk_category']}** (સંયુક્ત સ્કોર {metrics['peak_compound_risk']:.1f}/100)."
+        ),
+    }
+    return summaries.get(lang, summaries["hi"])
 
 
 def generate_deterministic_synthesis(
@@ -251,6 +516,7 @@ def generate_deterministic_synthesis(
     pred: LivePredictionResult,
     persona_id: str,
     retrieved_standards: Optional[List[Dict[str, Any]]] = None,
+    language: str = "en",
 ) -> str:
     """Intelligent rule-based synthesis answering basic weather queries when Gemini API key is absent."""
     metrics = build_metrics_summary(pred, persona_id)
@@ -270,6 +536,17 @@ def generate_deterministic_synthesis(
     restrictions = persona_data.get("operational_restrictions", []) if isinstance(persona_data, dict) else []
 
     is_rainy = (rain_prob_pct >= 35) or (rain_mm >= 1.5)
+
+    norm_lang = (language or "en").strip().lower()
+    if norm_lang in {"hi", "bn", "ta", "te", "mr", "gu"}:
+        return _generate_localized_deterministic_synthesis(
+            query=query,
+            pred=pred,
+            persona_id=persona_id,
+            metrics=metrics,
+            is_rainy=is_rainy,
+            language=norm_lang,
+        )
 
     # 1. Agriculture / Pesticide / Crop Query
     if re.search(r"\b(pesticide|spray|spraying|crop|crops|wheat|paddy|rice|cotton|mustard|potato|irrigate|irrigation|farming|sowing|soil)\b", q_lower):
@@ -672,12 +949,15 @@ class AssistantEngine:
             top_k=2,
         )
 
+        norm_lang = (req.language or "en").strip().lower()
+
         system_prompt = build_grounded_system_prompt(
             pred=prediction_result,
             persona_id=req.persona,
             retrieved_standards=retrieved_standards,
+            language=norm_lang,
         )
-        followups = generate_suggested_followups(prediction_result, req.persona)
+        followups = generate_suggested_followups(prediction_result, req.persona, language=norm_lang)
 
         # Initialize tool executor
         from climacore.ingestion.engine import LiveForecastEngine
@@ -724,6 +1004,7 @@ class AssistantEngine:
                     pred=prediction_result,
                     persona_id=req.persona,
                     retrieved_standards=retrieved_standards,
+                    language=norm_lang,
                 )
                 provider = "climacore-deterministic-synthesis"
 
@@ -740,4 +1021,5 @@ class AssistantEngine:
             retrieved_standards=retrieved_standards,
             provider=provider,
             latency_ms=round(latency_ms, 2),
+            language=norm_lang,
         )

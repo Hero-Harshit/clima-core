@@ -261,9 +261,9 @@ export default function CrisisCouncilModal({
                 <div>
                   <div className="kpi-label">INITIATING ENVIRONMENTAL SHOCK</div>
                   <div className="shock-metrics-row">
-                    <span>Temp: <b>{String(councilData.initiating_metrics.temp_max_c ?? "—")}°C</b></span>
-                    <span>Rain: <b>{String(councilData.initiating_metrics.rainfall_mm ?? "—")} mm</b></span>
-                    <span>Grid: <b>{String(councilData.initiating_metrics.peak_grid_load_mw ?? "—")} MW</b></span>
+                    <span>Temp: <b>{String(councilData.initiating_metrics.temp_max_c ?? "--")}°C</b></span>
+                    <span>Rain: <b>{String(councilData.initiating_metrics.rainfall_mm ?? "--")} mm</b></span>
+                    <span>Grid: <b>{String(councilData.initiating_metrics.peak_grid_load_mw ?? "--")} MW</b></span>
                   </div>
                   <div className="kpi-sub">Statutory threshold breach detected</div>
                 </div>

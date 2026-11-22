@@ -1086,7 +1086,7 @@ For questions about the use of environmental datasets within Clima-Core, users m
 
 **Data Catalogue Version:** 2.1
 
-**Last Updated:** [Insert Date]
+**Last Updated:** 22 November 2026
 
 **Related Pages:** Methodology | Model Performance | About Us | Privacy Policy
 

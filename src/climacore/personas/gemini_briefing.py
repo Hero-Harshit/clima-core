@@ -10,6 +10,10 @@ import json
 import logging
 from typing import Dict, Any, List, Optional
 import httpx
+from climacore.personas.briefing_translations import (
+    get_localized_persona_title,
+    get_localized_briefing_content,
+)
 
 logger = logging.getLogger("climacore.personas.gemini_briefing")
 
@@ -63,14 +67,16 @@ def _get_api_key() -> Optional[str]:
 def generate_deterministic_briefing(
     city: str,
     persona_id: str,
-    metrics: Dict[str, Any]
+    metrics: Dict[str, Any],
+    language: str = "en",
 ) -> Dict[str, Any]:
     """
     Produce rich, multi-point, occupation-specific operational guidance and advisories
     strictly calibrated to verified weather metrics (temperature, WBGT, rain, humidity, AQI).
     Ensures the UI ALWAYS displays 4 rich, actionable advisories including hydration,
-    gap intervals, PPE, and operational timing.
+    gap intervals, PPE, and operational timing. Supports full localization into 7 languages.
     """
+    norm_lang = (language or "en").strip().lower()
     t_max = float(metrics.get("temp_max") or 32.0)
     wbgt = float(metrics.get("wbgt") or (t_max * 0.85))
     precip = float(metrics.get("precipitation_mm") or 0.0)
@@ -78,7 +84,7 @@ def generate_deterministic_briefing(
     pm25 = float(metrics.get("pm2_5") or 45.0)
 
     p_norm = persona_id.lower().replace("-", "_")
-    p_title = PERSONA_TITLES.get(p_norm, "Outdoor Professional")
+    p_title = get_localized_persona_title(persona_id, language=norm_lang) if norm_lang != "en" else PERSONA_TITLES.get(p_norm, "Outdoor Professional")
 
     advisories: List[str] = []
     operational_guidance: str = ""
@@ -87,7 +93,10 @@ def generate_deterministic_briefing(
     is_extreme_hot = wbgt >= 33.0 or t_max >= 40.0
     is_rainy = precip >= 15.0 or rain_prob >= 50.0
 
-    if "gig_worker" in p_norm or "labor" in p_norm:
+    if norm_lang != "en":
+        cond = "extreme_hot" if is_extreme_hot else "hot" if is_hot else "rainy" if is_rainy else "default"
+        operational_guidance, advisories = get_localized_briefing_content(persona_id, cond, language=norm_lang)
+    elif "gig_worker" in p_norm or "labor" in p_norm:
         if is_extreme_hot:
             operational_guidance = "Mandate 45 minutes of shaded rest per hour between 12:00 PM and 4:00 PM. Platforms must suspend delivery SLA penalties during peak heat."
             advisories = [
@@ -288,7 +297,8 @@ def generate_deterministic_briefing(
         "advisories": advisories,
         "workability_score": workability,
         "status_level": status_level,
-        "provider": "climacore-deterministic-synthesis"
+        "provider": "climacore-deterministic-synthesis",
+        "language": norm_lang,
     }
 
 
@@ -296,19 +306,25 @@ async def generate_gemini_persona_briefing(
     city: str,
     persona_id: str,
     metrics: Dict[str, Any],
-    date_str: str = ""
+    date_str: str = "",
+    language: str = "en",
 ) -> Dict[str, Any]:
     """
     Generate tailored, rich operational guidance and 4 persona-specific advisories
     using Google Gemini API with fallback to deterministic domain synthesis.
+    Supports localization across all 7 languages.
     """
-    cache_key = f"{city.strip().lower()}:{persona_id.strip().lower()}:{date_str.strip()}"
+    norm_lang = (language or "en").strip().lower()
+    city_str = (city or "").strip().lower()
+    persona_str = (persona_id or "general").strip().lower()
+    date_clean = (date_str or "").strip()
+    cache_key = f"{city_str}:{persona_str}:{date_clean}:{norm_lang}"
     if cache_key in _BRIEFING_CACHE:
         return _BRIEFING_CACHE[cache_key]
 
     api_key = _get_api_key()
-    p_norm = persona_id.lower().replace("-", "_")
-    p_title = PERSONA_TITLES.get(p_norm, persona_id.replace("_", " ").title())
+    p_norm = persona_id.lower().replace("-", "_") if persona_id else "general"
+    p_title = get_localized_persona_title(persona_id, language=norm_lang) if norm_lang != "en" else PERSONA_TITLES.get(p_norm, persona_id.replace("_", " ").title() if persona_id else "General")
 
     t_max = metrics.get("temp_max", 32.0)
     t_min = metrics.get("temp_min", 24.0)
@@ -322,9 +338,21 @@ async def generate_gemini_persona_briefing(
 
     if not api_key:
         logger.info("No Gemini API key found, generating deterministic persona briefing.")
-        result = generate_deterministic_briefing(city, persona_id, metrics)
+        result = generate_deterministic_briefing(city, persona_id, metrics, language=norm_lang)
         _BRIEFING_CACHE[cache_key] = result
         return result
+
+    lang_directive = ""
+    LANGUAGE_DIRECTIVES = {
+        "hi": "MANDATORY: Generate 'operational_guidance' and all 'advisories' in Hindi (हिन्दी) in Devanagari script. Ensure numeric quantities and units (°C, mm, µg/m³, km/h) are maintained.",
+        "bn": "MANDATORY: Generate 'operational_guidance' and all 'advisories' in Bengali (বাংলা) in Bengali script. Ensure numeric quantities and units (°C, mm, µg/m³, km/h) are maintained.",
+        "ta": "MANDATORY: Generate 'operational_guidance' and all 'advisories' in Tamil (தமிழ்) in Tamil script. Ensure numeric quantities and units (°C, mm, µg/m³, km/h) are maintained.",
+        "te": "MANDATORY: Generate 'operational_guidance' and all 'advisories' in Telugu (తెలుగు) in Telugu script. Ensure numeric quantities and units (°C, mm, µg/m³, km/h) are maintained.",
+        "mr": "MANDATORY: Generate 'operational_guidance' and all 'advisories' in Marathi (मराठी) in Devanagari script. Ensure numeric quantities and units (°C, mm, µg/m³, km/h) are maintained.",
+        "gu": "MANDATORY: Generate 'operational_guidance' and all 'advisories' in Gujarati (ગુજરાતી) in Gujarati script. Ensure numeric quantities and units (°C, mm, µg/m³, km/h) are maintained.",
+    }
+    if norm_lang != "en" and norm_lang in LANGUAGE_DIRECTIVES:
+        lang_directive = f"\n7. {LANGUAGE_DIRECTIVES[norm_lang]}"
 
     system_prompt = (
         "You are ClimaCore's Occupational Environmental Safety Intelligence Engine. "
@@ -336,7 +364,8 @@ async def generate_gemini_persona_briefing(
         "3. Advisory 3 MUST be Protective Equipment & Attire (PPE, clothing, UV gear, cooling neck gaiter, rainwear, dust masks).\n"
         "4. Advisory 4 MUST be Workplace, Route & Hazard Countermeasures (slick roads, equipment overheating, transit safety).\n"
         "5. 'operational_guidance' must be a concise, authoritative 1-2 sentence directive.\n"
-        "6. Provide a calculated 'workability_score' (integer 0-100) and 'status_level' ('NORMAL', 'CAUTION', 'HIGH_ALERT', or 'CRITICAL').\n"
+        "6. Provide a calculated 'workability_score' (integer 0-100) and 'status_level' ('NORMAL', 'CAUTION', 'HIGH_ALERT', or 'CRITICAL')."
+        f"{lang_directive}\n"
         "Return ONLY a valid JSON object matching the schema:\n"
         "{\n"
         '  "operational_guidance": "string",\n'
@@ -388,7 +417,8 @@ async def generate_gemini_persona_briefing(
                                 "advisories": advisories_list[:5],
                                 "workability_score": int(parsed.get("workability_score", 70)),
                                 "status_level": str(parsed.get("status_level", "CAUTION")).upper(),
-                                "provider": f"gemini ({model})"
+                                "provider": f"gemini ({model})",
+                                "language": norm_lang,
                             }
                             _BRIEFING_CACHE[cache_key] = result
                             logger.info(f"Generated Gemini persona briefing for {city}/{persona_id} via {model}")
@@ -400,6 +430,6 @@ async def generate_gemini_persona_briefing(
 
     # Fallback to high-quality deterministic synthesizer
     logger.info("Falling back to deterministic persona synthesis.")
-    result = generate_deterministic_briefing(city, persona_id, metrics)
+    result = generate_deterministic_briefing(city, persona_id, metrics, language=norm_lang)
     _BRIEFING_CACHE[cache_key] = result
     return result

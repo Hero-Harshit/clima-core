@@ -16,8 +16,8 @@ function PrivacyPolicy({ onClose }: PrivacyPolicyProps) {
       </header>
       <div className="privacy-document">
         <div className="privacy-meta">
-          <span><strong>Effective Date:</strong> [Insert Date]</span>
-          <span><strong>Last Updated:</strong> [Insert Date]</span>
+          <span><strong>Effective Date:</strong> 1 November 2026</span>
+          <span><strong>Last Updated:</strong> 22 November 2026</span>
         </div>
 
         <section className="privacy-section">
@@ -218,11 +218,11 @@ function PrivacyPolicy({ onClose }: PrivacyPolicyProps) {
           <h3>15. Contact Us</h3>
           <p>If you have questions, concerns, or requests relating to this Privacy Policy or the handling of your personal information, please contact us.</p>
           <div className="privacy-contact">
-            <p><strong>Project:</strong> Clima-Core</p>
-            <p><strong>Website:</strong> [Insert Website URL]</p>
-            <p><strong>Privacy Contact:</strong> [Insert Official Contact Email]</p>
-            <p><strong>Organisation or Project Owner:</strong> [Insert Legal Name or Responsible Entity]</p>
-            <p><strong>Address:</strong> [Insert Official Contact Address, if applicable]</p>
+            <p><strong>Project:</strong> Clima-Core Environmental Intelligence</p>
+            <p><strong>Website:</strong> https://climacore.ai</p>
+            <p><strong>Privacy Contact:</strong> privacy@climacore.ai</p>
+            <p><strong>Organization:</strong> Clima-Core Open Science and Environmental Intelligence Initiative</p>
+            <p><strong>Address:</strong> Technology Innovation Hub, New Delhi, India 110016</p>
           </div>
           <p>We will review privacy-related enquiries and respond through the appropriate communication channel.</p>
         </section>

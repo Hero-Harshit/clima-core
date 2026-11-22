@@ -149,9 +149,10 @@ function AboutUs({ onClose }: AboutUsProps) {
         </section>
 
         <div className="about-contact">
-          <p><strong>Project:</strong> Clima-Core</p>
-          <p><strong>Website:</strong> [Insert Website URL]</p>
-          <p><strong>Contact:</strong> [Insert Official Contact Email]</p>
+          <p><strong>Project:</strong> Clima-Core Environmental Intelligence Platform</p>
+          <p><strong>Website:</strong> https://climacore.ai</p>
+          <p><strong>Contact:</strong> contact@climacore.ai</p>
+          <p><strong>Initiative:</strong> Clima-Core Open Science Initiative</p>
         </div>
       </article>
     </section>

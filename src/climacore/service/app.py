@@ -78,6 +78,7 @@ class PersonaBriefingRequest(BaseModel):
     city: str = Field(..., description="Target Indian city")
     persona: str = Field(..., description="Persona / occupation key (e.g. gig_worker, farmer, student)")
     day_offset: int = Field(default=0, ge=0, le=13, description="Forecast day offset index (0 for today)")
+    language: Optional[str] = Field(default="en", description="Target language code (en, hi, bn, ta, te, mr, gu)")
 
 
 class WaterQualityRequest(BaseModel):
@@ -364,12 +365,12 @@ def create_app() -> FastAPI:
     async def get_persona_briefing(req: PersonaBriefingRequest) -> Dict[str, Any]:
         """Generate Gemini-grounded occupational briefing, advisories, hydration protocol, and guidance."""
         from climacore.personas.gemini_briefing import generate_gemini_persona_briefing, generate_deterministic_briefing
+        metrics: Dict[str, Any] = {}
         try:
             live_engine = get_live_engine()
             pred = live_engine.predict(query=req.city, persona=req.persona, days=7, force_refresh=False)
             target_day = pred.daily_predictions[min(req.day_offset, len(pred.daily_predictions) - 1)] if pred.daily_predictions else None
 
-            metrics = {}
             if target_day:
                 m = target_day.forecast_metrics or {}
                 metrics = {
@@ -388,12 +389,13 @@ def create_app() -> FastAPI:
                 city=req.city,
                 persona_id=req.persona,
                 metrics=metrics,
-                date_str=target_day.date if target_day else ""
+                date_str=target_day.date if target_day else "",
+                language=req.language,
             )
             return briefing
         except Exception as e:
             logger.error(f"Error generating persona briefing for {req.city}/{req.persona}: {e}")
-            return generate_deterministic_briefing(req.city, req.persona, {})
+            return generate_deterministic_briefing(req.city, req.persona, metrics, language=req.language)
 
     @app.post("/api/assistant/chat", response_model=AssistantChatResponse)
     async def chat_with_assistant(req: AssistantChatRequest) -> AssistantChatResponse:
