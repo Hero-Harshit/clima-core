@@ -7,10 +7,10 @@ import {
   RefreshCw,
   ShieldCheck,
   Snowflake,
-  Sparkles,
   Thermometer,
   X,
 } from "lucide-react";
+import UtilityCustomSelect from "./UtilityCustomSelect";
 
 type ColdStorageBlackoutResponse = {
   city: string;
@@ -151,34 +151,24 @@ export default function ColdStorageModal({ city, onClose }: ColdStorageModalProp
         <div className="utility-controls-bar">
           <div className="utility-control-group">
             <label htmlFor="commodity-select">Chamber Cargo</label>
-            <select
+            <UtilityCustomSelect
               id="commodity-select"
-              className="utility-select"
               value={commodity}
-              onChange={(e) => setCommodity(e.target.value)}
-            >
-              {COMMODITY_OPTIONS.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
+              options={COMMODITY_OPTIONS}
+              onChange={setCommodity}
+              ariaLabel="Select chamber cargo"
+            />
           </div>
 
           <div className="utility-control-group">
             <label htmlFor="insulation-select">Insulation Specification</label>
-            <select
+            <UtilityCustomSelect
               id="insulation-select"
-              className="utility-select"
               value={insulation}
-              onChange={(e) => setInsulation(e.target.value)}
-            >
-              {INSULATION_OPTIONS.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.label}
-                </option>
-              ))}
-            </select>
+              options={INSULATION_OPTIONS}
+              onChange={setInsulation}
+              ariaLabel="Select insulation specification"
+            />
           </div>
 
           <div className="utility-control-group interests-toggle-group">
@@ -291,7 +281,6 @@ export default function ColdStorageModal({ city, onClose }: ColdStorageModalProp
               {/* AI Guidance */}
               <div className="utility-ai-guidance-card">
                 <div className="utility-ai-header">
-                  <Sparkles size={16} />
                   <span>Gemini Cold Chain Engineering & Thermodynamics Synthesis</span>
                   <span className="utility-provider-badge">{data.provider}</span>
                 </div>

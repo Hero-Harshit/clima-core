@@ -6,10 +6,10 @@ import {
   Clock,
   RefreshCw,
   ShieldCheck,
-  Sparkles,
   Train,
   X,
 } from "lucide-react";
+import UtilityCustomSelect from "./UtilityCustomSelect";
 
 type MetroRoadComparison = {
   mode_name: string;
@@ -148,61 +148,48 @@ export default function MetroVsRoadModal({ city, onClose }: MetroVsRoadModalProp
         <div className="utility-controls-bar">
           <div className="utility-control-group">
             <label htmlFor="corridor-select">Commute Corridor</label>
-            <select
+            <UtilityCustomSelect
               id="corridor-select"
-              className="utility-select"
               value={corridor}
-              onChange={(e) => setCorridor(e.target.value)}
-            >
-              {CORRIDOR_OPTIONS.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
+              options={CORRIDOR_OPTIONS}
+              onChange={setCorridor}
+              ariaLabel="Select commute corridor"
+            />
           </div>
 
           <div className="utility-control-group">
             <label htmlFor="window-select">Departure Window</label>
-            <select
+            <UtilityCustomSelect
               id="window-select"
-              className="utility-select"
               value={departureWindow}
-              onChange={(e) => setDepartureWindow(e.target.value)}
-            >
-              {WINDOW_OPTIONS.map((w) => (
-                <option key={w.id} value={w.id}>
-                  {w.label}
-                </option>
-              ))}
-            </select>
+              options={WINDOW_OPTIONS}
+              onChange={setDepartureWindow}
+              ariaLabel="Select departure window"
+            />
           </div>
 
           <div className="utility-control-group">
             <label htmlFor="vehicle-select">Surface Mode</label>
-            <select
+            <UtilityCustomSelect
               id="vehicle-select"
-              className="utility-select"
               value={vehicleMode}
-              onChange={(e) => setVehicleMode(e.target.value)}
-            >
-              {VEHICLE_OPTIONS.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.label}
-                </option>
-              ))}
-            </select>
+              options={VEHICLE_OPTIONS}
+              onChange={setVehicleMode}
+              ariaLabel="Select surface vehicle mode"
+            />
           </div>
 
-          <button
-            type="button"
-            className="utility-refresh-btn"
-            onClick={fetchComparison}
-            disabled={loading}
-          >
-            <RefreshCw size={14} className={loading ? "spin" : ""} />
-            <span>Evaluate</span>
-          </button>
+          <div className="utility-action-row-center">
+            <button
+              type="button"
+              className="utility-refresh-btn"
+              onClick={fetchComparison}
+              disabled={loading}
+            >
+              <RefreshCw size={14} className={loading ? "spin" : ""} />
+              <span>Evaluate</span>
+            </button>
+          </div>
         </div>
 
         {/* Modal Body */}
@@ -277,7 +264,7 @@ export default function MetroVsRoadModal({ city, onClose }: MetroVsRoadModalProp
               <div className="utility-ai-box">
                 <div className="utility-ai-header">
                   <div className="utility-ai-kicker">
-                    <Sparkles size={13} className="inline-icon" /> TRANSIT DECISION VERDICT
+                    TRANSIT DECISION VERDICT
                   </div>
                   <span className="utility-provider-badge">
                     {data.provider.includes("gemini") ? "Powered by Gemini Intelligence" : "Deterministic Engine"}
@@ -338,9 +325,6 @@ export default function MetroVsRoadModal({ city, onClose }: MetroVsRoadModalProp
           <div className="utility-footer-meta">
             <ShieldCheck size={14} className="inline-icon" /> Grounded in municipal flood telemetry & metro schedule feeds
           </div>
-          <button type="button" className="utility-btn-secondary" onClick={onClose}>
-            Close
-          </button>
         </div>
       </div>
     </div>

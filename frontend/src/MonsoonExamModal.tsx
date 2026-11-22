@@ -8,10 +8,10 @@ import {
   GraduationCap,
   RefreshCw,
   ShieldCheck,
-  Sparkles,
   Umbrella,
   X,
 } from "lucide-react";
+import UtilityCustomSelect from "./UtilityCustomSelect";
 
 type RouteChokePoint = {
   choke_name: string;
@@ -46,9 +46,9 @@ type MonsoonExamModalProps = {
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
 const SHIFT_OPTIONS = [
-  { id: "morning", label: "Morning (09:00 AM - 12:00 PM)", gate: "08:30 AM" },
-  { id: "afternoon", label: "Afternoon (02:00 PM - 05:00 PM)", gate: "01:30 PM" },
-  { id: "evening", label: "Evening (05:30 PM - 08:30 PM)", gate: "05:00 PM" },
+  { id: "morning", label: "Morning (09:00 AM - 12:00 PM)", desc: "Gate arrival by 08:30 AM" },
+  { id: "afternoon", label: "Afternoon (02:00 PM - 05:00 PM)", desc: "Gate arrival by 01:30 PM" },
+  { id: "evening", label: "Evening (05:30 PM - 08:30 PM)", desc: "Gate arrival by 05:00 PM" },
 ];
 
 const MODE_OPTIONS = [
@@ -148,34 +148,24 @@ export default function MonsoonExamModal({ city, onClose }: MonsoonExamModalProp
         <div className="utility-controls-bar">
           <div className="utility-control-group">
             <label htmlFor="shift-select">Exam Shift</label>
-            <select
+            <UtilityCustomSelect
               id="shift-select"
-              className="utility-select"
               value={examShift}
-              onChange={(e) => setExamShift(e.target.value)}
-            >
-              {SHIFT_OPTIONS.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
+              options={SHIFT_OPTIONS}
+              onChange={setExamShift}
+              ariaLabel="Select exam shift"
+            />
           </div>
 
           <div className="utility-control-group">
             <label htmlFor="mode-select">Transit Mode</label>
-            <select
+            <UtilityCustomSelect
               id="mode-select"
-              className="utility-select"
               value={transitMode}
-              onChange={(e) => setTransitMode(e.target.value)}
-            >
-              {MODE_OPTIONS.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
+              options={MODE_OPTIONS}
+              onChange={setTransitMode}
+              ariaLabel="Select transit mode"
+            />
           </div>
 
           <div className="utility-control-group interests-toggle-group">
@@ -194,15 +184,17 @@ export default function MonsoonExamModal({ city, onClose }: MonsoonExamModalProp
             </div>
           </div>
 
-          <button
-            type="button"
-            className="utility-refresh-btn"
-            onClick={fetchExamTransitAnalysis}
-            disabled={loading}
-          >
-            <RefreshCw size={14} className={loading ? "spin" : ""} />
-            <span>Recalculate</span>
-          </button>
+          <div className="utility-action-row-center">
+            <button
+              type="button"
+              className="utility-refresh-btn"
+              onClick={fetchExamTransitAnalysis}
+              disabled={loading}
+            >
+              <RefreshCw size={14} className={loading ? "spin" : ""} />
+              <span>Recalculate</span>
+            </button>
+          </div>
         </div>
 
         {/* Modal Body */}
@@ -266,7 +258,7 @@ export default function MonsoonExamModal({ city, onClose }: MonsoonExamModalProp
               <div className="utility-ai-box">
                 <div className="utility-ai-header">
                   <div className="utility-ai-kicker">
-                    <Sparkles size={13} className="inline-icon" /> STUDENT COMMUTE INTELLIGENCE
+                    STUDENT COMMUTE INTELLIGENCE
                   </div>
                   <span className="utility-provider-badge">
                     {data.provider.includes("gemini") ? "Powered by Gemini Intelligence" : "Deterministic Transit Engine"}
@@ -324,9 +316,6 @@ export default function MonsoonExamModal({ city, onClose }: MonsoonExamModalProp
           <div className="utility-footer-meta">
             <ShieldCheck size={14} className="inline-icon" /> Real-time municipal storm drain telemetry & transit buffers
           </div>
-          <button type="button" className="utility-btn-secondary" onClick={onClose}>
-            Close
-          </button>
         </div>
       </div>
     </div>

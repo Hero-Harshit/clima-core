@@ -7,11 +7,11 @@ import {
   HeartPulse,
   RefreshCw,
   ShieldCheck,
-  Sparkles,
   Stethoscope,
   Thermometer,
   X,
 } from "lucide-react";
+import UtilityCustomSelect from "./UtilityCustomSelect";
 
 type HeatStrokeSurgeResponse = {
   city: string;
@@ -134,18 +134,13 @@ export default function HeatStrokeSurgeModal({ city, onClose }: HeatStrokeSurgeM
         <div className="utility-controls-bar">
           <div className="utility-control-group">
             <label htmlFor="facility-select">Facility Tier</label>
-            <select
+            <UtilityCustomSelect
               id="facility-select"
-              className="utility-select"
               value={facilityType}
-              onChange={(e) => setFacilityType(e.target.value)}
-            >
-              {FACILITY_OPTIONS.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.label}
-                </option>
-              ))}
-            </select>
+              options={FACILITY_OPTIONS}
+              onChange={setFacilityType}
+              ariaLabel="Select facility tier"
+            />
           </div>
 
           <div className="utility-control-group interests-toggle-group">
@@ -164,15 +159,17 @@ export default function HeatStrokeSurgeModal({ city, onClose }: HeatStrokeSurgeM
             </div>
           </div>
 
-          <button
-            type="button"
-            className="utility-refresh-btn"
-            onClick={fetchSurgePrediction}
-            disabled={loading}
-          >
-            <RefreshCw size={14} className={loading ? "spin" : ""} />
-            <span>Recalculate</span>
-          </button>
+          <div className="utility-action-row-center">
+            <button
+              type="button"
+              className="utility-refresh-btn"
+              onClick={fetchSurgePrediction}
+              disabled={loading}
+            >
+              <RefreshCw size={14} className={loading ? "spin" : ""} />
+              <span>Recalculate</span>
+            </button>
+          </div>
         </div>
 
         {/* Modal Body */}
@@ -244,7 +241,7 @@ export default function HeatStrokeSurgeModal({ city, onClose }: HeatStrokeSurgeM
               <div className="utility-ai-box">
                 <div className="utility-ai-header">
                   <div className="utility-ai-kicker">
-                    <Sparkles size={13} className="inline-icon" /> CLINICAL TRIAGE ADVISORY
+                    CLINICAL TRIAGE ADVISORY
                   </div>
                   <span className="utility-provider-badge">
                     {data.provider.includes("gemini") ? "Powered by Gemini Intelligence" : "Deterministic Engine"}
@@ -274,9 +271,6 @@ export default function HeatStrokeSurgeModal({ city, onClose }: HeatStrokeSurgeM
           <div className="utility-footer-meta">
             <ShieldCheck size={14} className="inline-icon" /> Grounded in wet-bulb globe thermal strain & IDSP disease surveillance
           </div>
-          <button type="button" className="utility-btn-secondary" onClick={onClose}>
-            Close
-          </button>
         </div>
       </div>
     </div>

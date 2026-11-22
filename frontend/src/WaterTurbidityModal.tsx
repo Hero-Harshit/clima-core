@@ -7,10 +7,10 @@ import {
   Filter,
   RefreshCw,
   ShieldCheck,
-  Sparkles,
   Waves,
   X,
 } from "lucide-react";
+import UtilityCustomSelect from "./UtilityCustomSelect";
 
 type WaterTurbidityResponse = {
   city: string;
@@ -144,34 +144,24 @@ export default function WaterTurbidityModal({ city, onClose }: WaterTurbidityMod
         <div className="utility-controls-bar">
           <div className="utility-control-group">
             <label htmlFor="source-select">Raw Water Inflow Source</label>
-            <select
+            <UtilityCustomSelect
               id="source-select"
-              className="utility-select"
               value={source}
-              onChange={(e) => setSource(e.target.value)}
-            >
-              {SOURCE_OPTIONS.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
+              options={SOURCE_OPTIONS}
+              onChange={setSource}
+              ariaLabel="Select raw water source"
+            />
           </div>
 
           <div className="utility-control-group">
             <label htmlFor="coagulant-select">Active Coagulant</label>
-            <select
+            <UtilityCustomSelect
               id="coagulant-select"
-              className="utility-select"
               value={coagulant}
-              onChange={(e) => setCoagulant(e.target.value)}
-            >
-              {COAGULANT_OPTIONS.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
+              options={COAGULANT_OPTIONS}
+              onChange={setCoagulant}
+              ariaLabel="Select active coagulant"
+            />
           </div>
 
           <div className="utility-control-group interests-toggle-group">
@@ -268,7 +258,6 @@ export default function WaterTurbidityModal({ city, onClose }: WaterTurbidityMod
               {/* AI Guidance */}
               <div className="utility-ai-guidance-card">
                 <div className="utility-ai-header">
-                  <Sparkles size={16} />
                   <span>Gemini Municipal Water Treatment & Chemistry Synthesis</span>
                   <span className="utility-provider-badge">{data.provider}</span>
                 </div>

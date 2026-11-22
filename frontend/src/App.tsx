@@ -1082,10 +1082,8 @@ function App() {
   };
 
   return (
-    <div className={`app-shell${hasSelectedLocationAndOccupation ? " has-selection" : " is-white-bg"}`}>
-      {hasSelectedLocationAndOccupation && (
-        <Suspense fallback={null}><MapBackdrop {...coordinates} /></Suspense>
-      )}
+    <div className={`app-shell has-selection${activeModal ? " modal-page-active" : ""}`}>
+      <Suspense fallback={null}><MapBackdrop {...coordinates} /></Suspense>
       <main className="main-content" id="top">
         <header className={`topbar${isCompactNavBar ? " is-compact" : ""}`}>
           <a

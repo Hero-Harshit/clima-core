@@ -1,18 +1,28 @@
 import { useEffect, useState } from "react";
 import {
-  Calendar,
   CheckCircle2,
   Clock,
   Compass,
-  Footprints,
   MapPin,
   RefreshCw,
-  Sparkles,
   Sun,
   Umbrella,
   X,
   Droplet,
 } from "lucide-react";
+import UtilityCustomSelect from "./UtilityCustomSelect";
+
+const DATE_OPTIONS = [
+  { id: "Today", label: "Today (Live Forecast)", desc: "Current day forecast" },
+  { id: "Tomorrow", label: "Tomorrow", desc: "Next-day outlook" },
+  { id: "Weekend", label: "Upcoming Weekend", desc: "Saturday and Sunday" },
+];
+
+const PACE_OPTIONS = [
+  { id: "relaxed", label: "Relaxed", desc: "Shaded leisures" },
+  { id: "balanced", label: "Balanced", desc: "Optimal windows" },
+  { id: "intensive", label: "Intensive", desc: "Full day active" },
+];
 
 type ItineraryHourSlot = {
   time_window: string;
@@ -161,36 +171,24 @@ export default function TouristOptimizerModal({ city, onClose }: TouristOptimize
         <div className="utility-controls-bar">
           <div className="utility-control-group">
             <label htmlFor="tourist-date">Visit Date</label>
-            <div className="utility-input-wrapper">
-              <Calendar size={14} className="utility-input-icon" />
-              <select
-                id="tourist-date"
-                value={travelDate}
-                onChange={(e) => setTravelDate(e.target.value)}
-                className="utility-select"
-              >
-                <option value="Today">Today (Live Forecast)</option>
-                <option value="Tomorrow">Tomorrow</option>
-                <option value="Weekend">Upcoming Weekend</option>
-              </select>
-            </div>
+            <UtilityCustomSelect
+              id="tourist-date"
+              value={travelDate}
+              options={DATE_OPTIONS}
+              onChange={setTravelDate}
+              ariaLabel="Select visit date"
+            />
           </div>
 
           <div className="utility-control-group">
             <label htmlFor="tourist-pace">Tour Pace</label>
-            <div className="utility-input-wrapper">
-              <Footprints size={14} className="utility-input-icon" />
-              <select
-                id="tourist-pace"
-                value={pace}
-                onChange={(e) => setPace(e.target.value)}
-                className="utility-select"
-              >
-                <option value="relaxed">Relaxed (Shaded Leisures)</option>
-                <option value="balanced">Balanced (Optimal Windows)</option>
-                <option value="intensive">Intensive (Full Day Active)</option>
-              </select>
-            </div>
+            <UtilityCustomSelect
+              id="tourist-pace"
+              value={pace}
+              options={PACE_OPTIONS}
+              onChange={setPace}
+              ariaLabel="Select tour pace"
+            />
           </div>
 
           <div className="utility-control-group interests-toggle-group">
@@ -212,15 +210,17 @@ export default function TouristOptimizerModal({ city, onClose }: TouristOptimize
             </div>
           </div>
 
-          <button
-            type="button"
-            className="utility-action-btn"
-            onClick={fetchOptimizedSchedule}
-            disabled={loading}
-          >
-            <RefreshCw size={14} className={loading ? "spin-icon" : ""} />
-            <span>Plan Itinerary</span>
-          </button>
+          <div className="utility-action-row-center">
+            <button
+              type="button"
+              className="utility-action-btn"
+              onClick={fetchOptimizedSchedule}
+              disabled={loading}
+            >
+              <RefreshCw size={14} className={loading ? "spin-icon" : ""} />
+              <span>Plan Itinerary</span>
+            </button>
+          </div>
         </div>
 
         {/* Body */}
@@ -339,7 +339,7 @@ export default function TouristOptimizerModal({ city, onClose }: TouristOptimize
               {/* AI Concierge Briefing */}
               <div className="utility-section-card ai-concierge-card">
                 <div className="utility-card-kicker">
-                  <Sparkles size={13} className="sparkle-icon" /> GEMINI AI CONCIERGE BRIEFING
+                  GEMINI AI CONCIERGE BRIEFING
                 </div>
                 <p className="utility-ai-prose">{data.ai_concierge_briefing}</p>
                 <div className="utility-provider-badge">
@@ -356,9 +356,6 @@ export default function TouristOptimizerModal({ city, onClose }: TouristOptimize
             <span>Thermal Comfort Model: ClimaCore Wet-Bulb & Solar Flux Analysis</span>
             {data?.latency_ms && <span> · Latency: {data.latency_ms} ms</span>}
           </div>
-          <button type="button" className="utility-close-btn" onClick={onClose}>
-            Close Planner
-          </button>
         </div>
       </div>
     </div>

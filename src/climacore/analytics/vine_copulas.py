@@ -20,7 +20,7 @@ Provides multivariate compound risk modeling beyond bivariate copulas:
 References:
   - Aas, K., Czado, C., Frigessi, A., & Bakken, H. (2009). Pair-copula constructions of
     multiple dependence. Insurance: Mathematics and Economics, 44(2), 182-198.
-  - Bedford, T., & Cooke, R. M. (2002). Vines—a new graphical model for dependent random variables.
+  - Bedford, T., & Cooke, R. M. (2002). Vines - a new graphical model for dependent random variables.
     Annals of Statistics, 30(4), 1031-1068.
 """
 

@@ -7,10 +7,10 @@ import {
   Gauge,
   RefreshCw,
   ShieldCheck,
-  Sparkles,
   Sprout,
   X,
 } from "lucide-react";
+import UtilityCustomSelect from "./UtilityCustomSelect";
 
 type CropStageRisk = {
   stage_name: string;
@@ -164,18 +164,13 @@ export default function CropHarvestModal({ city, onClose }: CropHarvestModalProp
         <div className="utility-controls-bar">
           <div className="utility-control-group">
             <label htmlFor="crop-select">Crop Type</label>
-            <select
+            <UtilityCustomSelect
               id="crop-select"
-              className="utility-select"
               value={cropType}
-              onChange={(e) => setCropType(e.target.value)}
-            >
-              {CROP_OPTIONS.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
+              options={CROP_OPTIONS}
+              onChange={setCropType}
+              ariaLabel="Select crop type"
+            />
           </div>
 
           <div className="utility-control-group interests-toggle-group">
@@ -194,31 +189,28 @@ export default function CropHarvestModal({ city, onClose }: CropHarvestModalProp
             </div>
           </div>
 
-          <div className="utility-control-group">
+          <div className="utility-control-group storage-select-group">
             <label htmlFor="storage-select">Storage Facility</label>
-            <select
+            <UtilityCustomSelect
               id="storage-select"
-              className="utility-select"
               value={storageType}
-              onChange={(e) => setStorageType(e.target.value)}
-            >
-              {STORAGE_OPTIONS.map((st) => (
-                <option key={st.id} value={st.id}>
-                  {st.label}
-                </option>
-              ))}
-            </select>
+              options={STORAGE_OPTIONS}
+              onChange={setStorageType}
+              ariaLabel="Select storage facility"
+            />
           </div>
 
-          <button
-            type="button"
-            className="utility-refresh-btn"
-            onClick={fetchCropSpoilageAnalysis}
-            disabled={loading}
-          >
-            <RefreshCw size={14} className={loading ? "spin" : ""} />
-            <span>Recalculate</span>
-          </button>
+          <div className="utility-action-row-center">
+            <button
+              type="button"
+              className="utility-refresh-btn"
+              onClick={fetchCropSpoilageAnalysis}
+              disabled={loading}
+            >
+              <RefreshCw size={14} className={loading ? "spin" : ""} />
+              <span>Recalculate</span>
+            </button>
+          </div>
         </div>
 
         {/* Modal Body */}
@@ -292,7 +284,7 @@ export default function CropHarvestModal({ city, onClose }: CropHarvestModalProp
               <div className="utility-ai-box">
                 <div className="utility-ai-header">
                   <div className="utility-ai-kicker">
-                    <Sparkles size={13} className="inline-icon" /> POST-HARVEST AGRONOMY ADVISORY
+                    POST-HARVEST AGRONOMY ADVISORY
                   </div>
                   <span className="utility-provider-badge">
                     {data.provider.includes("gemini") ? "Powered by Gemini Intelligence" : "Deterministic Agronomy Engine"}
@@ -350,9 +342,6 @@ export default function CropHarvestModal({ city, onClose }: CropHarvestModalProp
           <div className="utility-footer-meta">
             <ShieldCheck size={14} className="inline-icon" /> Grounded in real-time localized agrometeorological sensors
           </div>
-          <button type="button" className="utility-btn-secondary" onClick={onClose}>
-            Close
-          </button>
         </div>
       </div>
     </div>

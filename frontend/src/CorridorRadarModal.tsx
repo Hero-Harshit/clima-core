@@ -7,13 +7,13 @@ import {
   Navigation,
   RefreshCw,
   ShieldCheck,
-  Sparkles,
   Thermometer,
   Truck,
   Wind,
   X,
   Droplets,
 } from "lucide-react";
+import UtilityCustomSelect, { UtilitySelectOption } from "./UtilityCustomSelect";
 
 type CorridorSegmentRisk = {
   segment_name: string;
@@ -49,11 +49,11 @@ type CorridorRadarModalProps = {
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
-const VEHICLE_OPTIONS = [
-  { id: "two_wheeler", label: "Two-Wheeler (Bike/EV)", subtitle: "High crosswind & slip sensitivity" },
-  { id: "ev_van", label: "Electric Delivery Van", subtitle: "Battery thermal & traction control" },
-  { id: "light_commercial", label: "Light Commercial (Pickup)", subtitle: "Braking & underpass clearance" },
-  { id: "heavy_truck", label: "Heavy Freight Truck", subtitle: "Bridge stability & jackknife safety" },
+const VEHICLE_OPTIONS: UtilitySelectOption[] = [
+  { id: "two_wheeler", label: "Two-Wheeler (Bike/EV)", desc: "High crosswind & slip sensitivity" },
+  { id: "ev_van", label: "Electric Delivery Van", desc: "Battery thermal & traction control" },
+  { id: "light_commercial", label: "Light Commercial (Pickup)", desc: "Braking & underpass clearance" },
+  { id: "heavy_truck", label: "Heavy Freight Truck", desc: "Bridge stability & jackknife safety" },
 ];
 
 export default function CorridorRadarModal({ city, onClose }: CorridorRadarModalProps) {
@@ -181,29 +181,26 @@ export default function CorridorRadarModal({ city, onClose }: CorridorRadarModal
 
           <div className="utility-control-group vehicle-select-group">
             <label htmlFor="corridor-vehicle">Fleet Vehicle</label>
-            <select
+            <UtilityCustomSelect
               id="corridor-vehicle"
               value={vehicleType}
-              onChange={(e) => setVehicleType(e.target.value)}
-              className="utility-select"
-            >
-              {VEHICLE_OPTIONS.map((opt) => (
-                <option key={opt.id} value={opt.id}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+              options={VEHICLE_OPTIONS}
+              onChange={setVehicleType}
+              ariaLabel="Select fleet vehicle"
+            />
           </div>
 
-          <button
-            type="button"
-            className="utility-action-btn"
-            onClick={fetchCorridorAnalysis}
-            disabled={loading}
-          >
-            <RefreshCw size={14} className={loading ? "spin-icon" : ""} />
-            <span>Analyze Route</span>
-          </button>
+          <div className="utility-action-row-center">
+            <button
+              type="button"
+              className="utility-action-btn"
+              onClick={fetchCorridorAnalysis}
+              disabled={loading}
+            >
+              <RefreshCw size={14} className={loading ? "spin-icon" : ""} />
+              <span>Analyze Route</span>
+            </button>
+          </div>
         </div>
 
         {/* Body */}
@@ -328,7 +325,7 @@ export default function CorridorRadarModal({ city, onClose }: CorridorRadarModal
 
                 <div className="utility-section-card ai-concierge-card">
                   <div className="utility-card-kicker">
-                    <Sparkles size={13} className="sparkle-icon" /> GEMINI LOGISTICS INTELLIGENCE
+                    GEMINI LOGISTICS INTELLIGENCE
                   </div>
                   <p className="utility-ai-prose">{data.ai_insights}</p>
                   <div className="utility-provider-badge">
@@ -346,9 +343,6 @@ export default function CorridorRadarModal({ city, onClose }: CorridorRadarModal
             <span>Spatial Engine: High-Resolution ClimaCore Ingestion</span>
             {data?.latency_ms && <span> · Latency: {data.latency_ms} ms</span>}
           </div>
-          <button type="button" className="utility-close-btn" onClick={onClose}>
-            Close Radar
-          </button>
         </div>
       </div>
     </div>

@@ -218,7 +218,7 @@ def audit_india_50_cities_dataset(
     # Generate Populated Manifest
     manifest = DatasetManifest(
         source_id="india_weather_air_quality_50_cities",
-        display_name="India Daily Weather & Air Quality — 50 cities",
+        display_name="India Daily Weather & Air Quality: 50 cities",
         source_url="https://huggingface.co/datasets/AkshayKarthick/india-weather-air-quality",
         retrieved_at_utc=datetime.now(timezone.utc).isoformat(),
         license="CC-BY-4.0",

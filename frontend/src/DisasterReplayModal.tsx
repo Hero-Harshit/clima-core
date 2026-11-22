@@ -10,7 +10,6 @@ import {
   History,
   RotateCcw,
   ShieldCheck,
-  Sparkles,
   Waves,
   X,
   Zap,
@@ -227,7 +226,7 @@ export default function DisasterReplayModal({ currentCity, onClose }: DisasterRe
               </div>
 
               <div className="replay-kpi-card payout-kpi">
-                <div className="kpi-icon-wrap"><Sparkles size={20} /></div>
+                <div className="kpi-icon-wrap"><ShieldCheck size={20} /></div>
                 <div>
                   <div className="kpi-label">PARAMETRIC CLAIMS DISBURSED</div>
                   <div className="kpi-value">₹{replayData.simulated_parametric_payout_inr_cr.toFixed(0)}<span>Crores</span></div>
@@ -408,8 +407,7 @@ export default function DisasterReplayModal({ currentCity, onClose }: DisasterRe
 
                   <div className="guarantee-item">
                     <div className="guarantee-head">
-                      <Sparkles size={16} />
-                      <h4>Zero-Basis Parametric DBT Insurance Settlement</h4>
+                      <ShieldCheck size={16} /><h4>Zero-Basis Parametric DBT Insurance Settlement</h4>
                     </div>
                     <p className="guarantee-text">
                       Simulated automatic payout of <b>₹{replayData.simulated_parametric_payout_inr_cr} Crores</b> triggered autonomously upon verified physical index breach without subjective claims inspection or bureaucratic paperwork delays.

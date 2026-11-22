@@ -9,9 +9,9 @@ import {
   RefreshCw,
   ShieldAlert,
   ShieldCheck,
-  Sparkles,
   X,
 } from "lucide-react";
+import UtilityCustomSelect from "./UtilityCustomSelect";
 
 type ParametricTriggerResponse = {
   city: string;
@@ -140,18 +140,13 @@ export default function ParametricTriggerModal({ city, onClose }: ParametricTrig
         <div className="utility-controls-bar">
           <div className="utility-control-group">
             <label htmlFor="peril-select">Underwritten Peril</label>
-            <select
+            <UtilityCustomSelect
               id="peril-select"
-              className="utility-select"
               value={peril}
-              onChange={(e) => setPeril(e.target.value)}
-            >
-              {PERIL_OPTIONS.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
+              options={PERIL_OPTIONS}
+              onChange={setPeril}
+              ariaLabel="Select underwritten peril"
+            />
           </div>
 
           <div className="utility-control-group interests-toggle-group">
@@ -264,7 +259,6 @@ export default function ParametricTriggerModal({ city, onClose }: ParametricTrig
               {/* AI Guidance */}
               <div className="utility-ai-guidance-card">
                 <div className="utility-ai-header">
-                  <Sparkles size={16} />
                   <span>Gemini Climate Insurance & Actuarial Synthesis</span>
                   <span className="utility-provider-badge">{data.provider}</span>
                 </div>

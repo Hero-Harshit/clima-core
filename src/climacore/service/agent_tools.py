@@ -857,7 +857,7 @@ def detect_and_execute_offline_scenario(
             "**Sequential Failure Propagation Chain:**",
         ]
         for n in cascade["nodes"]:
-            cascade_lines.append(f"{n['step']}. **[{n['sector']}]** {n['event']} (*P={int(n['conditional_probability']*100)}%*) — {n['physical_mechanism']}")
+            cascade_lines.append(f"{n['step']}. **[{n['sector']}]** {n['event']} (*P={int(n['conditional_probability']*100)}%*) : {n['physical_mechanism']}")
 
         if cascade["emergency_interventions"]:
             cascade_lines.append("\n**Civil Defense Decisive Interventions:**")
@@ -960,7 +960,7 @@ def detect_and_execute_offline_scenario(
             "**Chronological Timeline Progression & Model Defense:**",
         ]
         for ph in replay_data["timeline_phases"]:
-            r_lines.append(f"\n#### [{ph['phase_timestamp_relative']}] — `{ph['civil_defense_status']}`")
+            r_lines.append(f"\n#### [{ph['phase_timestamp_relative']}] : `{ph['civil_defense_status']}`")
             r_lines.append(f"* **Atmospheric Shock:** {', '.join([f'{k.replace('_', ' ').title()}: {v}' for k, v in ph['meteorological_conditions'].items()])}")
             r_lines.append(f"* **Autonomous Interventions:**")
             for act in ph["autonomous_actions_taken"]:
@@ -1001,10 +1001,10 @@ def detect_and_execute_offline_scenario(
                     f"| Metric | {ca['name']} | {cb['name']} | Difference |\n"
                     f"| :--- | :--- | :--- | :--- |\n"
                     f"| **Max Temperature** | {ca['temperature_max_c']}°C | {cb['temperature_max_c']}°C | {diff['temp_delta_c']:+.1f}°C |\n"
-                    f"| **Wet-Bulb Temp** | {ca['wet_bulb_temp_c']}°C | {cb['wet_bulb_temp_c']}°C | — |\n"
+                    f"| **Wet-Bulb Temp** | {ca['wet_bulb_temp_c']}°C | {cb['wet_bulb_temp_c']}°C | N/A |\n"
                     f"| **24h Rainfall** | {ca['rainfall_mm']} mm ({ca['rain_probability_pct']}%) | {cb['rainfall_mm']} mm ({cb['rain_probability_pct']}%) | {diff['rain_delta_mm']:+.1f} mm |\n"
                     f"| **Air Quality (PM2.5)** | {ca['pm25_ug_m3']} µg/m³ | {cb['pm25_ug_m3']} µg/m³ | {diff['pm25_delta']:+.1f} µg/m³ |\n"
-                    f"| **Compound Risk Score** | {ca['compound_risk_score']:.1f} ({ca['risk_category']}) | {cb['compound_risk_score']:.1f} ({cb['risk_category']}) | — |\n\n"
+                    f"| **Compound Risk Score** | {ca['compound_risk_score']:.1f} ({ca['risk_category']}) | {cb['compound_risk_score']:.1f} ({cb['risk_category']}) | N/A |\n\n"
                     f"**Strategic Assessment:** "
                     f"{ca['name']} presents a {ca['risk_category'].lower()} hazard tier, while {cb['name']} is {cb['risk_category'].lower()}. "
                     f"Plan departures and activities around the less volatile window."

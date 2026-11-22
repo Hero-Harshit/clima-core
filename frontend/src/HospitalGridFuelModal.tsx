@@ -8,10 +8,10 @@ import {
   Fuel,
   RefreshCw,
   ShieldCheck,
-  Sparkles,
   Zap,
   X,
 } from "lucide-react";
+import UtilityCustomSelect from "./UtilityCustomSelect";
 
 type HospitalGridFuelResponse = {
   city: string;
@@ -134,18 +134,13 @@ export default function HospitalGridFuelModal({ city, onClose }: HospitalGridFue
         <div className="utility-controls-bar">
           <div className="utility-control-group">
             <label htmlFor="tier-select">Hospital Tier</label>
-            <select
+            <UtilityCustomSelect
               id="tier-select"
-              className="utility-select"
               value={tier}
-              onChange={(e) => setTier(e.target.value)}
-            >
-              {TIER_OPTIONS.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
+              options={TIER_OPTIONS}
+              onChange={setTier}
+              ariaLabel="Select hospital tier"
+            />
           </div>
 
           <div className="utility-control-group interests-toggle-group">
@@ -164,15 +159,17 @@ export default function HospitalGridFuelModal({ city, onClose }: HospitalGridFue
             </div>
           </div>
 
-          <button
-            type="button"
-            className="utility-refresh-btn"
-            onClick={fetchGridFuelAssessment}
-            disabled={loading}
-          >
-            <RefreshCw size={14} className={loading ? "spin" : ""} />
-            <span>Recalculate</span>
-          </button>
+          <div className="utility-action-row-center">
+            <button
+              type="button"
+              className="utility-refresh-btn"
+              onClick={fetchGridFuelAssessment}
+              disabled={loading}
+            >
+              <RefreshCw size={14} className={loading ? "spin" : ""} />
+              <span>Recalculate</span>
+            </button>
+          </div>
         </div>
 
         {/* Modal Body */}
@@ -244,7 +241,7 @@ export default function HospitalGridFuelModal({ city, onClose }: HospitalGridFue
               <div className="utility-ai-box">
                 <div className="utility-ai-header">
                   <div className="utility-ai-kicker">
-                    <Sparkles size={13} className="inline-icon" /> FACILITY ENGINEERING DIRECTIVE
+                    FACILITY ENGINEERING DIRECTIVE
                   </div>
                   <span className="utility-provider-badge">
                     {data.provider.includes("gemini") ? "Powered by Gemini Intelligence" : "Deterministic Engine"}
@@ -294,9 +291,6 @@ export default function HospitalGridFuelModal({ city, onClose }: HospitalGridFue
           <div className="utility-footer-meta">
             <ShieldCheck size={14} className="inline-icon" /> Grounded in regional transmission grid load telemetry & IEEE 446 healthcare power standards
           </div>
-          <button type="button" className="utility-btn-secondary" onClick={onClose}>
-            Close
-          </button>
         </div>
       </div>
     </div>

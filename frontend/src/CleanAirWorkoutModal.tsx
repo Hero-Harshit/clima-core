@@ -5,15 +5,13 @@ import {
   CheckCircle2,
   Clock,
   Dumbbell,
-  HeartPulse,
   RefreshCw,
   ShieldAlert,
-  Sparkles,
   Thermometer,
-  Timer,
   Wind,
   X,
 } from "lucide-react";
+import UtilityCustomSelect from "./UtilityCustomSelect";
 
 type AirQualityHourEstimate = {
   time_slot: string;
@@ -50,10 +48,22 @@ type CleanAirWorkoutModalProps = {
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
 const ACTIVITY_OPTIONS = [
-  { id: "running", label: "Running / Jogging", note: "High tidal breathing volume" },
-  { id: "cycling", label: "Road Cycling", note: "Extended aerobic exposure & windage" },
-  { id: "brisk_walking", label: "Brisk Walking", note: "Moderate cardiovascular load" },
-  { id: "hiit", label: "Outdoor Functional HIIT", note: "Peak respiratory rate spikes" },
+  { id: "running", label: "Running / Jogging", desc: "High tidal breathing volume" },
+  { id: "cycling", label: "Road Cycling", desc: "Extended aerobic exposure & windage" },
+  { id: "brisk_walking", label: "Brisk Walking", desc: "Moderate cardiovascular load" },
+  { id: "hiit", label: "Outdoor Functional HIIT", desc: "Peak respiratory rate spikes" },
+];
+
+const INTENSITY_OPTIONS = [
+  { id: "light", label: "Zone 1-2 (Active Recovery)", desc: "Gentle aerobic session" },
+  { id: "moderate", label: "Zone 3 (Aerobic Base Training)", desc: "Sustained cardiovascular pace" },
+  { id: "vigorous", label: "Zone 4-5 (Threshold / VO2 Max)", desc: "High cardiovascular exertion" },
+];
+
+const WINDOW_OPTIONS = [
+  { id: "any", label: "Auto-Detect Best Window", desc: "Select lowest PM2.5 period" },
+  { id: "early_morning", label: "Early Morning Focus", desc: "Dawn to 08:00 AM" },
+  { id: "evening", label: "Late Afternoon / Evening", desc: "17:00 PM onwards" },
 ];
 
 export default function CleanAirWorkoutModal({ city, onClose }: CleanAirWorkoutModalProps) {
@@ -140,66 +150,48 @@ export default function CleanAirWorkoutModal({ city, onClose }: CleanAirWorkoutM
         <div className="utility-controls-bar">
           <div className="utility-control-group">
             <label htmlFor="workout-activity">Sport Activity</label>
-            <div className="utility-input-wrapper">
-              <HeartPulse size={14} className="utility-input-icon" />
-              <select
-                id="workout-activity"
-                value={activityType}
-                onChange={(e) => setActivityType(e.target.value)}
-                className="utility-select"
-              >
-                {ACTIVITY_OPTIONS.map((opt) => (
-                  <option key={opt.id} value={opt.id}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <UtilityCustomSelect
+              id="workout-activity"
+              value={activityType}
+              options={ACTIVITY_OPTIONS}
+              onChange={setActivityType}
+              ariaLabel="Select sport activity"
+            />
           </div>
 
           <div className="utility-control-group">
             <label htmlFor="workout-intensity">Intensity Zone</label>
-            <div className="utility-input-wrapper">
-              <Timer size={14} className="utility-input-icon" />
-              <select
-                id="workout-intensity"
-                value={intensity}
-                onChange={(e) => setIntensity(e.target.value)}
-                className="utility-select"
-              >
-                <option value="light">Zone 1-2 (Active Recovery)</option>
-                <option value="moderate">Zone 3 (Aerobic Base Training)</option>
-                <option value="vigorous">Zone 4-5 (Threshold / VO2 Max)</option>
-              </select>
-            </div>
+            <UtilityCustomSelect
+              id="workout-intensity"
+              value={intensity}
+              options={INTENSITY_OPTIONS}
+              onChange={setIntensity}
+              ariaLabel="Select workout intensity"
+            />
           </div>
 
           <div className="utility-control-group">
             <label htmlFor="workout-time">Target Window</label>
-            <div className="utility-input-wrapper">
-              <Clock size={14} className="utility-input-icon" />
-              <select
-                id="workout-time"
-                value={preferredTime}
-                onChange={(e) => setPreferredTime(e.target.value)}
-                className="utility-select"
-              >
-                <option value="any">Auto-Detect Best Window</option>
-                <option value="early_morning">Early Morning Focus</option>
-                <option value="evening">Late Afternoon / Evening</option>
-              </select>
-            </div>
+            <UtilityCustomSelect
+              id="workout-time"
+              value={preferredTime}
+              options={WINDOW_OPTIONS}
+              onChange={setPreferredTime}
+              ariaLabel="Select target workout window"
+            />
           </div>
 
-          <button
-            type="button"
-            className="utility-action-btn"
-            onClick={fetchWorkoutAnalysis}
-            disabled={loading}
-          >
-            <RefreshCw size={14} className={loading ? "spin-icon" : ""} />
-            <span>Radar Scan</span>
-          </button>
+          <div className="utility-action-row-center">
+            <button
+              type="button"
+              className="utility-action-btn"
+              onClick={fetchWorkoutAnalysis}
+              disabled={loading}
+            >
+              <RefreshCw size={14} className={loading ? "spin-icon" : ""} />
+              <span>Radar Scan</span>
+            </button>
+          </div>
         </div>
 
         {/* Body */}
@@ -341,7 +333,7 @@ export default function CleanAirWorkoutModal({ city, onClose }: CleanAirWorkoutM
               {/* Gemini Coaching Briefing */}
               <div className="utility-section-card ai-concierge-card">
                 <div className="utility-card-kicker">
-                  <Sparkles size={13} className="sparkle-icon" /> GEMINI ATHLETIC COACH PHYSIOLOGY BRIEFING
+                  GEMINI ATHLETIC COACH PHYSIOLOGY BRIEFING
                 </div>
                 <p className="utility-ai-prose">{data.coaching_guidance}</p>
                 <div className="utility-provider-badge">
@@ -358,9 +350,6 @@ export default function CleanAirWorkoutModal({ city, onClose }: CleanAirWorkoutM
             <span>Atmospheric Physics: Boundary-Layer Convective Mixing & Respiratory Models</span>
             {data?.latency_ms && <span> · Latency: {data.latency_ms} ms</span>}
           </div>
-          <button type="button" className="utility-close-btn" onClick={onClose}>
-            Close Window
-          </button>
         </div>
       </div>
     </div>

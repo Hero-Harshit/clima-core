@@ -6,12 +6,12 @@ import {
   Flame,
   RefreshCw,
   ShieldCheck,
-  Sparkles,
   Thermometer,
   Wind,
   X,
   Zap,
 } from "lucide-react";
+import UtilityCustomSelect from "./UtilityCustomSelect";
 
 type FactoryTinRoofResponse = {
   city: str;
@@ -158,34 +158,24 @@ export default function FactoryTinRoofModal({ city, onClose }: FactoryTinRoofMod
         <div className="utility-controls-bar">
           <div className="utility-control-group">
             <label htmlFor="roof-select">Roof Material</label>
-            <select
+            <UtilityCustomSelect
               id="roof-select"
-              className="utility-select"
               value={roofType}
-              onChange={(e) => setRoofType(e.target.value)}
-            >
-              {ROOF_OPTIONS.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.label}
-                </option>
-              ))}
-            </select>
+              options={ROOF_OPTIONS}
+              onChange={setRoofType}
+              ariaLabel="Select roof material"
+            />
           </div>
 
           <div className="utility-control-group">
             <label htmlFor="shift-select">Operating Shift</label>
-            <select
+            <UtilityCustomSelect
               id="shift-select"
-              className="utility-select"
               value={shiftType}
-              onChange={(e) => setShiftType(e.target.value)}
-            >
-              {SHIFT_OPTIONS.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
+              options={SHIFT_OPTIONS}
+              onChange={setShiftType}
+              ariaLabel="Select operating shift"
+            />
           </div>
 
           <div className="utility-control-group interests-toggle-group">
@@ -298,7 +288,6 @@ export default function FactoryTinRoofModal({ city, onClose }: FactoryTinRoofMod
               {/* AI Guidance */}
               <div className="utility-ai-guidance-card">
                 <div className="utility-ai-header">
-                  <Sparkles size={16} />
                   <span>Gemini Plant Engineering & Occupational Health Synthesis</span>
                   <span className="utility-provider-badge">{data.provider}</span>
                 </div>

@@ -6,11 +6,11 @@ import {
   RefreshCw,
   ShieldCheck,
   Ship,
-  Sparkles,
   Waves,
   Wind,
   X,
 } from "lucide-react";
+import UtilityCustomSelect from "./UtilityCustomSelect";
 
 type CoastalSquallResponse = {
   coastal_zone: string;
@@ -142,34 +142,24 @@ export default function CoastalSquallModal({ city, onClose }: CoastalSquallModal
         <div className="utility-controls-bar">
           <div className="utility-control-group">
             <label htmlFor="coast-select">Coastal Zone</label>
-            <select
+            <UtilityCustomSelect
               id="coast-select"
-              className="utility-select"
               value={coastalZone}
-              onChange={(e) => setCoastalZone(e.target.value)}
-            >
-              {COASTAL_ZONES.map((z) => (
-                <option key={z.id} value={z.id}>
-                  {z.label}
-                </option>
-              ))}
-            </select>
+              options={COASTAL_ZONES}
+              onChange={setCoastalZone}
+              ariaLabel="Select coastal zone"
+            />
           </div>
 
           <div className="utility-control-group">
             <label htmlFor="craft-select">Vessel Class</label>
-            <select
+            <UtilityCustomSelect
               id="craft-select"
-              className="utility-select"
               value={craftType}
-              onChange={(e) => setCraftType(e.target.value)}
-            >
-              {CRAFT_OPTIONS.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
+              options={CRAFT_OPTIONS}
+              onChange={setCraftType}
+              ariaLabel="Select vessel class"
+            />
           </div>
 
           <div className="utility-control-group interests-toggle-group">
@@ -188,15 +178,17 @@ export default function CoastalSquallModal({ city, onClose }: CoastalSquallModal
             </div>
           </div>
 
-          <button
-            type="button"
-            className="utility-refresh-btn"
-            onClick={fetchSquallAdvisory}
-            disabled={loading}
-          >
-            <RefreshCw size={14} className={loading ? "spin" : ""} />
-            <span>Broadcast</span>
-          </button>
+          <div className="utility-action-row-center">
+            <button
+              type="button"
+              className="utility-refresh-btn"
+              onClick={fetchSquallAdvisory}
+              disabled={loading}
+            >
+              <RefreshCw size={14} className={loading ? "spin" : ""} />
+              <span>Broadcast</span>
+            </button>
+          </div>
         </div>
 
         {/* Modal Body */}
@@ -273,7 +265,7 @@ export default function CoastalSquallModal({ city, onClose }: CoastalSquallModal
               <div className="utility-ai-box">
                 <div className="utility-ai-header">
                   <div className="utility-ai-kicker">
-                    <Sparkles size={13} className="inline-icon" /> FISHERIES WEATHER BROADCAST
+                    FISHERIES WEATHER BROADCAST
                   </div>
                   <span className="utility-provider-badge">
                     {data.provider.includes("gemini") ? "Powered by Gemini Intelligence" : "Deterministic Engine"}
@@ -303,9 +295,6 @@ export default function CoastalSquallModal({ city, onClose }: CoastalSquallModal
           <div className="utility-footer-meta">
             <ShieldCheck size={14} className="inline-icon" /> Grounded in INCOIS ocean state forecasts & IMD coastal radar telemetry
           </div>
-          <button type="button" className="utility-btn-secondary" onClick={onClose}>
-            Close
-          </button>
         </div>
       </div>
     </div>

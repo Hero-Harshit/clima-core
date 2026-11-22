@@ -8,10 +8,10 @@ import {
   RefreshCw,
   ShieldCheck,
   Snowflake,
-  Sparkles,
   Thermometer,
   X,
 } from "lucide-react";
+import UtilityCustomSelect from "./UtilityCustomSelect";
 
 type IceToFishRatioResponse = {
   coastal_zone: string;
@@ -132,34 +132,24 @@ export default function IceToFishRatioModal({ city, onClose }: IceToFishRatioMod
         <div className="utility-controls-bar">
           <div className="utility-control-group">
             <label htmlFor="species-select">Target Catch</label>
-            <select
+            <UtilityCustomSelect
               id="species-select"
-              className="utility-select"
               value={species}
-              onChange={(e) => setSpecies(e.target.value)}
-            >
-              {SPECIES_OPTIONS.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
+              options={SPECIES_OPTIONS}
+              onChange={setSpecies}
+              ariaLabel="Select target catch"
+            />
           </div>
 
           <div className="utility-control-group">
             <label htmlFor="insulation-select">Hold Insulation</label>
-            <select
+            <UtilityCustomSelect
               id="insulation-select"
-              className="utility-select"
               value={insulation}
-              onChange={(e) => setInsulation(e.target.value)}
-            >
-              {INSULATION_OPTIONS.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.label}
-                </option>
-              ))}
-            </select>
+              options={INSULATION_OPTIONS}
+              onChange={setInsulation}
+              ariaLabel="Select hold insulation"
+            />
           </div>
 
           <div className="utility-control-group interests-toggle-group">
@@ -178,15 +168,17 @@ export default function IceToFishRatioModal({ city, onClose }: IceToFishRatioMod
             </div>
           </div>
 
-          <button
-            type="button"
-            className="utility-refresh-btn"
-            onClick={fetchThermalCalculation}
-            disabled={loading}
-          >
-            <RefreshCw size={14} className={loading ? "spin" : ""} />
-            <span>Calculate</span>
-          </button>
+          <div className="utility-action-row-center">
+            <button
+              type="button"
+              className="utility-refresh-btn"
+              onClick={fetchThermalCalculation}
+              disabled={loading}
+            >
+              <RefreshCw size={14} className={loading ? "spin" : ""} />
+              <span>Calculate</span>
+            </button>
+          </div>
         </div>
 
         {/* Modal Body */}
@@ -261,7 +253,7 @@ export default function IceToFishRatioModal({ city, onClose }: IceToFishRatioMod
               <div className="utility-ai-box">
                 <div className="utility-ai-header">
                   <div className="utility-ai-kicker">
-                    <Sparkles size={13} className="inline-icon" /> THERMAL PRESERVATION PROTOCOL
+                    THERMAL PRESERVATION PROTOCOL
                   </div>
                   <span className="utility-provider-badge">
                     {data.provider.includes("gemini") ? "Powered by Gemini Intelligence" : "Deterministic Engine"}
@@ -291,9 +283,6 @@ export default function IceToFishRatioModal({ city, onClose }: IceToFishRatioMod
           <div className="utility-footer-meta">
             <ShieldCheck size={14} className="inline-icon" /> Grounded in FAO fish handling guidelines & tropical marine thermodynamics
           </div>
-          <button type="button" className="utility-btn-secondary" onClick={onClose}>
-            Close
-          </button>
         </div>
       </div>
     </div>

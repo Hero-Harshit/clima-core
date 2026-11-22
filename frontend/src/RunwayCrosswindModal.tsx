@@ -7,10 +7,10 @@ import {
   Plane,
   RefreshCw,
   ShieldCheck,
-  Sparkles,
   Wind,
   X,
 } from "lucide-react";
+import UtilityCustomSelect from "./UtilityCustomSelect";
 
 type RunwayCrosswindResponse = {
   airport_identifier: string;
@@ -37,14 +37,14 @@ type RunwayCrosswindModalProps = {
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
 const AIRPORT_OPTIONS = [
-  { code: "BOM", name: "Mumbai (CSMI Airport - BOM / VABB)", defaultRwy: 270 },
-  { code: "DEL", name: "Delhi (Indira Gandhi Intl - DEL / VIDP)", defaultRwy: 280 },
-  { code: "BLR", name: "Bengaluru (Kempegowda Intl - BLR / VOBL)", defaultRwy: 270 },
-  { code: "CCU", name: "Kolkata (Netaji Subhash Intl - CCU / VECC)", defaultRwy: 190 },
-  { code: "MAA", name: "Chennai (Chennai Intl - MAA / VOMM)", defaultRwy: 250 },
-  { code: "HYD", name: "Hyderabad (Rajiv Gandhi Intl - HYD / VOHS)", defaultRwy: 270 },
-  { code: "PNQ", name: "Pune (Pune Airport - PNQ / VAPO)", defaultRwy: 280 },
-  { code: "AMD", name: "Ahmedabad (Sardar Patel Intl - AMD / VAAH)", defaultRwy: 230 },
+  { id: "BOM", code: "BOM", name: "Mumbai (CSMI Airport - BOM / VABB)", label: "Mumbai (CSMI Airport - BOM / VABB)", defaultRwy: 270 },
+  { id: "DEL", code: "DEL", name: "Delhi (Indira Gandhi Intl - DEL / VIDP)", label: "Delhi (Indira Gandhi Intl - DEL / VIDP)", defaultRwy: 280 },
+  { id: "BLR", code: "BLR", name: "Bengaluru (Kempegowda Intl - BLR / VOBL)", label: "Bengaluru (Kempegowda Intl - BLR / VOBL)", defaultRwy: 270 },
+  { id: "CCU", code: "CCU", name: "Kolkata (Netaji Subhash Intl - CCU / VECC)", label: "Kolkata (Netaji Subhash Intl - CCU / VECC)", defaultRwy: 190 },
+  { id: "MAA", code: "MAA", name: "Chennai (Chennai Intl - MAA / VOMM)", label: "Chennai (Chennai Intl - MAA / VOMM)", defaultRwy: 250 },
+  { id: "HYD", code: "HYD", name: "Hyderabad (Rajiv Gandhi Intl - HYD / VOHS)", label: "Hyderabad (Rajiv Gandhi Intl - HYD / VOHS)", defaultRwy: 270 },
+  { id: "PNQ", code: "PNQ", name: "Pune (Pune Airport - PNQ / VAPO)", label: "Pune (Pune Airport - PNQ / VAPO)", defaultRwy: 280 },
+  { id: "AMD", code: "AMD", name: "Ahmedabad (Sardar Patel Intl - AMD / VAAH)", label: "Ahmedabad (Sardar Patel Intl - AMD / VAAH)", defaultRwy: 230 },
 ];
 
 const AIRCRAFT_OPTIONS = [
@@ -155,50 +155,35 @@ export default function RunwayCrosswindModal({ city, onClose }: RunwayCrosswindM
         <div className="utility-controls-bar">
           <div className="utility-control-group">
             <label htmlFor="airport-select">Target Aerodrome</label>
-            <select
+            <UtilityCustomSelect
               id="airport-select"
-              className="utility-select"
               value={airportCode}
-              onChange={(e) => handleAirportChange(e.target.value)}
-            >
-              {AIRPORT_OPTIONS.map((a) => (
-                <option key={a.code} value={a.code}>
-                  {a.name}
-                </option>
-              ))}
-            </select>
+              options={AIRPORT_OPTIONS}
+              onChange={(val) => handleAirportChange(val)}
+              ariaLabel="Select target aerodrome"
+            />
           </div>
 
           <div className="utility-control-group">
             <label htmlFor="aircraft-select">Aircraft Fleet Type</label>
-            <select
+            <UtilityCustomSelect
               id="aircraft-select"
-              className="utility-select"
               value={aircraftCategory}
-              onChange={(e) => setAircraftCategory(e.target.value)}
-            >
-              {AIRCRAFT_OPTIONS.map((ac) => (
-                <option key={ac.id} value={ac.id}>
-                  {ac.label}
-                </option>
-              ))}
-            </select>
+              options={AIRCRAFT_OPTIONS}
+              onChange={setAircraftCategory}
+              ariaLabel="Select aircraft fleet type"
+            />
           </div>
 
           <div className="utility-control-group">
             <label htmlFor="surface-select">Runway Surface State</label>
-            <select
+            <UtilityCustomSelect
               id="surface-select"
-              className="utility-select"
               value={surfaceCondition}
-              onChange={(e) => setSurfaceCondition(e.target.value)}
-            >
-              {SURFACE_OPTIONS.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
+              options={SURFACE_OPTIONS}
+              onChange={setSurfaceCondition}
+              ariaLabel="Select runway surface condition"
+            />
           </div>
 
           <div className="utility-control-group interests-toggle-group">
@@ -295,7 +280,6 @@ export default function RunwayCrosswindModal({ city, onClose }: RunwayCrosswindM
               {/* AI Guidance */}
               <div className="utility-ai-guidance-card">
                 <div className="utility-ai-header">
-                  <Sparkles size={16} />
                   <span>Gemini Aviation Meteorology & Flight Dispatch Synthesis</span>
                   <span className="utility-provider-badge">{data.provider}</span>
                 </div>
