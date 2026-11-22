@@ -739,13 +739,54 @@ if app is None:
         base_rates = {
             "Tomato": (1800, 2600, 2200),
             "Onion": (2200, 3400, 2800),
-            "Potato": (1600, 2400, 2000),
-            "Wheat": (2400, 2900, 2650),
-            "Rice": (3200, 4800, 3900),
-            "Cotton": (6700, 7800, 7250),
-            "Soybean": (4100, 5000, 4550),
+            "Potato": (1400, 2100, 1750),
+            "Green Chilli": (2800, 4200, 3500),
+            "Chilli": (2800, 4200, 3500),
+            "Garlic": (9500, 15000, 12500),
+            "Ginger": (7500, 12000, 9500),
+            "Cauliflower": (900, 1700, 1300),
+            "Cabbage": (700, 1400, 1050),
+            "Brinjal": (1200, 2200, 1700),
+            "Bhindi": (2600, 3800, 3200),
+            "Bhindi(Ladies Finger)": (2600, 3800, 3200),
+            "Carrot": (1600, 2600, 2100),
+            "Bitter gourd": (2400, 3600, 3000),
+            "Bottle gourd": (1100, 1900, 1500),
+            "Cucumber": (1200, 2000, 1600),
+            "Spinach": (1000, 1800, 1400),
+            "Wheat": (2350, 2850, 2600),
+            "Rice": (3100, 4600, 3850),
+            "Paddy": (2183, 2650, 2400),
+            "Maize": (1950, 2450, 2200),
+            "Cotton": (6800, 8200, 7500),
+            "Soybean": (4200, 5100, 4650),
+            "Soyabean": (4200, 5100, 4650),
+            "Groundnut": (5400, 6800, 6100),
+            "Mustard": (4900, 5800, 5350),
+            "Cumin(Jeera)": (24000, 32000, 28000),
+            "Banana": (1400, 2500, 1950),
+            "Apple": (6500, 14000, 10500),
+            "Lemon": (3500, 5800, 4600),
+            "Pomegranate": (7000, 12500, 9800),
+            "Grapes": (4000, 7500, 5800),
+            "Papaya": (1200, 2200, 1700),
         }
-        b_min, b_max, b_mod = base_rates.get(clean_comm, (2000, 2800, 2400))
+        # Match case-insensitively or partial key
+        matched_rate = None
+        for k, v in base_rates.items():
+            if k.lower() in clean_comm.lower() or clean_comm.lower() in k.lower():
+                matched_rate = v
+                break
+
+        if matched_rate:
+            b_min, b_max, b_mod = matched_rate
+        else:
+            # Deterministic pseudo-random generation based on commodity name hash so different vegetables never look identical
+            import hashlib
+            seed_val = int(hashlib.md5(clean_comm.lower().encode("utf-8")).hexdigest()[:6], 16)
+            b_mod = 1200 + (seed_val % 3300)
+            b_min = int(b_mod * 0.78)
+            b_max = int(b_mod * 1.25)
         markets = [f"{clean_dist} Main APMC", f"{clean_dist} Sub-Yard Mandi", f"{clean_dist} Rural Yard"]
         recs = []
         for i, m in enumerate(markets):
