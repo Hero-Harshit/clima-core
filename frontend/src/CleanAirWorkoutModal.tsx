@@ -330,14 +330,14 @@ export default function CleanAirWorkoutModal({ city, onClose }: CleanAirWorkoutM
                 </div>
               </div>
 
-              {/* Gemini Coaching Briefing */}
+              {/* ClimaCore Coaching Briefing */}
               <div className="utility-section-card ai-concierge-card">
                 <div className="utility-card-kicker">
-                  GEMINI ATHLETIC COACH PHYSIOLOGY BRIEFING
+                  CLIMACORE ATHLETIC COACH PHYSIOLOGY BRIEFING
                 </div>
                 <p className="utility-ai-prose">{data.coaching_guidance}</p>
                 <div className="utility-provider-badge">
-                  <span>Inference Provider: {data.provider}</span>
+                  <span>Powered by ClimaCore Intelligence</span>
                 </div>
               </div>
             </>

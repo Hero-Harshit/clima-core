@@ -325,11 +325,11 @@ export default function CorridorRadarModal({ city, onClose }: CorridorRadarModal
 
                 <div className="utility-section-card ai-concierge-card">
                   <div className="utility-card-kicker">
-                    GEMINI LOGISTICS INTELLIGENCE
+                    CLIMACORE LOGISTICS INTELLIGENCE
                   </div>
                   <p className="utility-ai-prose">{data.ai_insights}</p>
                   <div className="utility-provider-badge">
-                    <span>Engine: {data.provider}</span>
+                    <span>Powered by ClimaCore Intelligence</span>
                   </div>
                 </div>
               </div>

@@ -281,8 +281,8 @@ export default function ColdStorageModal({ city, onClose }: ColdStorageModalProp
               {/* AI Guidance */}
               <div className="utility-ai-guidance-card">
                 <div className="utility-ai-header">
-                  <span>Gemini Cold Chain Engineering & Thermodynamics Synthesis</span>
-                  <span className="utility-provider-badge">{data.provider}</span>
+                  <span>ClimaCore Cold Chain Engineering & Thermodynamics Synthesis</span>
+                  <span className="utility-provider-badge">ClimaCore Intelligence</span>
                 </div>
                 <p className="utility-ai-text">{data.ai_cold_chain_guidance}</p>
               </div>

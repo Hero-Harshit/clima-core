@@ -339,11 +339,11 @@ export default function TouristOptimizerModal({ city, onClose }: TouristOptimize
               {/* AI Concierge Briefing */}
               <div className="utility-section-card ai-concierge-card">
                 <div className="utility-card-kicker">
-                  GEMINI AI CONCIERGE BRIEFING
+                  CLIMACORE AI CONCIERGE BRIEFING
                 </div>
                 <p className="utility-ai-prose">{data.ai_concierge_briefing}</p>
                 <div className="utility-provider-badge">
-                  <span>Concierge Model: {data.provider}</span>
+                  <span>Powered by ClimaCore Intelligence</span>
                 </div>
               </div>
             </>

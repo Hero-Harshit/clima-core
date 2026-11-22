@@ -161,6 +161,7 @@ export default function DisasterReplayModal({ currentCity, onClose }: DisasterRe
                   type="button"
                   className={`benchmark-chip ${isSelected ? "active" : ""}`}
                   onClick={() => setSelectedDisasterId(b.id)}
+                  title={`${b.label} (${b.metric})`}
                 >
                   <Icon size={13} />
                   <span>{b.label}</span>

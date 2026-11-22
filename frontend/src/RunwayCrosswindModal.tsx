@@ -280,8 +280,8 @@ export default function RunwayCrosswindModal({ city, onClose }: RunwayCrosswindM
               {/* AI Guidance */}
               <div className="utility-ai-guidance-card">
                 <div className="utility-ai-header">
-                  <span>Gemini Aviation Meteorology & Flight Dispatch Synthesis</span>
-                  <span className="utility-provider-badge">{data.provider}</span>
+                  <span>ClimaCore Aviation Meteorology & Flight Dispatch Synthesis</span>
+                  <span className="utility-provider-badge">ClimaCore Intelligence</span>
                 </div>
                 <p className="utility-ai-text">{data.ai_aviation_guidance}</p>
               </div>

@@ -268,7 +268,7 @@ export default function CoastalSquallModal({ city, onClose }: CoastalSquallModal
                     FISHERIES WEATHER BROADCAST
                   </div>
                   <span className="utility-provider-badge">
-                    {data.provider.includes("gemini") ? "Powered by Gemini Intelligence" : "Deterministic Engine"}
+                    "Powered by ClimaCore Intelligence"
                   </span>
                 </div>
                 <p className="utility-ai-text">{data.ai_maritime_advisory}</p>

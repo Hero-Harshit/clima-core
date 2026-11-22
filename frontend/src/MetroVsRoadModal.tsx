@@ -267,7 +267,7 @@ export default function MetroVsRoadModal({ city, onClose }: MetroVsRoadModalProp
                     TRANSIT DECISION VERDICT
                   </div>
                   <span className="utility-provider-badge">
-                    {data.provider.includes("gemini") ? "Powered by Gemini Intelligence" : "Deterministic Engine"}
+                    "Powered by ClimaCore Intelligence"
                   </span>
                 </div>
                 <p className="utility-ai-text">{data.ai_transit_verdict}</p>

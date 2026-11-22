@@ -287,7 +287,7 @@ export default function CropHarvestModal({ city, onClose }: CropHarvestModalProp
                     POST-HARVEST AGRONOMY ADVISORY
                   </div>
                   <span className="utility-provider-badge">
-                    {data.provider.includes("gemini") ? "Powered by Gemini Intelligence" : "Deterministic Agronomy Engine"}
+                    "Powered by ClimaCore Intelligence"
                   </span>
                 </div>
                 <p className="utility-ai-text">{data.ai_agronomy_guidance}</p>

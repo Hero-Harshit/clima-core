@@ -467,19 +467,150 @@ function App() {
     return () => window.removeEventListener("scroll", updateNavBarOnScroll);
   }, []);
 
+  const isAnyOverlayOpen = Boolean(
+    activeModal ||
+    isCrisisCouncilOpen ||
+    isDisasterReplayOpen ||
+    isCorridorRadarOpen ||
+    isTouristOptimizerOpen ||
+    isCleanAirWorkoutOpen ||
+    isCropHarvestOpen ||
+    isMonsoonExamOpen ||
+    isMetroVsRoadOpen ||
+    isHeatStrokeSurgeOpen ||
+    isHospitalGridFuelOpen ||
+    isCoastalSquallOpen ||
+    isIceToFishRatioOpen ||
+    isFactoryTinRoofOpen ||
+    isRunwayCrosswindOpen ||
+    isWaterTurbidityOpen ||
+    isParametricTriggerOpen ||
+    isColdStorageOpen
+  );
+
   useEffect(() => {
-    if (!activeModal) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    if (!isAnyOverlayOpen) return;
+
+    const html = document.documentElement;
+    const body = document.body;
+    const currentScrollY = window.scrollY;
+
+    const prevHtmlOverflow = html.style.overflow;
+    const prevBodyOverflow = body.style.overflow;
+    const prevHtmlOverscroll = html.style.overscrollBehavior;
+    const prevBodyOverscroll = body.style.overscrollBehavior;
+
+    html.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    html.style.overscrollBehavior = "none";
+    body.style.overscrollBehavior = "none";
+    html.classList.add("modal-open");
+    body.classList.add("modal-open");
+
+    const lockScrollPosition = () => {
+      if (window.scrollY !== currentScrollY) {
+        window.scrollTo(0, currentScrollY);
+      }
+    };
+
+    const handleWheel = (event: WheelEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) {
+        event.preventDefault();
+        return;
+      }
+
+      const scrollable = target.closest(
+        ".utility-modal-body, .utility-modal-content, .provenance-modal, .war-room-content, .replay-modal-content, .utility-custom-select-menu"
+      ) as HTMLElement | null;
+
+      if (!scrollable) {
+        event.preventDefault();
+        return;
+      }
+
+      const { scrollTop, scrollHeight, clientHeight } = scrollable;
+      const isAtTop = scrollTop <= 0;
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1;
+
+      if ((event.deltaY < 0 && isAtTop) || (event.deltaY > 0 && isAtBottom)) {
+        event.preventDefault();
+      }
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) {
+        if (event.cancelable) event.preventDefault();
+        return;
+      }
+
+      const scrollable = target.closest(
+        ".utility-modal-body, .utility-modal-content, .provenance-modal, .war-room-content, .replay-modal-content, .utility-custom-select-menu"
+      ) as HTMLElement | null;
+
+      if (!scrollable) {
+        if (event.cancelable) event.preventDefault();
+        return;
+      }
+
+      const { scrollHeight, clientHeight } = scrollable;
+      if (scrollHeight <= clientHeight && event.cancelable) {
+        event.preventDefault();
+      }
+    };
+
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setActiveModal(null);
+      if (event.key === "Escape") {
+        if (activeModal) setActiveModal(null);
+        setIsCrisisCouncilOpen(false);
+        setIsDisasterReplayOpen(false);
+        setIsCorridorRadarOpen(false);
+        setIsTouristOptimizerOpen(false);
+        setIsCleanAirWorkoutOpen(false);
+        setIsCropHarvestOpen(false);
+        setIsMonsoonExamOpen(false);
+        setIsMetroVsRoadOpen(false);
+        setIsHeatStrokeSurgeOpen(false);
+        setIsHospitalGridFuelOpen(false);
+        setIsCoastalSquallOpen(false);
+        setIsIceToFishRatioOpen(false);
+        setIsFactoryTinRoofOpen(false);
+        setIsRunwayCrosswindOpen(false);
+        setIsWaterTurbidityOpen(false);
+        setIsParametricTriggerOpen(false);
+        setIsColdStorageOpen(false);
+      }
+      if (["Space", " ", "PageUp", "PageDown", "ArrowUp", "ArrowDown"].includes(event.key)) {
+        const target = event.target as HTMLElement | null;
+        const isInput = target && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
+        const scrollable = target?.closest(
+          ".utility-modal-body, .utility-modal-content, .provenance-modal, .war-room-content, .replay-modal-content, .utility-custom-select-menu"
+        );
+        if (!isInput && !scrollable) {
+          event.preventDefault();
+        }
+      }
     };
+
+    window.addEventListener("wheel", handleWheel, { passive: false });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    window.addEventListener("scroll", lockScrollPosition, { passive: false });
     window.addEventListener("keydown", handleKeyDown);
+
     return () => {
-      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("scroll", lockScrollPosition);
       window.removeEventListener("keydown", handleKeyDown);
+      html.style.overflow = prevHtmlOverflow;
+      body.style.overflow = prevBodyOverflow;
+      html.style.overscrollBehavior = prevHtmlOverscroll;
+      body.style.overscrollBehavior = prevBodyOverscroll;
+      html.classList.remove("modal-open");
+      body.classList.remove("modal-open");
     };
-  }, [activeModal]);
+  }, [isAnyOverlayOpen, activeModal]);
 
   const personasQuery = useQuery({
     queryKey: ["personas"],
@@ -1082,7 +1213,7 @@ function App() {
   };
 
   return (
-    <div className={`app-shell has-selection${activeModal ? " modal-page-active" : ""}`}>
+    <div className={`app-shell has-selection${isAnyOverlayOpen ? " modal-page-active" : ""}`}>
       <Suspense fallback={null}><MapBackdrop {...coordinates} /></Suspense>
       <main className="main-content" id="top">
         <header className={`topbar${isCompactNavBar ? " is-compact" : ""}`}>
@@ -1974,7 +2105,18 @@ function App() {
         </div>
       </main>
 
-      {activeModal && <div className="drawer-scrim" onMouseDown={(e) => { if (e.target === e.currentTarget) setActiveModal(null); }}>
+      {activeModal && (
+        <div
+          className="drawer-scrim"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setActiveModal(null);
+          }}
+          onWheel={(e) => {
+            if (e.target === e.currentTarget) {
+              e.preventDefault();
+            }
+          }}
+        >
         {activeModal === "provenance" ? (
           <section className="provenance-modal" role="dialog" aria-modal="true" aria-labelledby="transparency-title">
             <div className="drawer-header"><div><span className="section-kicker">ENVIRONMENTAL INTELLIGENCE</span><h2 id="transparency-title">Transparency &amp; Trust</h2></div><button className="icon-btn" onClick={() => setActiveModal(null)} aria-label="Close Transparency & Trust"><X size={18} /></button></div>
@@ -2001,7 +2143,8 @@ function App() {
                   : null}
             </EmptyInfoPageModal>
               : null}
-      </div>}
+        </div>
+      )}
 
       {isCrisisCouncilOpen && (
         <Suspense fallback={null}>

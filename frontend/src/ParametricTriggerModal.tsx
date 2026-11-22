@@ -259,8 +259,8 @@ export default function ParametricTriggerModal({ city, onClose }: ParametricTrig
               {/* AI Guidance */}
               <div className="utility-ai-guidance-card">
                 <div className="utility-ai-header">
-                  <span>Gemini Climate Insurance & Actuarial Synthesis</span>
-                  <span className="utility-provider-badge">{data.provider}</span>
+                  <span>ClimaCore Climate Insurance & Actuarial Synthesis</span>
+                  <span className="utility-provider-badge">ClimaCore Intelligence</span>
                 </div>
                 <p className="utility-ai-text">{data.ai_actuarial_guidance}</p>
               </div>

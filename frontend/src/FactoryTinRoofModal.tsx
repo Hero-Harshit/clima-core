@@ -288,8 +288,8 @@ export default function FactoryTinRoofModal({ city, onClose }: FactoryTinRoofMod
               {/* AI Guidance */}
               <div className="utility-ai-guidance-card">
                 <div className="utility-ai-header">
-                  <span>Gemini Plant Engineering & Occupational Health Synthesis</span>
-                  <span className="utility-provider-badge">{data.provider}</span>
+                  <span>ClimaCore Plant Engineering & Occupational Health Synthesis</span>
+                  <span className="utility-provider-badge">ClimaCore Intelligence</span>
                 </div>
                 <p className="utility-ai-text">{data.ai_industrial_guidance}</p>
               </div>

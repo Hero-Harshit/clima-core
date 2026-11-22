@@ -260,27 +260,27 @@ export const FAQ_DATA: FAQItem[] = [
   },
   {
     "id": 43,
-    "category": "Personas & Gemini AI",
+    "category": "Personas & ClimaCore AI",
     "question": "Why does ClimaCore customize briefings for different personas and occupations?",
     "answer": "The impact of a 42-degree Celsius day is drastically different for an air-conditioned office worker compared to an outdoor construction laborer, a delivery gig worker on a motorcycle, or a traffic police officer standing on hot asphalt for eight hours. ClimaCore provides tailored advisories calibrated to the specific physiological exposure, physical exertion, and operational environment of eight distinct personas."
   },
   {
     "id": 44,
-    "category": "Personas & Gemini AI",
+    "category": "Personas & ClimaCore AI",
     "question": "Which personas are supported in ClimaCore today?",
     "answer": "ClimaCore currently provides tailored briefings for eight distinct operational groups:\n\n1. Gig Workers and Outdoor Laborers (delivery drivers, construction workers, street vendors).\n2. Traffic Police and Transport Workers (roadside exposure, particulate inhalation, heat radiance).\n3. Agricultural Producers and Smallholders (irrigation management, crop protection, livestock welfare).\n4. Industrial and Warehouse Managers (thermal stress on factory floors, inventory humidity control).\n5. Municipal and Civil Defense Officers (drainage management, water distribution, heat shelter logistics).\n6. Healthcare and Hospital Administrators (heatstroke bed availability, respiratory disease surge prep).\n7. Vulnerable Citizens and Elderly Caregivers (indoor thermal safety, hydration protocols, air filtration).\n8. School Administrators and Educators (outdoor sports restrictions, classroom heat safety, school bus ventilation)."
   },
   {
     "id": 45,
-    "category": "Personas & Gemini AI",
-    "question": "How does the Gemini AI integration generate persona briefings?",
-    "answer": "ClimaCore utilizes Google DeepMind Gemini API (gemini-2.5-flash-lite) through a strictly grounded schema-driven prompt. The backend feeds deterministic physical model outputs (such as exact wet-bulb temperature, AQI sub-indices, flood runoff depth, and workability scores) into the prompt. Gemini translates these quantitative metrics into natural, highly empathetic, occupational operational guidance and sector advisories without hallucinating facts or overriding physical model outputs."
+    "category": "Personas & ClimaCore AI",
+    "question": "How does the ClimaCore AI integration generate persona briefings?",
+    "answer": "ClimaCore utilizes a strictly grounded, schema-driven ClimaCore Neural Intelligence engine. The backend feeds deterministic physical model outputs (such as exact wet-bulb temperature, AQI sub-indices, flood runoff depth, and workability scores) into the synthesis pipeline. ClimaCore translates these quantitative metrics into natural, highly empathetic, occupational operational guidance and sector advisories without hallucinating facts or overriding physical model outputs."
   },
   {
     "id": 46,
-    "category": "Personas & Gemini AI",
-    "question": "What happens if the Gemini AI API is unavailable or rate-limited?",
-    "answer": "Reliability is paramount in environmental intelligence. If the Gemini API endpoint experiences a network interruption or rate limit, ClimaCore backend immediately falls back to a deterministic, rule-based expert recommendation matrix. Users will always see validated operational guidance and actionable safety advisories regardless of external LLM availability."
+    "category": "Personas & ClimaCore AI",
+    "question": "What happens if an external inference endpoint is unavailable or rate-limited?",
+    "answer": "Reliability is paramount in environmental intelligence. If any inference endpoint experiences a network interruption or latency, the ClimaCore backend immediately falls back to a deterministic, rule-based expert recommendation matrix. Users will always see validated operational guidance and actionable safety advisories with guaranteed high availability."
   },
   {
     "id": 47,
@@ -319,6 +319,6 @@ export const FAQ_CATEGORIES = [
   "Agriculture & AgriSense",
   "Water Quality & Potability",
   "Multi-Hazard Cascades & War Room",
-  "Personas & Gemini AI",
+  "Personas & ClimaCore AI",
   "Data Governance & Science",
 ] as const;

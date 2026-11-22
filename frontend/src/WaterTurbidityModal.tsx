@@ -258,8 +258,8 @@ export default function WaterTurbidityModal({ city, onClose }: WaterTurbidityMod
               {/* AI Guidance */}
               <div className="utility-ai-guidance-card">
                 <div className="utility-ai-header">
-                  <span>Gemini Municipal Water Treatment & Chemistry Synthesis</span>
-                  <span className="utility-provider-badge">{data.provider}</span>
+                  <span>ClimaCore Municipal Water Treatment & Chemistry Synthesis</span>
+                  <span className="utility-provider-badge">ClimaCore Intelligence</span>
                 </div>
                 <p className="utility-ai-text">{data.ai_water_guidance}</p>
               </div>

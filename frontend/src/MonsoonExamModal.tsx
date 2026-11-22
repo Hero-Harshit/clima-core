@@ -261,7 +261,7 @@ export default function MonsoonExamModal({ city, onClose }: MonsoonExamModalProp
                     STUDENT COMMUTE INTELLIGENCE
                   </div>
                   <span className="utility-provider-badge">
-                    {data.provider.includes("gemini") ? "Powered by Gemini Intelligence" : "Deterministic Transit Engine"}
+                    "Powered by ClimaCore Intelligence"
                   </span>
                 </div>
                 <p className="utility-ai-text">{data.ai_commute_guidance}</p>

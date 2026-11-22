@@ -244,7 +244,7 @@ export default function HeatStrokeSurgeModal({ city, onClose }: HeatStrokeSurgeM
                     CLINICAL TRIAGE ADVISORY
                   </div>
                   <span className="utility-provider-badge">
-                    {data.provider.includes("gemini") ? "Powered by Gemini Intelligence" : "Deterministic Engine"}
+                    "Powered by ClimaCore Intelligence"
                   </span>
                 </div>
                 <p className="utility-ai-text">{data.ai_clinical_guidance}</p>

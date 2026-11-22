@@ -256,7 +256,7 @@ export default function IceToFishRatioModal({ city, onClose }: IceToFishRatioMod
                     THERMAL PRESERVATION PROTOCOL
                   </div>
                   <span className="utility-provider-badge">
-                    {data.provider.includes("gemini") ? "Powered by Gemini Intelligence" : "Deterministic Engine"}
+                    "Powered by ClimaCore Intelligence"
                   </span>
                 </div>
                 <p className="utility-ai-text">{data.ai_preservation_guidance}</p>

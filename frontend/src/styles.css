@@ -35,6 +35,14 @@ body {
   overflow-x: clip
 }
 
+html.modal-open,
+body.modal-open {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  touch-action: none !important;
+  height: 100% !important;
+}
+
 button,
 input,
 select {
@@ -1801,7 +1809,9 @@ h1 {
   inset: 0;
   background: #1e281e65;
   display: flex;
-  justify-content: flex-end
+  justify-content: flex-end;
+  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
 }
 
 .provenance-modal {
@@ -1814,7 +1824,9 @@ h1 {
   box-shadow: 0 28px 90px rgba(13, 45, 27, .28);
   display: flex;
   flex-direction: column;
-  overflow: auto
+  overflow: auto;
+  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
 }
 
 .drawer-header {
@@ -2879,6 +2891,8 @@ button:focus-visible {
   -webkit-backdrop-filter: blur(2px);
   animation: fadeIn 220ms ease both;
   overflow: hidden;
+  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
 }
 
 .provenance-modal {
@@ -2893,6 +2907,8 @@ button:focus-visible {
   animation: modalIn 320ms cubic-bezier(.2, .8, .2, 1) both;
   overflow-y: auto;
   overflow-x: hidden;
+  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
   display: flex;
   flex-direction: column;
 }
@@ -5771,33 +5787,33 @@ button:focus-visible {
 }
 
 .severity-critical {
-  background: #fef2f2;
-  color: #991b1b;
-  border: 1px solid #fecaca;
+  background: #e6f4ea;
+  color: #0c381e;
+  border: 1px solid #a3d9b1;
 }
 
 .severity-critical .dot {
-  background: #dc2626;
+  background: #14532d;
 }
 
 .severity-high {
-  background: #fffbeb;
-  color: #b45309;
-  border: 1px solid #fde68a;
+  background: #edf7ef;
+  color: #14532d;
+  border: 1px solid #b7e3c3;
 }
 
 .severity-high .dot {
-  background: #f59e0b;
+  background: #15803d;
 }
 
 .severity-moderate {
-  background: #f0fdf4;
+  background: #f2f9f3;
   color: #166534;
-  border: 1px solid #bbf7d0;
+  border: 1px solid #c8ebd1;
 }
 
 .severity-moderate .dot {
-  background: #22c55e;
+  background: #16a34a;
 }
 
 .war-room-title-block h2 {
@@ -5959,6 +5975,9 @@ button:focus-visible {
 /* War Room Content */
 .war-room-content {
   overflow-y: auto;
+  overscroll-behavior: contain !important;
+  overscroll-behavior-y: contain !important;
+  -webkit-overflow-scrolling: touch !important;
   padding: 24px 28px 20px;
   display: flex;
   flex-direction: column;
@@ -5993,33 +6012,33 @@ button:focus-visible {
 }
 
 .life-kpi {
-  border-color: #bbf7d0;
+  border-color: #cce8d5;
   background: linear-gradient(145deg, #f0fdf4, #f7fdf9);
 }
 
 .life-kpi .kpi-icon-wrap {
   background: #dcfce7;
-  color: #16a34a;
+  color: #15803d;
 }
 
 .econ-kpi {
-  border-color: #fed7aa;
-  background: linear-gradient(145deg, #fffbeb, #fffdf8);
+  border-color: #cce8d5;
+  background: linear-gradient(145deg, #f0fdf4, #f7fdf9);
 }
 
 .econ-kpi .kpi-icon-wrap {
-  background: #ffedd5;
-  color: #d97706;
+  background: #e6f7f5;
+  color: #0f766e;
 }
 
 .shock-kpi {
-  border-color: #e2e8f0;
-  background: #f8fafc;
+  border-color: #cce8d5;
+  background: #f7faf7;
 }
 
 .shock-kpi .kpi-icon-wrap {
-  background: #e2e8f0;
-  color: #475569;
+  background: #ecfccb;
+  color: #3f6212;
 }
 
 .kpi-label {
@@ -6059,13 +6078,13 @@ button:focus-visible {
 
 .life-kpi .kpi-gauge-fill {
   height: 100%;
-  background: #16a34a;
+  background: #15803d;
   border-radius: 999px;
 }
 
 .econ-kpi .kpi-gauge-fill {
   height: 100%;
-  background: #d97706;
+  background: #0f766e;
   border-radius: 999px;
 }
 
@@ -6132,30 +6151,30 @@ button:focus-visible {
 }
 
 .auth-health {
-  border-top: 3px solid #dc2626;
+  border-top: 3px solid #166534;
 }
 
 .auth-health .auth-avatar {
-  background: #fee2e2;
-  color: #dc2626;
+  background: #dcfce7;
+  color: #166534;
 }
 
 .auth-grid {
-  border-top: 3px solid #f59e0b;
+  border-top: 3px solid #3f6212;
 }
 
 .auth-grid .auth-avatar {
-  background: #fef3c7;
-  color: #d97706;
+  background: #ecfccb;
+  color: #3f6212;
 }
 
 .auth-logistics {
-  border-top: 3px solid #16a34a;
+  border-top: 3px solid #0f766e;
 }
 
 .auth-logistics .auth-avatar {
-  background: #eaf7ee;
-  color: #15803d;
+  background: #e6f7f5;
+  color: #0f766e;
 }
 
 .authority-head {
@@ -6438,15 +6457,15 @@ button:focus-visible {
 }
 
 .bubble-health {
-  border-left: 4px solid #dc2626;
+  border-left: 4px solid #166534;
 }
 
 .bubble-grid {
-  border-left: 4px solid #d97706;
+  border-left: 4px solid #3f6212;
 }
 
 .bubble-logistics {
-  border-left: 4px solid #16a34a;
+  border-left: 4px solid #0f766e;
 }
 
 .bubble-commander {
@@ -6491,23 +6510,25 @@ button:focus-visible {
 }
 
 .stance-opening_position {
-  background: #eaf7ee;
+  background: #dcfce7;
   color: #15803d;
 }
 
 .stance-cross_sector_objection {
-  background: #fef2f2;
-  color: #b91c1c;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
 }
 
 .stance-counterproposal {
-  background: #fefce8;
-  color: #a16207;
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
 }
 
 .stance-executive_synthesis {
-  background: #dcfce7;
-  color: #15803d;
+  background: #d1fae5;
+  color: #047857;
 }
 
 .bubble-argument {
@@ -6549,20 +6570,21 @@ button:focus-visible {
 .friction-card {
   padding: 14px;
   border-radius: 12px;
-  border: 1px solid #fed7aa;
-  background: #fffdfa;
+  border: 1px solid #cde7d3;
+  background: #fbfdfb;
 }
 
 .friction-card-title {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #c2410c;
+  color: #15803d;
   margin-bottom: 8px;
 }
 
 .friction-card-title h4 {
   font: 700 12px Manrope, sans-serif;
+  color: #0c381e;
   margin: 0;
 }
 
@@ -6577,7 +6599,7 @@ button:focus-visible {
 
 .friction-card li {
   font-size: 10.5px;
-  color: #7c2d12;
+  color: #2b4532;
   line-height: 1.45;
   position: relative;
   padding-left: 12px;
@@ -7078,6 +7100,9 @@ button:focus-visible {
   align-items: center;
   justify-content: center;
   padding: 20px;
+  overscroll-behavior: contain !important;
+  overscroll-behavior-y: contain !important;
+  touch-action: none;
 }
 
 .crisis-council-modal {
@@ -7090,6 +7115,8 @@ button:focus-visible {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  overscroll-behavior: contain !important;
+  overscroll-behavior-y: contain !important;
   font-family: "DM Sans", sans-serif;
   color: #212621;
   animation: warRoomFadeIn 0.22s ease-out;
@@ -7172,21 +7199,21 @@ button:focus-visible {
 }
 
 .severity-tag.severity-critical {
-  background: #fff0ef;
-  border: 1px solid #f1d6d3;
-  color: #87423d;
+  background: #e6f4ea;
+  border: 1px solid #a3d9b1;
+  color: #0c381e;
 }
 
 .severity-tag.severity-high {
-  background: #fff5ee;
-  border: 1px solid #f3dfd1;
-  color: #7e4630;
+  background: #edf7ef;
+  border: 1px solid #b7e3c3;
+  color: #14532d;
 }
 
 .severity-tag.severity-moderate {
-  background: #fff9eb;
-  border: 1px solid #f1e7c9;
-  color: #79653a;
+  background: #f2f9f3;
+  border: 1px solid #c8ebd1;
+  color: #166534;
 }
 
 .severity-tag .dot {
@@ -7294,6 +7321,9 @@ button:focus-visible {
 .war-room-content {
   padding: 20px 26px;
   overflow-y: auto;
+  overscroll-behavior: contain !important;
+  overscroll-behavior-y: contain !important;
+  -webkit-overflow-scrolling: touch !important;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -7328,18 +7358,18 @@ button:focus-visible {
 }
 
 .life-kpi .kpi-icon-wrap {
-  background: #eaf3e9;
-  color: #356740;
+  background: #dcfce7;
+  color: #15803d;
 }
 
 .econ-kpi .kpi-icon-wrap {
-  background: #eef6ff;
-  color: #1d70b8;
+  background: #e6f7f5;
+  color: #0f766e;
 }
 
 .shock-kpi .kpi-icon-wrap {
-  background: #fff5ee;
-  color: #b45309;
+  background: #ecfccb;
+  color: #3f6212;
 }
 
 .kpi-label {
@@ -7399,11 +7429,11 @@ button:focus-visible {
 }
 
 .life-kpi .kpi-gauge-fill {
-  background: #356740;
+  background: #15803d;
 }
 
 .econ-kpi .kpi-gauge-fill {
-  background: #1d70b8;
+  background: #0f766e;
 }
 
 /* Authorities Section */
@@ -7459,18 +7489,18 @@ button:focus-visible {
 }
 
 .authority-card.auth-health {
-  border-color: #f7dede;
-  background: #fffdfd;
+  border-color: #cde7d3;
+  background: #fbfdfb;
 }
 
 .authority-card.auth-grid {
-  border-color: #faeed2;
-  background: #fffdf8;
+  border-color: #cde7d3;
+  background: #fbfdfb;
 }
 
 .authority-card.auth-logistics {
-  border-color: #dfeffa;
-  background: #fbfdff;
+  border-color: #cde7d3;
+  background: #fbfdfb;
 }
 
 .authority-head {
@@ -7489,18 +7519,18 @@ button:focus-visible {
 }
 
 .auth-health .auth-avatar {
-  background: #ffecec;
-  color: #c93b3b;
+  background: #dcfce7;
+  color: #166534;
 }
 
 .auth-grid .auth-avatar {
-  background: #fef3c7;
-  color: #b45309;
+  background: #ecfccb;
+  color: #3f6212;
 }
 
 .auth-logistics .auth-avatar {
-  background: #e0f2fe;
-  color: #0369a1;
+  background: #e6f7f5;
+  color: #0f766e;
 }
 
 .authority-head h4 {
@@ -7842,8 +7872,8 @@ button:focus-visible {
 }
 
 .friction-card {
-  background: #fffdfa;
-  border: 1px solid #f4e8d2;
+  background: #fbfdfb;
+  border: 1px solid #cde7d3;
   border-radius: 10px;
   padding: 14px 15px;
   display: flex;
@@ -7855,12 +7885,12 @@ button:focus-visible {
   display: flex;
   align-items: center;
   gap: 7px;
-  color: #a16207;
+  color: #15803d;
 }
 
 .friction-card-title h4 {
   font: 700 12px Manrope, sans-serif;
-  color: #78350f;
+  color: #0c381e;
   margin: 0;
   text-transform: capitalize;
 }
@@ -8040,10 +8070,13 @@ button:focus-visible {
   align-items: center;
   justify-content: center;
   padding: 20px;
+  overscroll-behavior: contain !important;
+  overscroll-behavior-y: contain !important;
+  touch-action: none;
 }
 
 .disaster-replay-modal {
-  width: min(940px, 94vw);
+  width: min(1000px, 95vw);
   max-height: min(860px, 92vh);
   background: #ffffff;
   border: 1px solid #d5e4d7;
@@ -8052,6 +8085,8 @@ button:focus-visible {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  overscroll-behavior: contain !important;
+  overscroll-behavior-y: contain !important;
   font-family: "DM Sans", sans-serif;
   color: #212621;
   animation: replayFadeIn 0.22s ease-out;
@@ -8173,56 +8208,74 @@ button:focus-visible {
 
 /* Benchmark Selector Bar */
 .replay-selector-bar {
-  padding: 10px 26px;
+  padding: 10px 20px;
   background: #f6f8f5;
   border-bottom: 1px solid #e9ece6;
   display: flex;
   align-items: center;
   gap: 12px;
-  overflow-x: auto;
   flex-shrink: 0;
 }
 
 .selector-kicker {
   font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.9px;
+  letter-spacing: 0.8px;
   color: #768076;
   display: inline-flex;
   align-items: center;
   gap: 5px;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .benchmark-chips-group {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: 1;
+  min-width: 0;
 }
 
 .benchmark-chip {
+  flex: 1 1 0;
+  min-width: 0;
   height: 32px;
-  padding: 0 12px;
+  padding: 0 10px;
   border: 1px solid #dce4dc;
   background: #ffffff;
   border-radius: 8px;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 600;
   color: #435144;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  justify-content: center;
+  gap: 6px;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.16s ease;
+  box-sizing: border-box;
+}
+
+.benchmark-chip svg {
+  flex-shrink: 0;
+}
+
+.benchmark-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .benchmark-chip small {
   font-size: 9.5px;
   font-weight: 500;
   color: #7b877b;
-  padding-left: 4px;
+  padding-left: 5px;
   border-left: 1px solid #e2e8e2;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .benchmark-chip:hover {
@@ -8248,6 +8301,9 @@ button:focus-visible {
 .replay-modal-content {
   padding: 20px 26px;
   overflow-y: auto;
+  overscroll-behavior: contain !important;
+  overscroll-behavior-y: contain !important;
+  -webkit-overflow-scrolling: touch !important;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -8256,8 +8312,8 @@ button:focus-visible {
 
 /* Historical Reality Banner */
 .historical-reality-banner {
-  background: #fff8f5;
-  border: 1px solid #f6ded5;
+  background: #f7faf7;
+  border: 1px solid #d4e6d6;
   border-radius: 11px;
   padding: 13px 16px;
   display: flex;
@@ -8266,7 +8322,7 @@ button:focus-visible {
 }
 
 .reality-icon-wrap {
-  color: #c93b3b;
+  color: #166534;
   flex-shrink: 0;
   margin-top: 1px;
 }
@@ -8279,12 +8335,12 @@ button:focus-visible {
 
 .reality-body strong {
   font: 700 12px Manrope, sans-serif;
-  color: #8c3b28;
+  color: #0c381e;
 }
 
 .reality-body p {
   font-size: 11.5px;
-  color: #5d4943;
+  color: #3b523e;
   line-height: 1.5;
   margin: 0;
 }
@@ -8326,8 +8382,8 @@ button:focus-visible {
 }
 
 .payout-kpi .kpi-icon-wrap {
-  background: #fffbf2;
-  color: #b45309;
+  background: #ecfccb;
+  color: #3f6212;
 }
 
 /* Tabs Bar */
@@ -8481,21 +8537,21 @@ button:focus-visible {
 }
 
 .milestone-status-tag.status-peak {
-  background: #fff0ef;
-  border: 1px solid #f1d6d3;
-  color: #87423d;
+  background: #e6f4ea;
+  border: 1px solid #a3d9b1;
+  color: #0c381e;
 }
 
 .milestone-status-tag.status-evac {
-  background: #fff5ee;
-  border: 1px solid #f3dfd1;
-  color: #b45309;
+  background: #edf7ef;
+  border: 1px solid #b7e3c3;
+  color: #14532d;
 }
 
 .milestone-status-tag.status-warning {
-  background: #fff9eb;
-  border: 1px solid #f1e7c9;
-  color: #79653a;
+  background: #f2f9f3;
+  border: 1px solid #c8ebd1;
+  color: #166534;
 }
 
 .milestone-status-tag.status-watch {
@@ -8928,6 +8984,27 @@ button:focus-visible {
 }
 
 /* Responsiveness */
+@media (max-width: 860px) {
+  .replay-selector-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px 16px;
+  }
+
+  .benchmark-chips-group {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    width: 100%;
+  }
+
+  .benchmark-chip {
+    padding: 0 6px;
+    font-size: 10.5px;
+  }
+}
+
 @media (max-width: 780px) {
 
   .replay-kpi-grid,
@@ -8954,6 +9031,13 @@ button:focus-visible {
 
   .replay-modal-header h2 {
     font-size: 18px;
+  }
+}
+
+@media (max-width: 600px) {
+  .benchmark-chips-group {
+    grid-template-columns: 1fr;
+    gap: 6px;
   }
 }
 
@@ -9568,6 +9652,9 @@ button:focus-visible {
   align-items: center;
   justify-content: center;
   padding: 20px;
+  overscroll-behavior: contain !important;
+  overscroll-behavior-y: contain !important;
+  touch-action: none !important;
 }
 
 .utility-modal-window {
@@ -9580,6 +9667,8 @@ button:focus-visible {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  overscroll-behavior: contain !important;
+  overscroll-behavior-y: contain !important;
   font-family: "DM Sans", sans-serif;
   color: #18281b;
   animation: utilityModalFadeIn 0.22s ease-out;
@@ -10070,6 +10159,9 @@ button:focus-visible {
 .utility-modal-body {
   padding: 22px 26px;
   overflow-y: auto;
+  overscroll-behavior: contain !important;
+  overscroll-behavior-y: contain !important;
+  -webkit-overflow-scrolling: touch !important;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -11075,6 +11167,9 @@ button:focus-visible {
   justify-content: center;
   z-index: 9999;
   padding: 16px;
+  overscroll-behavior: contain !important;
+  overscroll-behavior-y: contain !important;
+  touch-action: none;
 }
 
 .utility-modal-card {
@@ -11087,11 +11182,16 @@ button:focus-visible {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  overscroll-behavior: contain !important;
+  overscroll-behavior-y: contain !important;
 }
 
 .utility-modal-content {
   padding: 22px 26px;
   overflow-y: auto;
+  overscroll-behavior: contain !important;
+  overscroll-behavior-y: contain !important;
+  -webkit-overflow-scrolling: touch !important;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -11673,9 +11773,15 @@ button:focus-visible {
 }
 
 /* Subpage Map Backdrop and Glassmorphic Cards System */
+.app-shell.modal-page-active {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
 .app-shell.modal-page-active .main-content {
-  visibility: hidden !important;
   pointer-events: none !important;
+  user-select: none !important;
+  overflow: hidden !important;
 }
 
 .drawer-scrim {
@@ -11690,6 +11796,9 @@ button:focus-visible {
   justify-content: stretch !important;
   padding: 0 !important;
   overflow: hidden !important;
+  overscroll-behavior: contain !important;
+  overscroll-behavior-y: contain !important;
+  touch-action: none !important;
 }
 
 .provenance-modal {
@@ -11703,6 +11812,9 @@ button:focus-visible {
   box-shadow: none !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
+  overscroll-behavior: contain !important;
+  overscroll-behavior-y: contain !important;
+  -webkit-overflow-scrolling: touch !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: stretch !important;
