@@ -1341,7 +1341,7 @@ function App() {
           message,
           city: selectedCityName || "New Delhi",
           persona: persona || "all",
-          history: assistantMessages.slice(-8),
+          history: assistantMessages.slice(-8).map((m) => ({ role: m.role, content: m.content })),
           force_refresh: false,
           language: selectedLanguage,
         }),
@@ -2536,6 +2536,7 @@ function App() {
         <Suspense fallback={null}>
           <CropHarvestModal
             city={selectedCityName}
+            language={selectedLanguage}
             onClose={() => setIsCropHarvestOpen(false)}
           />
         </Suspense>
@@ -2546,6 +2547,7 @@ function App() {
           <MandiPricesModal
             city={cityName || selectedCityName || (city ? city.split(",")[0].trim() : "Ahmedabad")}
             state={cityState || predictionQuery.data?.state || (city.includes(",") ? city.split(",")[1].trim() : "Gujarat")}
+            language={selectedLanguage}
             onClose={() => setIsMandiPricesOpen(false)}
           />
         </Suspense>

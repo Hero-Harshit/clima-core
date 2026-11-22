@@ -46,18 +46,18 @@ FALLBACK_MODELS = [
 
 
 class ChatMessage(BaseModel):
-    role: str = Field(..., description="'user' or 'assistant' (or 'system')")
-    content: str = Field(..., description="Message text")
+    role: Optional[str] = Field(default="user", description="'user' or 'assistant' (or 'system')")
+    content: Optional[str] = Field(default="", description="Message text")
 
 
 class AssistantChatRequest(BaseModel):
     message: Optional[str] = Field(default=None, description="User query or instruction")
     query: Optional[str] = Field(default=None, description="Alternative user query field")
     prompt: Optional[str] = Field(default=None, description="Alternative prompt field")
-    city: str = Field(default="Mumbai", description="Target Indian city or coordinates")
-    persona: str = Field(default="general", description="Occupation / persona identifier (e.g. farmer, student, commuter)")
-    history: List[ChatMessage] = Field(default_factory=list, description="Prior conversational turns")
-    force_refresh: bool = Field(default=False, description="Force fresh fetch of upstream weather data")
+    city: Optional[str] = Field(default="Mumbai", description="Target Indian city or coordinates")
+    persona: Optional[str] = Field(default="general", description="Occupation / persona identifier (e.g. farmer, student, commuter)")
+    history: Optional[List[Any]] = Field(default_factory=list, description="Prior conversational turns")
+    force_refresh: Optional[bool] = Field(default=False, description="Force fresh fetch of upstream weather data")
     language: Optional[str] = Field(default="en", description="Target language code (en, hi, bn, ta, te, mr, gu)")
 
 
@@ -904,12 +904,21 @@ async def call_gemini_agent_with_tools(
 
     # Build initial conversation contents
     contents: List[Dict[str, Any]] = []
-    for h in history:
-        role = "model" if h.role == "assistant" else "user"
-        contents.append({
-            "role": role,
-            "parts": [{"text": h.content}]
-        })
+    if history:
+        for h in history:
+            if isinstance(h, dict):
+                role = "model" if h.get("role") in ["assistant", "model"] else "user"
+                txt = str(h.get("content") or h.get("text") or "").strip()
+            elif hasattr(h, "role"):
+                role = "model" if getattr(h, "role", "user") in ["assistant", "model"] else "user"
+                txt = str(getattr(h, "content", "") or "").strip()
+            else:
+                continue
+            if txt:
+                contents.append({
+                    "role": role,
+                    "parts": [{"text": txt}]
+                })
     contents.append({
         "role": "user",
         "parts": [{"text": user_message}]

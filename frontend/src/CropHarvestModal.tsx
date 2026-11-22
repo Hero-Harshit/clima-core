@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import UtilityCustomSelect from "./UtilityCustomSelect";
+import { getTranslations } from "./i18n";
 
 type CropStageRisk = {
   stage_name: string;
@@ -41,6 +42,7 @@ type CropHarvestResponse = {
 
 type CropHarvestModalProps = {
   city: string;
+  language?: string;
   onClose: () => void;
 };
 
@@ -69,7 +71,9 @@ const STORAGE_OPTIONS = [
   { id: "ventilated_metal_silo", label: "Ventilated Metal Silo" },
 ];
 
-export default function CropHarvestModal({ city, onClose }: CropHarvestModalProps) {
+export default function CropHarvestModal({ city, language, onClose }: CropHarvestModalProps) {
+  const t = getTranslations(language || "en");
+  const m = t.cropHarvestModal;
   const [cropType, setCropType] = useState<string>("paddy");
   const [harvestStage, setHarvestStage] = useState<string>("mature_standing");
   const [storageType, setStorageType] = useState<string>("traditional_tarpaulin");
@@ -142,11 +146,11 @@ export default function CropHarvestModal({ city, onClose }: CropHarvestModalProp
             </div>
             <div className="utility-modal-header-info">
               <div className="utility-modal-kicker">
-                <Sprout size={13} className="inline-icon" /> AGRICULTURE & GRAIN PRESERVATION
+                <Sprout size={13} className="inline-icon" /> {m.kicker}
               </div>
-              <h2>Crop Harvest Spoilage Radar</h2>
+              <h2>{m.title}</h2>
               <p className="utility-modal-subtitle">
-                Live grain moisture, dew condensation, and post-harvest drying risk calculator for {city}
+                {m.subtitle} {city}
               </p>
             </div>
           </div>
@@ -154,7 +158,7 @@ export default function CropHarvestModal({ city, onClose }: CropHarvestModalProp
             type="button"
             className="utility-modal-close"
             onClick={onClose}
-            aria-label="Close Crop Harvest Spoilage Radar"
+            aria-label={`Close ${m.title}`}
           >
             <X size={18} />
           </button>
@@ -163,7 +167,7 @@ export default function CropHarvestModal({ city, onClose }: CropHarvestModalProp
         {/* Controls Bar */}
         <div className="utility-controls-bar">
           <div className="utility-control-group">
-            <label htmlFor="crop-select">Crop Type</label>
+            <label htmlFor="crop-select">{m.cropTypeLabel}</label>
             <UtilityCustomSelect
               id="crop-select"
               value={cropType}
@@ -174,7 +178,7 @@ export default function CropHarvestModal({ city, onClose }: CropHarvestModalProp
           </div>
 
           <div className="utility-control-group interests-toggle-group">
-            <label>Harvest Stage</label>
+            <label>{m.harvestStageLabel}</label>
             <div className="utility-chips-row">
               {STAGE_OPTIONS.map((s) => (
                 <button
@@ -190,7 +194,7 @@ export default function CropHarvestModal({ city, onClose }: CropHarvestModalProp
           </div>
 
           <div className="utility-control-group storage-select-group">
-            <label htmlFor="storage-select">Storage Facility</label>
+            <label htmlFor="storage-select">{m.storageFacilityLabel}</label>
             <UtilityCustomSelect
               id="storage-select"
               value={storageType}
@@ -208,7 +212,7 @@ export default function CropHarvestModal({ city, onClose }: CropHarvestModalProp
               disabled={loading}
             >
               <RefreshCw size={14} className={loading ? "spin" : ""} />
-              <span>Recalculate</span>
+              <span>{m.recalculateBtn}</span>
             </button>
           </div>
         </div>
@@ -228,7 +232,7 @@ export default function CropHarvestModal({ city, onClose }: CropHarvestModalProp
               <div className="utility-status-grid">
                 <div className="utility-status-card">
                   <div className="utility-metric-label">
-                    <Gauge size={13} className="inline-icon" /> Spoilage Threat Index
+                    <Gauge size={13} className="inline-icon" /> {m.spoilageThreatIndex}
                   </div>
                   <div className="utility-metric-main">
                     <span className="utility-metric-number">{data.spoilage_risk_score}</span>
@@ -239,36 +243,36 @@ export default function CropHarvestModal({ city, onClose }: CropHarvestModalProp
                   </div>
                   <div className="utility-metric-sub">
                     {data.spoilage_risk_score > 60
-                      ? "High atmospheric humidity and condensation threat"
-                      : "Favorable conditions for field curing & drying"}
+                      ? m.highHumidityNotice
+                      : m.favorableDryingNotice}
                   </div>
                 </div>
 
                 <div className="utility-status-card">
                   <div className="utility-metric-label">
-                    <Droplets size={13} className="inline-icon" /> Grain Moisture & Dew Point
+                    <Droplets size={13} className="inline-icon" /> {m.grainMoistureDewPoint}
                   </div>
                   <div className="utility-metric-main">
                     <span className="utility-metric-number">{data.estimated_field_moisture_pct}%</span>
-                    <span className="utility-metric-unit">moisture</span>
+                    <span className="utility-metric-unit">{m.moistureUnit.toLowerCase()}</span>
                     <span className={`utility-status-pill ${getMoldBadgeClass(data.fungal_mold_incubation_risk)}`}>
-                      {data.fungal_mold_incubation_risk} MOLD RISK
+                      {data.fungal_mold_incubation_risk} {m.moldRiskSuffix}
                     </span>
                   </div>
                   <div className="utility-metric-sub">
-                    Dew point spread: {data.dew_point_spread_c} deg C (Nocturnal condensation risk)
+                    {m.dewPointSpreadLabel} {data.dew_point_spread_c} deg C {m.nocturnalCondensation}
                   </div>
                 </div>
 
                 <div className="utility-status-card">
                   <div className="utility-metric-label">
-                    <Clock size={13} className="inline-icon" /> Safe Ventilation Hours
+                    <Clock size={13} className="inline-icon" /> {m.safeVentilationHours}
                   </div>
                   <div className="utility-metric-main">
                     <span className="utility-metric-text-val">{data.safe_ventilation_hours}</span>
                   </div>
                   <div className="utility-metric-sub">
-                    Run aeration blowers strictly during low ambient relative humidity
+                    {m.ventilationAdvice}
                   </div>
                 </div>
               </div>
@@ -284,7 +288,7 @@ export default function CropHarvestModal({ city, onClose }: CropHarvestModalProp
               <div className="utility-ai-box">
                 <div className="utility-ai-header">
                   <div className="utility-ai-kicker">
-                    POST-HARVEST AGRONOMY ADVISORY
+                    {m.agronomyAdvisoryKicker}
                   </div>
                   <span className="utility-provider-badge">
                     "Powered by ClimaCore Intelligence"
@@ -295,7 +299,7 @@ export default function CropHarvestModal({ city, onClose }: CropHarvestModalProp
 
               {/* Stage-by-Stage Vulnerability Breakdown */}
               <div className="utility-section-title">
-                Harvest & Storage Stage Vulnerability Radar
+                {m.stageVulnerabilityTitle}
               </div>
               <div className="utility-segments-list">
                 {data.stages_breakdown.map((stg, i) => (
@@ -311,7 +315,7 @@ export default function CropHarvestModal({ city, onClose }: CropHarvestModalProp
                     </div>
                     <div className="utility-segment-right">
                       <span className="utility-speed-pill">
-                        {stg.estimated_moisture_pct}% Moisture
+                        {stg.estimated_moisture_pct}% {m.moistureUnit}
                       </span>
                       <span className={`utility-status-pill ${getStatusBadgeClass(stg.risk_level)}`}>
                         {stg.risk_level}
@@ -323,7 +327,7 @@ export default function CropHarvestModal({ city, onClose }: CropHarvestModalProp
 
               {/* Drying and Aeration Protocol Checklist */}
               <div className="utility-section-title">
-                Actionable Grain Drying & Protection Checklist
+                {m.dryingChecklistTitle}
               </div>
               <div className="utility-checklist-grid">
                 {data.drying_recommendations.map((rec, i) => (
@@ -340,7 +344,7 @@ export default function CropHarvestModal({ city, onClose }: CropHarvestModalProp
         {/* Action Footer */}
         <div className="utility-action-footer">
           <div className="utility-footer-meta">
-            <ShieldCheck size={14} className="inline-icon" /> Grounded in real-time localized agrometeorological sensors
+            <ShieldCheck size={14} className="inline-icon" /> {m.footerGrounded}
           </div>
         </div>
       </div>

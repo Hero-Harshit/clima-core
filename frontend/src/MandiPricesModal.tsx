@@ -21,6 +21,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import UtilityCustomSelect from "./UtilityCustomSelect";
+import { getTranslations } from "./i18n";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.PROD ? "" : "http://localhost:8000");
 
@@ -85,6 +86,7 @@ interface MandiCommoditiesResponse {
 interface MandiPricesModalProps {
   city: string;
   state?: string;
+  language?: string;
   onClose: () => void;
 }
 
@@ -229,7 +231,9 @@ function formatDateDisplay(dateStr?: string): string {
   return dateStr;
 }
 
-export default function MandiPricesModal({ city, state, onClose }: MandiPricesModalProps) {
+export default function MandiPricesModal({ city, state, language, onClose }: MandiPricesModalProps) {
+  const t = getTranslations(language || "en");
+  const m = t.mandiPricesModal;
   // 1. Resolve State and District automatically from homepage location
   const resolvedDistrict = useMemo(() => {
     if (!city) return "Ahmedabad";
@@ -386,14 +390,14 @@ export default function MandiPricesModal({ city, state, onClose }: MandiPricesMo
               <Wheat size={18} />
             </div>
             <div className="utility-modal-header-info">
-              <span className="utility-modal-kicker">APMC AGRICULTURAL MARKET TELEMETRY</span>
-              <h2>Mandi Commodity Prices</h2>
+              <span className="utility-modal-kicker">{m.kicker}</span>
+              <h2>{m.title}</h2>
               <p className="utility-modal-subtitle">
-                Certified daily market arrivals, modal rates, and inter-mandi price spread for {selectedDistrict}, {selectedState}
+                {m.subtitle} {selectedDistrict}, {selectedState}
               </p>
             </div>
           </div>
-          <button className="utility-modal-close" onClick={onClose} aria-label="Close Mandi Prices">
+          <button className="utility-modal-close" onClick={onClose} aria-label={`Close ${m.title}`}>
             <X size={18} />
           </button>
         </div>
@@ -407,7 +411,7 @@ export default function MandiPricesModal({ city, state, onClose }: MandiPricesMo
                 <MapPin size={18} />
               </div>
               <div>
-                <span className="mandi-location-sub">PRIMARY MARKET REGION (FROM HOMEPAGE)</span>
+                <span className="mandi-location-sub">{m.primaryRegionLabel}</span>
                 <h3 className="mandi-location-name">{selectedDistrict}, {selectedState}</h3>
               </div>
             </div>
@@ -415,7 +419,7 @@ export default function MandiPricesModal({ city, state, onClose }: MandiPricesMo
             <div className="mandi-location-actions">
               <div className="mandi-location-status">
                 <span className="mandi-live-pulse-dot" />
-                <span className="mandi-live-status-text">Official APMC Connected</span>
+                <span className="mandi-live-status-text">{m.apmcConnected}</span>
               </div>
               <button
                 type="button"
@@ -424,7 +428,7 @@ export default function MandiPricesModal({ city, state, onClose }: MandiPricesMo
                 title="Change Market District or State"
               >
                 <SlidersHorizontal size={13} />
-                <span>{isRegionPickerOpen ? "Hide Region Options" : "Switch Market / State"}</span>
+                <span>{isRegionPickerOpen ? m.hideRegionOptions : m.switchMarketState}</span>
                 {isRegionPickerOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
               </button>
             </div>
@@ -436,7 +440,7 @@ export default function MandiPricesModal({ city, state, onClose }: MandiPricesMo
               <div className="mandi-region-inputs-grid">
                 <div className="utility-input-group">
                   <label className="utility-input-label">
-                    <MapPin size={13} /> Selected State
+                    <MapPin size={13} /> {m.selectedStateLabel}
                   </label>
                   <UtilityCustomSelect
                     value={selectedState}
@@ -446,14 +450,14 @@ export default function MandiPricesModal({ city, state, onClose }: MandiPricesMo
                 </div>
                 <div className="utility-input-group">
                   <label className="utility-input-label">
-                    <Store size={13} /> District / APMC Market Center
+                    <Store size={13} /> {m.districtApmcLabel}
                   </label>
                   <input
                     type="text"
                     className="utility-text-input"
                     value={selectedDistrict}
                     onChange={(e) => setSelectedDistrict(e.target.value)}
-                    placeholder="e.g. Ahmedabad, Pune, Nashik, Surat"
+                    placeholder={m.districtPlaceholder}
                   />
                 </div>
               </div>
@@ -473,7 +477,7 @@ export default function MandiPricesModal({ city, state, onClose }: MandiPricesMo
                       className={`mandi-cat-btn ${activeCategory === cat.id ? "is-active selected" : ""}`}
                       onClick={() => setActiveCategory(cat.id)}
                     >
-                      {cat.label}
+                      {cat.id === "all" ? m.allProduce : cat.id === "vegetables" ? m.vegetables : cat.id === "fruits" ? m.fruits : cat.id === "grains" ? m.grains : cat.id === "cash_crops" ? m.oilseeds : cat.label}
                     </button>
                   ))}
                 </div>
@@ -484,7 +488,7 @@ export default function MandiPricesModal({ city, state, onClose }: MandiPricesMo
                   <input
                     type="text"
                     className="mandi-search-input"
-                    placeholder={`Search in ${selectedState} (e.g. Tomato, Onion, Wheat)...`}
+                    placeholder={`${m.searchPlaceholderPrefix} ${selectedState} (e.g. Tomato, Onion, Wheat)...`}
                     value={commoditySearch}
                     onChange={(e) => setCommoditySearch(e.target.value)}
                   />
@@ -506,7 +510,7 @@ export default function MandiPricesModal({ city, state, onClose }: MandiPricesMo
                 {commoditiesLoading && commodities.length === 0 ? (
                   <div className="mandi-chips-loading">
                     <RefreshCw size={14} className="animate-spin text-emerald" />
-                    <span>Loading available crops for {selectedState}...</span>
+                    <span>{m.loadingCrops} {selectedState}...</span>
                   </div>
                 ) : filteredCommodities.length > 0 ? (
                   filteredCommodities.slice(0, 18).map((c) => {
@@ -535,7 +539,7 @@ export default function MandiPricesModal({ city, state, onClose }: MandiPricesMo
             <div className="mandi-date-selector-row">
               <div className="mandi-date-label">
                 <Calendar size={14} />
-                <span>Auction Reporting Session:</span>
+                <span>{m.auctionSessionLabel}</span>
               </div>
               <div className="mandi-date-tabs">
                 <button
@@ -543,28 +547,28 @@ export default function MandiPricesModal({ city, state, onClose }: MandiPricesMo
                   className={`mandi-date-tab ${dateMode === "today" ? "is-active selected" : ""}`}
                   onClick={() => setDateMode("today")}
                 >
-                  Today's Session (Latest)
+                  {m.tabToday}
                 </button>
                 <button
                   type="button"
                   className={`mandi-date-tab ${dateMode === "yesterday" ? "is-active selected" : ""}`}
                   onClick={() => setDateMode("yesterday")}
                 >
-                  Yesterday
+                  {m.tabYesterday}
                 </button>
                 <button
                   type="button"
                   className={`mandi-date-tab ${dateMode === "two_days_ago" ? "is-active selected" : ""}`}
                   onClick={() => setDateMode("two_days_ago")}
                 >
-                  2 Days Ago
+                  {m.tabTwoDaysAgo}
                 </button>
                 <button
                   type="button"
                   className={`mandi-date-tab ${dateMode === "custom" ? "is-active selected" : ""}`}
                   onClick={() => setDateMode("custom")}
                 >
-                  Custom Date
+                  {m.tabCustom}
                 </button>
               </div>
 
@@ -589,7 +593,7 @@ export default function MandiPricesModal({ city, state, onClose }: MandiPricesMo
                 disabled={pricesLoading}
               >
                 <RefreshCw size={15} className={pricesLoading ? "animate-spin" : ""} />
-                <span>{pricesLoading ? "Querying APMC Books..." : `Fetch Mandi Rates for ${selectedCommodity}`}</span>
+                <span>{pricesLoading ? m.queryingBooks : `${m.fetchRatesPrefix} ${selectedCommodity}`}</span>
               </button>
             </div>
           </div>
@@ -599,7 +603,7 @@ export default function MandiPricesModal({ city, state, onClose }: MandiPricesMo
             <div className="utility-error-banner mandi-error-card">
               <AlertCircle size={16} />
               <div>
-                <strong>Unable to retrieve Mandi telemetry:</strong>
+                <strong>{m.unableToRetrieve}</strong>
                 <p>{pricesError}</p>
               </div>
             </div>
@@ -645,9 +649,9 @@ export default function MandiPricesModal({ city, state, onClose }: MandiPricesMo
                 <div className="mandi-verdict-header">
                   <div className="mandi-verdict-badge">
                     <Sprout size={15} />
-                    <span>1-CLICK HARVEST & SELL VERDICT</span>
+                    <span>{m.verdictTitle || "1-CLICK HARVEST & SELL VERDICT"}</span>
                   </div>
-                  <span className="mandi-verdict-meta">Agrometeorology + Mandi Arbitrage Synthesis</span>
+                  <span className="mandi-verdict-meta">{m.verdictSubtitle}</span>
                 </div>
                 <p className="mandi-verdict-text">
                   Because <strong>18 mm rain</strong> is forecast in <strong>36 hours</strong> (raising mold risk to <strong>68%</strong>), and {selectedCommodity.toLowerCase()} rates in {selectedDistrict} {pricesData.highest_market || "Mandi"} are currently at an optimal peak of <strong>₹{pricesData.max_modal_price_kg.toFixed(2)}/kg</strong>, ClimaCore recommends harvesting immediate standing lots today and dispatching to {pricesData.highest_market || "Mandi"} before road transit slows.
@@ -673,7 +677,7 @@ export default function MandiPricesModal({ city, state, onClose }: MandiPricesMo
                 {/* 1. Average Modal Price */}
                 <div className="utility-status-card mandi-kpi-card">
                   <div className="utility-kpi-label">
-                    <DollarSign size={13} /> AVERAGE MODAL PRICE
+                    <DollarSign size={13} /> {m.avgModalPrice}
                   </div>
                   <div className="utility-kpi-value text-emerald">
                     ₹{pricesData.avg_modal_price_kg.toFixed(2)}
@@ -701,7 +705,7 @@ export default function MandiPricesModal({ city, state, onClose }: MandiPricesMo
                 {/* 3. Price Spread */}
                 <div className="utility-status-card mandi-kpi-card">
                   <div className="utility-kpi-label">
-                    <TrendingUp size={13} /> INTER-MANDI SPREAD
+                    <TrendingUp size={13} /> {m.priceSpread}
                   </div>
                   <div className="utility-kpi-value text-forest">
                     ₹{pricesData.price_spread_kg.toFixed(2)}
@@ -715,7 +719,7 @@ export default function MandiPricesModal({ city, state, onClose }: MandiPricesMo
                 {/* 4. Top Paying Market */}
                 <div className="utility-status-card mandi-kpi-card">
                   <div className="utility-kpi-label">
-                    <Store size={13} /> TOP PAYING MARKET
+                    <Store size={13} /> {m.highestMandi}
                   </div>
                   <div className="utility-kpi-value text-top-market">
                     {pricesData.highest_market || "Single Market"}
@@ -731,12 +735,12 @@ export default function MandiPricesModal({ city, state, onClose }: MandiPricesMo
                   <table className="mandi-table">
                     <thead>
                       <tr>
-                        <th>APMC MANDI YARD</th>
+                        <th>{m.columnMarket}</th>
                         <th>REPORTED DATE</th>
-                        <th>VARIETY & GRADE</th>
-                        <th>MODAL RATE (₹/KG)</th>
-                        <th>PRICE / QUINTAL (100 KG)</th>
-                        <th>SPREAD ASSESSMENT</th>
+                        <th>{m.columnVariety}</th>
+                        <th>{m.columnModalPrice}</th>
+                        <th>{m.columnPriceRange}</th>
+                        <th>{m.columnDistrict}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -822,7 +826,7 @@ export default function MandiPricesModal({ city, state, onClose }: MandiPricesMo
         {/* Footer */}
         <div className="utility-modal-footer">
           <div className="utility-footer-meta">
-            <span>Data Source: Agmarknet (Ministry of Agriculture & Farmers Welfare, Govt of India) · ClimaCore Pipeline</span>
+            <span>{m.footerGovData}</span>
             {pricesData?.reporting_date && (
               <span> · Verified Session: {formatDateDisplay(pricesData.reporting_date)}</span>
             )}

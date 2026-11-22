@@ -866,14 +866,15 @@ def create_app() -> FastAPI:
             logger.error(f"Error in cold storage defense planning for {req.city}: {e}")
             raise HTTPException(status_code=500, detail=f"Cold storage defense planning failed: {str(e)}")
 
-    @app.get("/api/tools/mandi-commodities")
-    async def get_mandi_commodities(state: str = Query(default="Maharashtra")) -> Dict[str, Any]:
+    @app.api_route("/api/tools/mandi-commodities", methods=["GET", "POST"])
+    async def get_or_post_mandi_commodities(state: Optional[str] = Query(default=None), req: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Fetch available commodities reported in the selected state from Agmarknet Mandi API."""
         from climacore.analytics.utility_tools import fetch_mandi_commodities
+        target_state = state or (req.get("state") if req else None) or "Maharashtra"
         monitor = get_monitoring_service()
         t0 = time.perf_counter()
         try:
-            res = await fetch_mandi_commodities(state=state)
+            res = await fetch_mandi_commodities(state=target_state)
             lat_ms = (time.perf_counter() - t0) * 1000.0
             monitor.latency_profiler.record(lat_ms, is_error=False)
             data = res.model_dump()
@@ -882,7 +883,7 @@ def create_app() -> FastAPI:
         except Exception as e:
             lat_ms = (time.perf_counter() - t0) * 1000.0
             monitor.latency_profiler.record(lat_ms, is_error=True)
-            logger.error(f"Error fetching Mandi commodities for {state}: {e}")
+            logger.error(f"Error fetching Mandi commodities for {target_state}: {e}")
             raise HTTPException(status_code=500, detail=f"Failed to fetch Mandi commodities: {str(e)}")
 
     @app.get("/api/tools/mandi-prices")

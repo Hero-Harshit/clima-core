@@ -611,9 +611,10 @@ if app is None:
         }
 
     # Mandi Telemetry Endpoints
-    @fallback_app.get("/api/tools/mandi-commodities")
-    async def get_mandi_commodities_fallback(state: str = Query(default="Maharashtra")):
-        clean_state = state.strip() or "Maharashtra"
+    @fallback_app.api_route("/api/tools/mandi-commodities", methods=["GET", "POST", "OPTIONS"])
+    async def get_mandi_commodities_fallback(state: Optional[str] = Query(default=None), req: Optional[Dict[str, Any]] = None):
+        clean_state = state or (req.get("state") if isinstance(req, dict) else None) or "Maharashtra"
+        clean_state = str(clean_state).strip() or "Maharashtra"
         today_str = datetime.now(timezone(timedelta(hours=5, minutes=30))).strftime("%Y-%m-%d")
 
         try:
