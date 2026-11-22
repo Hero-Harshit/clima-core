@@ -111,7 +111,7 @@ export default function CropHarvestModal({ city, language, onClose }: CropHarves
   useEffect(() => {
     fetchCropSpoilageAnalysis();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [city]);
+  }, [city, cropType, harvestStage, storageType]);
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {

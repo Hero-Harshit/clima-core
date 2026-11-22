@@ -12,7 +12,7 @@ import os
 import math
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 import httpx
 from pydantic import BaseModel, Field
 
@@ -821,7 +821,7 @@ async def analyze_crop_harvest_spoilage(
 
     cache_key = f"crop_spoilage:{city}:{crop}:{stage}:{storage}:{norm_lang}"
     if cache_key in _TOOL_CACHE:
-        return _TOOL_CACHE[cache_key]
+        del _TOOL_CACHE[cache_key]
 
     metrics = current_weather or {}
     t_max = float(metrics.get("temp_max") or metrics.get("temperature_max") or 33.0)
@@ -851,7 +851,23 @@ async def analyze_crop_harvest_spoilage(
         field_moisture += 2.1
     elif rh < 50.0:
         field_moisture -= 1.8
-    field_moisture = round(min(34.0, max(10.0, field_moisture)), 1)
+
+    # Dynamic adjustments based on harvest stage and storage facility
+    stage_moisture_delta = {
+        "mature_standing": 0.0,
+        "field_cut": 2.4,
+        "thrashing_yard": -0.8,
+        "bagged_godown": -2.2,
+    }.get(stage, 0.0)
+
+    storage_moisture_delta = {
+        "traditional_tarpaulin": 1.5,
+        "covered_shed": 0.0,
+        "hermetic_bag": -1.8,
+        "ventilated_metal_silo": -2.5,
+    }.get(storage, 0.0)
+
+    field_moisture = round(min(34.0, max(8.5, field_moisture + stage_moisture_delta + storage_moisture_delta)), 1)
 
     # Spoilage risk calculation
     risk_score = 25
@@ -3541,7 +3557,7 @@ async def fetch_mandi_prices(req: MandiPricesRequest) -> MandiPricesResponse:
         ai_market_advisory=f"Across {len(synth_recs)} reporting mandis in {clean_district}, prices range from Rs {synth_recs[0].modal_price_kg}/kg at {synth_recs[0].market} to Rs {synth_recs[-1].modal_price_kg}/kg at {synth_recs[-1].market}. Dispatching to {synth_recs[-1].market} offers an upside spread of Rs {spread_kg}/kg (+Rs {int(spread_q)}/quintal).",
         provider="ClimaCore Intelligence",
     )
-    _MANDI_PRICES_CACHE[cache_key] = (now_ts + 300.0, synth_res)
+    _MANDI_PRICES_CACHE[cache_key] = (now_ts + 2.0, synth_res)
     return synth_res
 
 
