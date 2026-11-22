@@ -16,6 +16,12 @@ export const mr: TranslationDictionary = {
     disasterReplayDesc: "ऐतिहासिक आपत्ती टाइम मशीन",
     crisisCouncilTitle: "संकट परिषद",
     crisisCouncilDesc: "मल्टी-एजंट आपत्कालीन वॉर रूम",
+    corridorRadarTitle: "डिलिव्हरी कॉरिडॉर रडार",
+    corridorRadarDesc: "मार्ग पाणी साचणे, वारे आणि डांबर उष्णता",
+    touristOptimizerTitle: "पर्यटन नियोजन अनुकूलक",
+    touristOptimizerDesc: "सुरक्षित पर्यटन आणि हवामान वेळा",
+    cleanAirWorkoutTitle: "शुद्ध हवा व्यायाम वेळ",
+    cleanAirWorkoutDesc: "प्रदूषण स्थिती आणि मैदानी फिटनेस",
   },
   assistantDrawer: {
     headerTitle: "मागील संवाद",

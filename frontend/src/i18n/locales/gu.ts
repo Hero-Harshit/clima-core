@@ -16,6 +16,12 @@ export const gu: TranslationDictionary = {
     disasterReplayDesc: "ઐતિહાસિક આપત્તિ ટાઇમ મશીન",
     crisisCouncilTitle: "કટોકટી પરિષદ",
     crisisCouncilDesc: "મલ્ટી-એજન્ટ ઇમરજન્સી વૉર રૂમ",
+    corridorRadarTitle: "ડિલિવરી કોરિડોર રડાર",
+    corridorRadarDesc: "માર્ગ જળબરાવ, પવન અને ડામર ગરમી",
+    touristOptimizerTitle: "પ્રવાસી યોજના અનુકૂલક",
+    touristOptimizerDesc: "સુરક્ષિત જોવાલાયક સ્થળો અને અનુકૂળ સમય",
+    cleanAirWorkoutTitle: "સ્વચ્છ હવા કસરત સમય",
+    cleanAirWorkoutDesc: "પ્રદૂષણ સ્થિતિ અને આઉટડોર ફિટનેસ",
   },
   assistantDrawer: {
     headerTitle: "અગાઉની વાતચીત",

@@ -16,6 +16,12 @@ export const te: TranslationDictionary = {
     disasterReplayDesc: "చారిత్రక విపత్తు టైమ్ మెషిన్",
     crisisCouncilTitle: "క్రైసిస్ కౌన్సిల్",
     crisisCouncilDesc: "మల్టీ-ఏజెంట్ అత్యవసర వార్ రూమ్",
+    corridorRadarTitle: "డెలివరీ కారిడార్ రాడార్",
+    corridorRadarDesc: "రూట్ నీటి నిల్వ, గాలులు మరియు తారు వేడి",
+    touristOptimizerTitle: "పర్యాటక ప్రయాణ ఆప్టిమైజర్",
+    touristOptimizerDesc: "సురక్షిత సందర్శన మరియు వాతావరణ సమయాలు",
+    cleanAirWorkoutTitle: "స్వచ్ఛమైన గాలి వ్యాయామ సమయం",
+    cleanAirWorkoutDesc: "కాలుష్య స్థితి మరియు అవుట్‌డోర్ ఫిట్‌నెస్",
   },
   assistantDrawer: {
     headerTitle: "మునుపటి సంభాషణలు",

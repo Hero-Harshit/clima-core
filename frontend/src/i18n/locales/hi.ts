@@ -16,6 +16,12 @@ export const hi: TranslationDictionary = {
     disasterReplayDesc: "ऐतिहासिक आपदा समय यंत्र",
     crisisCouncilTitle: "संकट परिषद",
     crisisCouncilDesc: "मल्टी-एजेंट आपातकालीन वार रूम",
+    corridorRadarTitle: "डिलीवरी कॉरिडोर रडार",
+    corridorRadarDesc: "मार्ग जलभराव, आंधी और डामर गर्मी",
+    touristOptimizerTitle: "पर्यटक यात्रा अनुकूलक",
+    touristOptimizerDesc: "सुरक्षित दर्शनीय स्थल और मौसम समय",
+    cleanAirWorkoutTitle: "स्वच्छ वायु व्यायाम खिड़की",
+    cleanAirWorkoutDesc: "प्रदूषण व्युत्क्रमण और आउटडोर फिटनेस",
   },
   assistantDrawer: {
     headerTitle: "पिछली बातचीत",

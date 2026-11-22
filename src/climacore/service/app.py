@@ -29,6 +29,11 @@ from climacore.service.assistant import (
     AssistantChatRequest,
     AssistantChatResponse,
 )
+from climacore.analytics.utility_tools import (
+    CorridorRadarRequest,
+    TouristOptimizerRequest,
+    CleanAirWorkoutRequest,
+)
 
 logger = get_logger("climacore.service.app")
 
@@ -283,6 +288,9 @@ def create_app() -> FastAPI:
                 "/api/crisis-council/deliberate",
                 "/api/disaster-replay/events",
                 "/api/disaster-replay/run",
+                "/api/tools/corridor-radar",
+                "/api/tools/tourist-optimizer",
+                "/api/tools/clean-air-workout",
             ],
         }
 
@@ -507,6 +515,87 @@ def create_app() -> FastAPI:
             monitor.latency_profiler.record(lat_ms, is_error=True)
             logger.error(f"Error running disaster replay for {req.disaster_id}: {e}")
             raise HTTPException(status_code=500, detail=f"Disaster replay failed: {str(e)}")
+
+    def _extract_live_tool_metrics(city: str) -> Dict[str, Any]:
+        """Helper to extract real-time forecasted telemetry for utility tool models."""
+        try:
+            live_engine = get_live_engine()
+            pred = live_engine.predict(query=city, persona="outdoor_worker", days=7, force_refresh=False)
+            if pred and pred.daily_predictions:
+                day0 = pred.daily_predictions[0]
+                m = day0.forecast_metrics or {}
+                return {
+                    "temp_max": m.get("temperature_max_c") or m.get("temp_max") or 33.0,
+                    "temp_min": m.get("temperature_min_c") or m.get("temp_min") or 24.0,
+                    "precipitation_mm": m.get("precipitation_mm") or 0.0,
+                    "wind_speed_kmh": m.get("wind_speed_kmh") or 14.0,
+                    "aqi": m.get("aqi") or 95,
+                    "pm25": m.get("pm2_5_ug_m3") or m.get("pm2_5") or 42.0,
+                    "wbgt": m.get("wet_bulb_temp_c") or 27.5,
+                }
+        except Exception as e:
+            logger.debug(f"Unable to extract live forecast metrics for {city}: {e}")
+        return {}
+
+    @app.post("/api/tools/corridor-radar")
+    async def post_corridor_radar(req: CorridorRadarRequest) -> Dict[str, Any]:
+        """Delivery Corridor Radar route waterlogging, crosswinds, and asphalt thermal stress."""
+        from climacore.analytics.utility_tools import analyze_delivery_corridor
+        monitor = get_monitoring_service()
+        t0 = time.perf_counter()
+        try:
+            live_weather = _extract_live_tool_metrics(req.city)
+            res = await analyze_delivery_corridor(req=req, current_weather=live_weather)
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=False)
+            data = res.model_dump()
+            data["latency_ms"] = round(lat_ms, 2)
+            return data
+        except Exception as e:
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=True)
+            logger.error(f"Error in corridor radar for {req.city}: {e}")
+            raise HTTPException(status_code=500, detail=f"Corridor radar analysis failed: {str(e)}")
+
+    @app.post("/api/tools/tourist-optimizer")
+    async def post_tourist_optimizer(req: TouristOptimizerRequest) -> Dict[str, Any]:
+        """Tourist Itinerary Optimizer safe sightseeing and weather window planner."""
+        from climacore.analytics.utility_tools import optimize_tourist_schedule
+        monitor = get_monitoring_service()
+        t0 = time.perf_counter()
+        try:
+            live_weather = _extract_live_tool_metrics(req.city)
+            res = await optimize_tourist_schedule(req=req, current_weather=live_weather)
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=False)
+            data = res.model_dump()
+            data["latency_ms"] = round(lat_ms, 2)
+            return data
+        except Exception as e:
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=True)
+            logger.error(f"Error in tourist optimizer for {req.city}: {e}")
+            raise HTTPException(status_code=500, detail=f"Tourist schedule optimization failed: {str(e)}")
+
+    @app.post("/api/tools/clean-air-workout")
+    async def post_clean_air_workout(req: CleanAirWorkoutRequest) -> Dict[str, Any]:
+        """Clean Air Athletic Window pollution inversion and outdoor workout radar."""
+        from climacore.analytics.utility_tools import calculate_clean_air_workout
+        monitor = get_monitoring_service()
+        t0 = time.perf_counter()
+        try:
+            live_weather = _extract_live_tool_metrics(req.city)
+            res = await calculate_clean_air_workout(req=req, current_weather=live_weather)
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=False)
+            data = res.model_dump()
+            data["latency_ms"] = round(lat_ms, 2)
+            return data
+        except Exception as e:
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=True)
+            logger.error(f"Error in clean air workout for {req.city}: {e}")
+            raise HTTPException(status_code=500, detail=f"Clean air workout calculation failed: {str(e)}")
 
     @app.post("/api/predict/custom")
     def predict_custom(req: CustomPredictionRequest) -> Dict[str, Any]:

@@ -16,6 +16,12 @@ export const ta: TranslationDictionary = {
     disasterReplayDesc: "வரலாற்றுப் பேரிடர் கால இயந்திரம்",
     crisisCouncilTitle: "நெருக்கடி கவுன்சில்",
     crisisCouncilDesc: "பல முகவர் அவசரகால கட்டுப்பாட்டு அறை",
+    corridorRadarTitle: "டெலிவரி பாதை ரேடார்",
+    corridorRadarDesc: "சாலை நீர் தேக்கம், காற்று மற்றும் வெப்பம்",
+    touristOptimizerTitle: "சுற்றுலா பயண உகப்பாக்கி",
+    touristOptimizerDesc: "பாதுகாப்பான இடங்கள் மற்றும் வானிலை நேரம்",
+    cleanAirWorkoutTitle: "தூய காற்று உடற்பயிற்சி நேரம்",
+    cleanAirWorkoutDesc: "மாசு நிலை மற்றும் வெளிப்புற உடற்பயிற்சி",
   },
   assistantDrawer: {
     headerTitle: "முந்தைய உரையாடல்கள்",

@@ -15,7 +15,7 @@ import {
   BarChart3, CircleHelp, CloudDrizzle, CloudRain, CloudSun, Compass, Database, Droplets, Factory, Flame,
   Globe2, History, Info, Languages, Layers, Send,
   LocateFixed, LockKeyhole, MapPin, MoreHorizontal, RotateCcw,
-  ShieldCheck, Sprout, Sun, Thermometer, Waves, Wind, X, Zap,
+  ShieldCheck, Sprout, Sun, Thermometer, Truck, Waves, Wind, X, Zap,
 } from "lucide-react";
 import { getTranslations, TranslationDictionary } from "./i18n";
 
@@ -25,6 +25,9 @@ const ConformalChart = lazy(() => import("./ConformalChart"));
 const ModelPerformance = lazy(() => import("./ModelPerformance"));
 const CrisisCouncilModal = lazy(() => import("./CrisisCouncilModal"));
 const DisasterReplayModal = lazy(() => import("./DisasterReplayModal"));
+const CorridorRadarModal = lazy(() => import("./CorridorRadarModal"));
+const TouristOptimizerModal = lazy(() => import("./TouristOptimizerModal"));
+const CleanAirWorkoutModal = lazy(() => import("./CleanAirWorkoutModal"));
 
 type Persona = { id: string; key?: string; title: string; icon?: string; description?: string };
 type PersonasResponse = Persona[] | { personas?: Persona[] };
@@ -361,6 +364,9 @@ function App() {
   const [isNavBarExpanded, setIsNavBarExpanded] = useState(false);
   const [isCrisisCouncilOpen, setIsCrisisCouncilOpen] = useState(false);
   const [isDisasterReplayOpen, setIsDisasterReplayOpen] = useState(false);
+  const [isCorridorRadarOpen, setIsCorridorRadarOpen] = useState(false);
+  const [isTouristOptimizerOpen, setIsTouristOptimizerOpen] = useState(false);
+  const [isCleanAirWorkoutOpen, setIsCleanAirWorkoutOpen] = useState(false);
   const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
   const toolsMenuRef = useRef<HTMLDivElement>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
@@ -1032,6 +1038,57 @@ function App() {
                         <small>{t.topbar.crisisCouncilDesc}</small>
                       </div>
                     </button>
+
+                    <button
+                      type="button"
+                      className="tools-menu-item"
+                      onClick={() => {
+                        setIsCorridorRadarOpen(true);
+                        setIsToolsMenuOpen(false);
+                      }}
+                    >
+                      <span className="utility-tool-circle-btn corridor-circle-btn" aria-hidden="true">
+                        <Truck size={14} />
+                      </span>
+                      <div className="tools-menu-item-info">
+                        <strong>{t.topbar.corridorRadarTitle}</strong>
+                        <small>{t.topbar.corridorRadarDesc}</small>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="tools-menu-item"
+                      onClick={() => {
+                        setIsTouristOptimizerOpen(true);
+                        setIsToolsMenuOpen(false);
+                      }}
+                    >
+                      <span className="utility-tool-circle-btn tourist-circle-btn" aria-hidden="true">
+                        <Compass size={14} />
+                      </span>
+                      <div className="tools-menu-item-info">
+                        <strong>{t.topbar.touristOptimizerTitle}</strong>
+                        <small>{t.topbar.touristOptimizerDesc}</small>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="tools-menu-item"
+                      onClick={() => {
+                        setIsCleanAirWorkoutOpen(true);
+                        setIsToolsMenuOpen(false);
+                      }}
+                    >
+                      <span className="utility-tool-circle-btn workout-circle-btn" aria-hidden="true">
+                        <Activity size={14} />
+                      </span>
+                      <div className="tools-menu-item-info">
+                        <strong>{t.topbar.cleanAirWorkoutTitle}</strong>
+                        <small>{t.topbar.cleanAirWorkoutDesc}</small>
+                      </div>
+                    </button>
                   </div>
                 </div>
               )}
@@ -1068,13 +1125,23 @@ function App() {
           <div className="weather-hero-region">
             <section className="page-heading">
               <div>
-                <div className="eyebrow"><CalendarDays className="eyebrow-calendar" size={14} strokeWidth={2} aria-hidden="true" /> {new Intl.DateTimeFormat(selectedLanguage === "en" ? "en-IN" : selectedLanguage, { weekday: "long", day: "2-digit", month: "long", year: "numeric" }).format(new Date()).toUpperCase()} <span className="eyebrow-separator">/</span> {getSeasonLabel(new Date().getMonth(), t)}</div>
+                <div className="eyebrow"><CalendarDays className="eyebrow-calendar" size={16} strokeWidth={2} aria-hidden="true" /> {new Intl.DateTimeFormat(selectedLanguage === "en" ? "en-IN" : selectedLanguage, { weekday: "long", day: "2-digit", month: "long", year: "numeric" }).format(new Date()).toUpperCase()} <span className="eyebrow-separator">/</span> {getSeasonLabel(new Date().getMonth(), t)}</div>
                 <h1>{t.hero.title}</h1>
                 <p className="heading-subtitle">{t.hero.subtitle}</p>
               </div>
             </section>
 
             <div className="view-controls">
+              <div className="persona-select-wrap">
+                <span>{t.hero.viewFor}</span>
+                <StyledDropdown
+                  ariaLabel="Select persona"
+                  value={persona}
+                  placeholder={t.hero.selectOccupation}
+                  options={people.map((item) => ({ value: item.id ?? item.key ?? "", label: t.personas[item.id as keyof typeof t.personas] ?? item.title }))}
+                  onChange={setPersona}
+                />
+              </div>
               <div className="city-select-wrap">
                 <span>{t.hero.viewIn}</span>
                 <CitySearch
@@ -1084,16 +1151,6 @@ function App() {
                     setCity(value);
                     setActiveDay(0);
                   }}
-                />
-              </div>
-              <div className="persona-select-wrap">
-                <span>{t.hero.viewFor}</span>
-                <StyledDropdown
-                  ariaLabel="Select persona"
-                  value={persona}
-                  placeholder={t.hero.selectOccupation}
-                  options={people.map((item) => ({ value: item.id ?? item.key ?? "", label: t.personas[item.id as keyof typeof t.personas] ?? item.title }))}
-                  onChange={setPersona}
                 />
               </div>
             </div>
@@ -1116,10 +1173,12 @@ function App() {
                 </div>
               </div>
               <div className="threat-right">
-                <div className="risk-score">
-                  <strong>{hasSelectedLocationAndOccupation && risk != null ? risk : "--"}</strong>
-                  <span>{t.threatBanner.unitScale}</span>
-                </div>
+                {hasSelectedLocationAndOccupation && risk != null && (
+                  <div className="risk-score">
+                    <strong>{risk}</strong>
+                    <span>{t.threatBanner.unitScale}</span>
+                  </div>
+                )}
                 <span className={`risk-pill ${!hasSelectedLocationAndOccupation ? "is-unselected" : tone}`}>
                   <span />
                   {hasSelectedLocationAndOccupation ? peakRiskCategory : t.threatBanner.pillAwaiting}
@@ -1696,6 +1755,33 @@ function App() {
           <DisasterReplayModal
             currentCity={selectedCityName}
             onClose={() => setIsDisasterReplayOpen(false)}
+          />
+        </Suspense>
+      )}
+
+      {isCorridorRadarOpen && (
+        <Suspense fallback={null}>
+          <CorridorRadarModal
+            city={selectedCityName}
+            onClose={() => setIsCorridorRadarOpen(false)}
+          />
+        </Suspense>
+      )}
+
+      {isTouristOptimizerOpen && (
+        <Suspense fallback={null}>
+          <TouristOptimizerModal
+            city={selectedCityName}
+            onClose={() => setIsTouristOptimizerOpen(false)}
+          />
+        </Suspense>
+      )}
+
+      {isCleanAirWorkoutOpen && (
+        <Suspense fallback={null}>
+          <CleanAirWorkoutModal
+            city={selectedCityName}
+            onClose={() => setIsCleanAirWorkoutOpen(false)}
           />
         </Suspense>
       )}

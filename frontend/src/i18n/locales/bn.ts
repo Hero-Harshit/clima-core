@@ -16,6 +16,12 @@ export const bn: TranslationDictionary = {
     disasterReplayDesc: "ঐতিহাসিক দুর্যোগের টাইম মেশিন",
     crisisCouncilTitle: "ক্রাইসিস কাউন্সিল",
     crisisCouncilDesc: "মাল্টি-এজেন্ট জরুরি ওয়ার রুম",
+    corridorRadarTitle: "ডেলিভারি করিডোর রাডার",
+    corridorRadarDesc: "রুট জলাবদ্ধতা, বাতাস ও পিচ তাপ",
+    touristOptimizerTitle: "পর্যটক ভ্রমণ অপ্টিমাইজার",
+    touristOptimizerDesc: "নিরাপদ দর্শনীয় স্থান ও অনুকূল সময়",
+    cleanAirWorkoutTitle: "বিশুদ্ধ বায়ু ব্যায়াম সময়",
+    cleanAirWorkoutDesc: "দূষণ বিপরীতকরণ ও আউটডোর ফিটনেস",
   },
   assistantDrawer: {
     headerTitle: "পূর্ববর্তী চ্যাট",

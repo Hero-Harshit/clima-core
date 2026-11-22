@@ -22,6 +22,12 @@ export interface TranslationDictionary {
     disasterReplayDesc: string;
     crisisCouncilTitle: string;
     crisisCouncilDesc: string;
+    corridorRadarTitle: string;
+    corridorRadarDesc: string;
+    touristOptimizerTitle: string;
+    touristOptimizerDesc: string;
+    cleanAirWorkoutTitle: string;
+    cleanAirWorkoutDesc: string;
   };
   assistantDrawer: {
     headerTitle: string;

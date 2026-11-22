@@ -16,6 +16,12 @@ export const en: TranslationDictionary = {
     disasterReplayDesc: "Historical catastrophe time machine",
     crisisCouncilTitle: "Crisis Council",
     crisisCouncilDesc: "Multi-agent emergency war room",
+    corridorRadarTitle: "Delivery Corridor Radar",
+    corridorRadarDesc: "Route waterlogging, crosswinds & heat",
+    touristOptimizerTitle: "Tourist Itinerary Optimizer",
+    touristOptimizerDesc: "Safe sightseeing & weather windows",
+    cleanAirWorkoutTitle: "Clean Air Athletic Window",
+    cleanAirWorkoutDesc: "Pollution inversion & workout radar",
   },
   assistantDrawer: {
     headerTitle: "Previous chats",
