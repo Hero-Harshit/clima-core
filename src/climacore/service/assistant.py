@@ -33,7 +33,14 @@ from climacore.analytics.rag_retriever import (
 logger = get_logger("climacore.service.assistant")
 
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models"
-DEFAULT_MODEL = "gemini-3-flash-preview"
+DEFAULT_MODEL = "gemini-flash-lite-latest"
+FALLBACK_MODELS = [
+    "gemini-flash-lite-latest",
+    "gemini-3.1-flash-lite",
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite-preview",
+    "gemini-3.5-flash",
+]
 
 
 class ChatMessage(BaseModel):
@@ -888,10 +895,10 @@ async def call_gemini_agent_with_tools(
     api_key: str,
     executor: AgentToolExecutor,
     model: str = DEFAULT_MODEL,
-    timeout_seconds: float = 16.0,
+    timeout_seconds: float = 12.0,
 ) -> Tuple[Optional[str], Optional[Dict[str, Any]], List[Dict[str, Any]]]:
-    """Call Google Gemini REST API with native tool calling loop, executing tools dynamically."""
-    url = f"{GEMINI_API_URL}/{model}:generateContent?key={api_key}"
+    """Call Google Gemini REST API with native tool calling loop, falling back to direct generation."""
+    models_to_try = [model] + [m for m in FALLBACK_MODELS if m != model]
 
     # Build initial conversation contents
     contents: List[Dict[str, Any]] = []
@@ -908,7 +915,7 @@ async def call_gemini_agent_with_tools(
 
     tools = [{"function_declarations": AGENT_FUNCTION_DECLARATIONS}]
 
-    payload = {
+    payload_with_tools = {
         "system_instruction": {
             "parts": [{"text": system_prompt}]
         },
@@ -920,185 +927,205 @@ async def call_gemini_agent_with_tools(
         }
     }
 
+    payload_direct = {
+        "system_instruction": {
+            "parts": [{"text": system_prompt}]
+        },
+        "contents": contents,
+        "generationConfig": {
+            "temperature": 0.2,
+            "maxOutputTokens": 1000,
+        }
+    }
+
     executed_tools: List[Dict[str, Any]] = []
     dispatched_action: Optional[Dict[str, Any]] = None
 
     async with httpx.AsyncClient(timeout=timeout_seconds) as client:
-        # Step 1: Initial invocation
-        resp = await client.post(url, json=payload)
-        if resp.status_code != 200:
-            logger.warning(f"Gemini API returned status {resp.status_code}: {resp.text[:200]}")
-            return None, None, []
+        for m in models_to_try:
+            url = f"{GEMINI_API_URL}/{m}:generateContent?key={api_key}"
 
-        data = resp.json()
-        candidates = data.get("candidates", [])
-        if not candidates:
-            return None, None, []
+            # Step 1: Try with tools
+            try:
+                resp = await client.post(url, json=payload_with_tools)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    candidates = data.get("candidates", [])
+                    if candidates:
+                        candidate = candidates[0]
+                        content_obj = candidate.get("content", {})
+                        parts = content_obj.get("parts", [])
 
-        candidate = candidates[0]
-        content_obj = candidate.get("content", {})
-        parts = content_obj.get("parts", [])
+                        fn_call_part = None
+                        direct_text = None
+                        for p in parts:
+                            if "functionCall" in p:
+                                fn_call_part = p["functionCall"]
+                                break
+                            elif "text" in p:
+                                direct_text = p["text"]
 
-        # Step 2: Check for function calls
-        fn_call_part = None
-        direct_text = None
-        for p in parts:
-            if "functionCall" in p:
-                fn_call_part = p["functionCall"]
-                break
-            elif "text" in p:
-                direct_text = p["text"]
+                        # If no tool was called, return direct text answer
+                        if not fn_call_part and direct_text:
+                            return direct_text.strip(), None, []
 
-        # If no tool was called, return direct text answer
-        if not fn_call_part:
-            return direct_text.strip() if direct_text else None, None, []
+                        if fn_call_part:
+                            fn_name = fn_call_part.get("name")
+                            fn_args = fn_call_part.get("args", {})
+                            logger.info(f"Agent executing tool: {fn_name}({fn_args})")
+                            tool_result = executor.execute_tool(name=fn_name, args=fn_args)
+                            executed_tools.append({"name": fn_name, "args": fn_args, "result": tool_result})
+                            if fn_name == "dispatch_dashboard_action":
+                                dispatched_action = tool_result
 
-        # Step 3: Execute tool
-        fn_name = fn_call_part.get("name")
-        fn_args = fn_call_part.get("args", {})
-        logger.info(f"Agent executing tool: {fn_name}({fn_args})")
+                            followup_contents = list(contents)
+                            followup_contents.append({
+                                "role": "model",
+                                "parts": [{"functionCall": fn_call_part}]
+                            })
+                            followup_contents.append({
+                                "role": "user",
+                                "parts": [{
+                                    "functionResponse": {
+                                        "name": fn_name,
+                                        "response": {"output": tool_result}
+                                    }
+                                }]
+                            })
+                            resp2 = await client.post(url, json={
+                                "system_instruction": {"parts": [{"text": system_prompt}]},
+                                "contents": followup_contents,
+                                "tools": tools,
+                                "generationConfig": {"temperature": 0.2, "maxOutputTokens": 1000}
+                            })
+                            if resp2.status_code == 200:
+                                data2 = resp2.json()
+                                candidates2 = data2.get("candidates", [])
+                                if candidates2:
+                                    parts2 = candidates2[0].get("content", {}).get("parts", [])
+                                    for p in parts2:
+                                        if "text" in p and p["text"]:
+                                            return p["text"].strip(), dispatched_action, executed_tools
 
-        tool_result = executor.execute_tool(name=fn_name, args=fn_args)
-        executed_tools.append({"name": fn_name, "args": fn_args, "result": tool_result})
+                            # Fallback formatting if second call is throttled or empty
+                            if fn_name == "dispatch_dashboard_action" and isinstance(tool_result, dict):
+                                explanation = tool_result.get("explanation") or f"Focused dashboard on {tool_result.get('active_card', 'environmental risk')}."
+                                return explanation, dispatched_action, executed_tools
 
-        if fn_name == "dispatch_dashboard_action":
-            dispatched_action = tool_result
+                            if fn_name == "convene_crisis_council" and isinstance(tool_result, dict):
+                                c_lines = [
+                                    f"### Autonomous Multi-Agent Crisis Council (ICS War Room): **{tool_result.get('city', '')}**\n",
+                                    f"* **Incident Command Reference:** `{tool_result.get('incident_id', '')}` ({tool_result.get('ics_form_reference', '')})",
+                                    f"* **Cryptographic Verification Hash:** `{tool_result.get('verification_hash', '')}` (SHA-256)",
+                                    f"* **Incident Type & Severity:** **{tool_result.get('incident_type', '').replace('_', ' ')}** | `{tool_result.get('severity_tier', '')}`",
+                                    f"* **Life Preservation Score:** **{tool_result.get('life_preservation_index', 0):.1f}/100** | **Economic Continuity Score:** **{tool_result.get('economic_continuity_index', 0):.1f}/100**\n",
+                                ]
+                                if tool_result.get("mermaid_sequence_diagram"):
+                                    c_lines.append("```mermaid")
+                                    c_lines.append(tool_result["mermaid_sequence_diagram"])
+                                    c_lines.append("```\n")
 
-        # Step 4: Multi-turn loop: send function response back to Gemini
-        contents.append({
-            "role": "model",
-            "parts": [{"functionCall": fn_call_part}]
-        })
-        contents.append({
-            "role": "user",
-            "parts": [{
-                "functionResponse": {
-                    "name": fn_name,
-                    "response": {"output": tool_result}
-                }
-            }]
-        })
+                                c_lines.append("\n**Executive Incident Commander Directives (Approved ICS-201 Policy):**")
+                                for d in tool_result.get("executive_directives", []):
+                                    c_lines.append(f"- 📜 **{d.get('directive_id')} ({d.get('title')}):** {d.get('mandate')}")
 
-        followup_payload = {
-            "system_instruction": {
-                "parts": [{"text": system_prompt}]
-            },
-            "contents": contents,
-            "tools": tools,
-            "generationConfig": {
-                "temperature": 0.2,
-                "maxOutputTokens": 1000,
-            }
-        }
+                                return "\n".join(c_lines), dispatched_action, executed_tools
 
-        # Step 5: Second call for final natural language synthesis
-        resp2 = await client.post(url, json=followup_payload)
-        if resp2.status_code == 200:
-            data2 = resp2.json()
-            candidates2 = data2.get("candidates", [])
-            if candidates2:
-                parts2 = candidates2[0].get("content", {}).get("parts", [])
-                for p in parts2:
-                    if "text" in p:
-                        return p["text"].strip(), dispatched_action, executed_tools
+                            if fn_name == "replay_historical_disaster" and isinstance(tool_result, dict):
+                                d_lines = [
+                                    f"### Historical Disaster Replay Time Machine: **{tool_result.get('name', '')}**\n",
+                                    f"* **Benchmark ID:** `{tool_result.get('disaster_id', '')}` | **Date:** {tool_result.get('historical_date', '')}",
+                                    f"* **Advance Warning Delivered:** **+{tool_result.get('total_advance_warning_hours', 0):.0f} Hours** in advance lead time",
+                                    f"* **Lives Preserved Estimate:** **{tool_result.get('lives_protected_estimate', 0):,} citizens**",
+                                    f"* **Parametric DBT Claims Disbursed:** **₹{tool_result.get('simulated_parametric_payout_inr_cr', 0):.0f} Crores** instant voucher\n",
+                                ]
+                                if tool_result.get("mermaid_timeline_chart"):
+                                    d_lines.append(f"\n```mermaid\n{tool_result['mermaid_timeline_chart']}\n```")
+                                return "\n".join(d_lines), dispatched_action, executed_tools
 
-        # Fallback formatting if second call is throttled or empty
-        if fn_name == "convene_crisis_council" and isinstance(tool_result, dict):
-            c_lines = [
-                f"### Autonomous Multi-Agent Crisis Council (ICS War Room): **{tool_result.get('city', '')}**\n",
-                f"* **Incident Command Reference:** `{tool_result.get('incident_id', '')}` ({tool_result.get('ics_form_reference', '')})",
-                f"* **Cryptographic Verification Hash:** `{tool_result.get('verification_hash', '')}` (SHA-256)",
-                f"* **Incident Type & Severity:** **{tool_result.get('incident_type', '').replace('_', ' ')}** | `{tool_result.get('severity_tier', '')}`",
-                f"* **Life Preservation Score:** **{tool_result.get('life_preservation_index', 0):.1f}/100** | **Economic Continuity Score:** **{tool_result.get('economic_continuity_index', 0):.1f}/100**\n",
-            ]
-            if tool_result.get("mermaid_sequence_diagram"):
-                c_lines.append("```mermaid")
-                c_lines.append(tool_result["mermaid_sequence_diagram"])
-                c_lines.append("```\n")
+                            if fn_name == "compare_cities_risk" and isinstance(tool_result, dict):
+                                ca = tool_result.get("city_a", {})
+                                cb = tool_result.get("city_b", {})
+                                kd = tool_result.get("key_differences", {})
+                                comp_lines = [
+                                    f"### Comparative Environmental Risk Evaluation: **{ca.get('name')}** vs **{cb.get('name')}**\n",
+                                    f"* **{ca.get('name')}:** Max Temp: {ca.get('temperature_max_c')}°C | Rain: {ca.get('rainfall_mm')} mm | PM2.5: {ca.get('pm25_ug_m3')} µg/m³ | Risk: **{ca.get('risk_category')}** ({ca.get('compound_risk_score')})",
+                                    f"* **{cb.get('name')}:** Max Temp: {cb.get('temperature_max_c')}°C | Rain: {cb.get('rainfall_mm')} mm | PM2.5: {cb.get('pm25_ug_m3')} µg/m³ | Risk: **{cb.get('risk_category')}** ({cb.get('compound_risk_score')})",
+                                    f"* **Key Differences:** Δ Temp: {kd.get('temp_delta_c')}°C | Δ Rain: {kd.get('rain_delta_mm')} mm | Δ PM2.5: {kd.get('pm25_delta')} µg/m³\n",
+                                ]
+                                return "\n".join(comp_lines), dispatched_action, executed_tools
 
-            c_lines.append("\n**Executive Incident Commander Directives (Approved ICS-201 Policy):**")
-            for d in tool_result.get("executive_directives", []):
-                c_lines.append(f"- 📜 **{d.get('directive_id')} ({d.get('title')}):** {d.get('mandate')}")
+                            if fn_name == "simulate_what_if_scenario" and isinstance(tool_result, dict):
+                                city = tool_result.get("city", "")
+                                inputs = tool_result.get("inputs", {})
+                                impacts = tool_result.get("simulated_impacts", {})
+                                w_lines = [
+                                    f"### Counterfactual Simulation: **{city}**\n",
+                                    f"* **Physical Inputs:** Max Temp: {inputs.get('temperature_max_c')}°C | Rainfall: {inputs.get('rainfall_mm')} mm | PM2.5: {inputs.get('pm25_ug_m3')} µg/m³",
+                                    f"* **SCS Surface Runoff:** {impacts.get('effective_surface_runoff_mm', 0):.1f} mm ({impacts.get('runoff_surge_multiplier', '')})",
+                                    f"* **Hydrological Hazard Probability:** {impacts.get('flood_hazard_probability', 0):.1%}",
+                                    f"* **Wet-Bulb Temperature:** {impacts.get('wet_bulb_temp_c', 0):.1f}°C (Apparent Heat Index: {impacts.get('apparent_heat_index_c', 0):.1f}°C)",
+                                    f"* **Power Grid Stress & Peak Load:** {impacts.get('peak_grid_load_mw', 0):,.0f} MW (Δ: {impacts.get('grid_load_delta_mw', 0):+,.0f} MW | Blackout Risk: {impacts.get('blackout_stress_probability', 0):.1%})",
+                                    f"* **Air Quality Category:** `{impacts.get('air_quality_category', 'MODERATE')}`\n",
+                                ]
+                                persona_sim = tool_result.get("persona_simulation")
+                                if persona_sim:
+                                    w_lines.append(f"**Persona Impact Level:** `{persona_sim.get('status_level')}` (Score: {persona_sim.get('impact_score')}/100)")
+                                    for adv in persona_sim.get("advisories", []):
+                                        w_lines.append(f"- {adv}")
+                                return "\n".join(w_lines), dispatched_action, executed_tools
 
-            return "\n".join(c_lines), dispatched_action, executed_tools
+                            if fn_name == "evaluate_parametric_crop_claim" and isinstance(tool_result, dict):
+                                v_lines = [
+                                    f"### Parametric Insurance Settlement Voucher: **{tool_result.get('voucher_id', '')}**\n",
+                                    f"* **Payout Status:** `{tool_result.get('payout_status', '')}`",
+                                    f"* **Crop & Season:** **{tool_result.get('crop', '')}** ({tool_result.get('season', '')})",
+                                    f"* **Net Claim Payout:** **₹{tool_result.get('net_claim_payout_inr', 0):,.2f}** ({tool_result.get('payout_percentage', 0)}% of sum insured)",
+                                    f"* **Statistical Guarantee:** {tool_result.get('statistical_guarantee', '')}",
+                                    f"* **Cryptographic Verification Hash:** `{tool_result.get('verification_hash', '')}` (SHA-256)\n",
+                                ]
+                                return "\n".join(v_lines), dispatched_action, executed_tools
 
-        if fn_name == "replay_historical_disaster" and isinstance(tool_result, dict):
-            d_lines = [
-                f"### Historical Disaster Replay Time Machine: **{tool_result.get('name', '')}**\n",
-                f"* **Benchmark ID:** `{tool_result.get('disaster_id', '')}` | **Date:** {tool_result.get('historical_date', '')}",
-                f"* **Advance Warning Delivered:** **+{tool_result.get('total_advance_warning_hours', 0):.0f} Hours** in advance lead time",
-                f"* **Lives Preserved Estimate:** **{tool_result.get('lives_protected_estimate', 0):,} citizens**",
-                f"* **Parametric DBT Claims Disbursed:** **₹{tool_result.get('simulated_parametric_payout_inr_cr', 0):.0f} Crores** instant voucher\n",
-            ]
-            if tool_result.get("mermaid_timeline_chart"):
-                d_lines.append(f"\n```mermaid\n{tool_result['mermaid_timeline_chart']}\n```")
-            return "\n".join(d_lines), dispatched_action, executed_tools
+                            if fn_name == "simulate_compound_domino_cascade" and isinstance(tool_result, dict):
+                                dom_lines = [
+                                    f"### Compound Domino Cascade Simulation: **{tool_result.get('city', '')}**\n",
+                                    f"* **System Vulnerability Index:** **{tool_result.get('system_vulnerability_index', 0):.1f}/100**",
+                                    f"* **Cascade Stages:** {len(tool_result.get('stages', []))} Sequential Failure Propagation steps\n",
+                                ]
+                                if tool_result.get("mermaid_flowchart"):
+                                    dom_lines.append(f"```mermaid\n{tool_result['mermaid_flowchart']}\n```\n")
+                                return "\n".join(dom_lines), dispatched_action, executed_tools
 
-        if fn_name == "compare_cities_risk" and isinstance(tool_result, dict):
-            ca = tool_result.get("city_a", {})
-            cb = tool_result.get("city_b", {})
-            kd = tool_result.get("key_differences", {})
-            comp_lines = [
-                f"### Comparative Environmental Risk Evaluation: **{ca.get('name')}** vs **{cb.get('name')}**\n",
-                f"* **{ca.get('name')}:** Max Temp: {ca.get('temperature_max_c')}°C | Rain: {ca.get('rainfall_mm')} mm | PM2.5: {ca.get('pm25_ug_m3')} µg/m³ | Risk: **{ca.get('risk_category')}** ({ca.get('compound_risk_score')})",
-                f"* **{cb.get('name')}:** Max Temp: {cb.get('temperature_max_c')}°C | Rain: {cb.get('rainfall_mm')} mm | PM2.5: {cb.get('pm25_ug_m3')} µg/m³ | Risk: **{cb.get('risk_category')}** ({cb.get('compound_risk_score')})",
-                f"* **Key Differences:** Δ Temp: {kd.get('temp_delta_c')}°C | Δ Rain: {kd.get('rain_delta_mm')} mm | Δ PM2.5: {kd.get('pm25_delta')} µg/m³\n",
-            ]
-            return "\n".join(comp_lines), dispatched_action, executed_tools
+                            if fn_name == "explain_risk_attribution_shap" and isinstance(tool_result, dict):
+                                shap_lines = [
+                                    f"### TreeSHAP Mathematical Risk Attribution: **{tool_result.get('city', '')}**\n",
+                                    f"* **Model ID:** `{tool_result.get('model_id', '')}` | Target: `{tool_result.get('target_unit', '')}`",
+                                    f"* **Additivity Error:** `{tool_result.get('additivity_error', '0.0')}`",
+                                    f"\n**Top Amplifying Risk Drivers:**",
+                                ]
+                                for feat in tool_result.get("top_amplifying_features", []):
+                                    shap_lines.append(f"- **{feat.get('feature_name')}:** +{feat.get('shap_value', 0):.3f} (Val: {feat.get('feature_value')})")
+                                return "\n".join(shap_lines), dispatched_action, executed_tools
 
-        if fn_name == "simulate_what_if_scenario" and isinstance(tool_result, dict):
-            city = tool_result.get("city", "")
-            inputs = tool_result.get("inputs", {})
-            impacts = tool_result.get("simulated_impacts", {})
-            w_lines = [
-                f"### Counterfactual Simulation: **{city}**\n",
-                f"* **Physical Inputs:** Max Temp: {inputs.get('temperature_max_c')}°C | Rainfall: {inputs.get('rainfall_mm')} mm | PM2.5: {inputs.get('pm25_ug_m3')} µg/m³",
-                f"* **SCS Surface Runoff:** {impacts.get('effective_surface_runoff_mm', 0):.1f} mm ({impacts.get('runoff_surge_multiplier', '')})",
-                f"* **Hydrological Hazard Probability:** {impacts.get('flood_hazard_probability', 0):.1%}",
-                f"* **Wet-Bulb Temperature:** {impacts.get('wet_bulb_temp_c', 0):.1f}°C (Apparent Heat Index: {impacts.get('apparent_heat_index_c', 0):.1f}°C)",
-                f"* **Power Grid Stress & Peak Load:** {impacts.get('peak_grid_load_mw', 0):,.0f} MW (Δ: {impacts.get('grid_load_delta_mw', 0):+,.0f} MW | Blackout Risk: {impacts.get('blackout_stress_probability', 0):.1%})",
-                f"* **Air Quality Category:** `{impacts.get('air_quality_category', 'MODERATE')}`\n",
-            ]
-            persona_sim = tool_result.get("persona_simulation")
-            if persona_sim:
-                w_lines.append(f"**Persona Impact Level:** `{persona_sim.get('status_level')}` (Score: {persona_sim.get('impact_score')}/100)")
-                for adv in persona_sim.get("advisories", []):
-                    w_lines.append(f"- {adv}")
-            return "\n".join(w_lines), dispatched_action, executed_tools
+                            return str(tool_result), dispatched_action, executed_tools
+            except Exception as e:
+                logger.warning(f"Gemini tools attempt on {m} failed: {e}")
 
-        if fn_name == "evaluate_parametric_crop_claim" and isinstance(tool_result, dict):
-            v_lines = [
-                f"### Parametric Insurance Settlement Voucher: **{tool_result.get('voucher_id', '')}**\n",
-                f"* **Payout Status:** `{tool_result.get('payout_status', '')}`",
-                f"* **Crop & Season:** **{tool_result.get('crop', '')}** ({tool_result.get('season', '')})",
-                f"* **Net Claim Payout:** **₹{tool_result.get('net_claim_payout_inr', 0):,.2f}** ({tool_result.get('payout_percentage', 0)}% of sum insured)",
-                f"* **Statistical Guarantee:** {tool_result.get('statistical_guarantee', '')}",
-                f"* **Cryptographic Verification Hash:** `{tool_result.get('verification_hash', '')}` (SHA-256)\n",
-            ]
-            return "\n".join(v_lines), dispatched_action, executed_tools
+            # Step 2: Try direct generation without tools (guaranteed resilient fallback)
+            try:
+                resp_direct = await client.post(url, json=payload_direct)
+                if resp_direct.status_code == 200:
+                    data = resp_direct.json()
+                    candidates = data.get("candidates", [])
+                    if candidates:
+                        parts = candidates[0].get("content", {}).get("parts", [])
+                        direct_text = next((p.get("text") for p in parts if "text" in p), None)
+                        if direct_text:
+                            return direct_text.strip(), None, []
+            except Exception as e:
+                logger.warning(f"Gemini direct attempt on {m} failed: {e}")
 
-        if fn_name == "simulate_compound_domino_cascade" and isinstance(tool_result, dict):
-            dom_lines = [
-                f"### Compound Domino Cascade Simulation: **{tool_result.get('city', '')}**\n",
-                f"* **System Vulnerability Index:** **{tool_result.get('system_vulnerability_index', 0):.1f}/100**",
-                f"* **Cascade Stages:** {len(tool_result.get('stages', []))} Sequential Failure Propagation steps\n",
-            ]
-            if tool_result.get("mermaid_flowchart"):
-                dom_lines.append(f"```mermaid\n{tool_result['mermaid_flowchart']}\n```\n")
-            return "\n".join(dom_lines), dispatched_action, executed_tools
-
-        if fn_name == "explain_risk_attribution_shap" and isinstance(tool_result, dict):
-            shap_lines = [
-                f"### TreeSHAP Mathematical Risk Attribution: **{tool_result.get('city', '')}**\n",
-                f"* **Model ID:** `{tool_result.get('model_id', '')}` | Target: `{tool_result.get('target_unit', '')}`",
-                f"* **Additivity Error:** `{tool_result.get('additivity_error', '0.0')}`",
-                f"\n**Top Amplifying Risk Drivers:**",
-            ]
-            for feat in tool_result.get("top_amplifying_features", []):
-                shap_lines.append(f"- **{feat.get('feature_name')}:** +{feat.get('shap_value', 0):.3f} (Val: {feat.get('feature_value')})")
-            return "\n".join(shap_lines), dispatched_action, executed_tools
-
-        return str(tool_result), dispatched_action, executed_tools
+    return None, None, []
 
 
 class AssistantEngine:
@@ -1118,20 +1145,25 @@ class AssistantEngine:
         req.message = (req.message or req.query or req.prompt or "").strip()
         metrics = build_metrics_summary(prediction_result, req.persona)
 
-        # 0. Retrieve Institutional Regulatory Standards via Federated Multi-Shard RAG
-        retrieved_standards = retrieve_relevant_standards(
-            query=req.message,
-            persona=req.persona,
-            city=prediction_result.city,
-            top_k=2,
-        )
+        # 0. Retrieve Institutional Regulatory Standards via Federated Multi-Shard RAG (targeted for regulatory topics)
+        retrieved_standards = None
+        if any(w in req.message.lower() for w in ["standard", "regulatory", "guideline", "blight", "cpcb", "ndma", "icar", "protocol", "threshold", "rule"]):
+            try:
+                retrieved_standards = retrieve_relevant_standards(
+                    query=req.message,
+                    persona=req.persona,
+                    city=prediction_result.city,
+                    top_k=1,
+                )
+            except Exception:
+                retrieved_standards = None
 
         norm_lang = (req.language or "en").strip().lower()
 
         system_prompt = build_grounded_system_prompt(
             pred=prediction_result,
             persona_id=req.persona,
-            retrieved_standards=retrieved_standards,
+            retrieved_standards=retrieved_standards or [],
             language=norm_lang,
         )
         followups = generate_suggested_followups(prediction_result, req.persona, language=norm_lang)
@@ -1160,7 +1192,7 @@ class AssistantEngine:
                 tool_calls.append({"name": "operational_command_engine", "data": tool_data})
                 provider = "climacore-intelligence-engine"
 
-        # 1. Attempt Gemini Agent Call with Native Function Calling
+        # 1. Attempt Gemini Agent Call with Native Function Calling & Direct Fallback
         key = self.api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
         if not ai_text and key:
             try:
@@ -1194,7 +1226,7 @@ class AssistantEngine:
                     query=req.message,
                     pred=prediction_result,
                     persona_id=req.persona,
-                    retrieved_standards=retrieved_standards,
+                    retrieved_standards=retrieved_standards or [],
                     language=norm_lang,
                 )
                 provider = "climacore-deterministic-synthesis"
@@ -1215,7 +1247,7 @@ class AssistantEngine:
             suggested_followups=followups,
             action=action,
             tool_calls=tool_calls,
-            retrieved_standards=retrieved_standards,
+            retrieved_standards=retrieved_standards or [],
             provider=clean_provider,
             latency_ms=round(latency_ms, 2),
             language=norm_lang,
