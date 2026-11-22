@@ -25,4 +25,29 @@ const createSatelliteMapStyle = (saturation: number, contrast: number): StyleSpe
 export const pageBackdropStyle = createSatelliteMapStyle(-0.4, 0.02);
 export const detailedSatelliteStyle = createSatelliteMapStyle(0.08, 0.08);
 
-export const detailedStreetStyle = "https://tiles.openfreemap.org/styles/bright";
+export const detailedStreetStyle: StyleSpecification = {
+  version: 8,
+  sources: {
+    street: {
+      type: "raster",
+      tiles: [
+        "https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
+        "https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
+        "https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
+        "https://d.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
+      ],
+      tileSize: 256,
+      attribution: "Map data (c) OpenStreetMap contributors, (c) CARTO",
+      maxzoom: 19,
+    },
+  },
+  layers: [
+    { id: "background", type: "background", paint: { "background-color": "#f8fafc" } },
+    {
+      id: "street-imagery",
+      type: "raster",
+      source: "street",
+      paint: { "raster-opacity": 1.0 },
+    },
+  ],
+};
