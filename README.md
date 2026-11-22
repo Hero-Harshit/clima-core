@@ -233,3 +233,5 @@ ClimaCore strictly adheres to authoritative national and international scientifi
 * **Backend**: Python 3.12, FastAPI, Uvicorn, Pydantic v2, LightGBM, NumPy, Pandas, Scipy.
 * **Generative Intelligence**: Google Gemini API (`gemini-3.8-flash`, `gemini-3.7-flash`, `gemini-3.6-flash`) with structured fallback heuristics.
 * **Deployment Architecture**: Vercel Serverless Functions and Edge-compatible ASGI pipeline.
+
+Made with Love, Made by Hero-Harshit.
