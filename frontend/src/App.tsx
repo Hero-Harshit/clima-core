@@ -396,7 +396,6 @@ function App() {
   const [activeDay, setActiveDay] = useState(0);
   const [intervalMetric, setIntervalMetric] = useState<IntervalMetric>("temperature_c");
   const [mapReset, setMapReset] = useState(0);
-  const [realismEnabled, setRealismEnabled] = useState(true);
   const [assistantInput, setAssistantInput] = useState("");
   const [assistantMessages, setAssistantMessages] = useState<AssistantMessage[]>([]);
   const [assistantFollowups, setAssistantFollowups] = useState<string[]>([]);
@@ -1933,17 +1932,6 @@ function App() {
                     <span className="card-label">{t.geospatial.cardLabel}</span>
                     <div className="map-location-row">
                       <h3><MapPin size={16} /><span>{cityName || t.geospatial.selectLocation}{cityState && cityState.toLowerCase() !== cityName.toLowerCase() ? `, ${cityState}` : ""}</span></h3>
-                      <button
-                        type="button"
-                        className={`realism-toggle ${realismEnabled ? "is-on" : ""}`}
-                        role="switch"
-                        aria-label={t.geospatial.realismToggle}
-                        aria-checked={realismEnabled}
-                        onClick={() => setRealismEnabled((enabled) => !enabled)}
-                      >
-                        <span>{t.geospatial.realismToggle}</span>
-                        <span className="realism-toggle-track" aria-hidden="true"><span /></span>
-                      </button>
                     </div>
                   </div>
                 </div>
@@ -1951,12 +1939,12 @@ function App() {
                   {city.trim() ? (
                     <>
                       <Suspense fallback={<div className="map-loading">Loading geospatial view…</div>}>
-                        <MapCanvas key={mapReset} {...coordinates} realismEnabled={realismEnabled} />
+                        <MapCanvas key={mapReset} {...coordinates} />
                       </Suspense>
                       <div className="map-overlay"><span className="map-live-dot" /> {t.geospatial.weatherAssistanceOverlay}</div>
                       {mapLocationUnavailable && <div className="map-location-warning" role="status">Could not locate {cityName || "selected city"}; showing default coordinates.</div>}
                       <div className="map-legend"><span><i className="legend-core" />{t.geospatial.legendUrbanCore}</span><span><i className="legend-ring" />{t.geospatial.legendExposureRadius}</span><span><i className="legend-marker" />{t.geospatial.legendCityCenter}</span></div>
-                      <div className="map-attribution">{realismEnabled ? "Imagery © Esri, Maxar, Earthstar Geographics, and the GIS User Community" : "© OpenStreetMap contributors © OpenFreeMap"}</div>
+                      <div className="map-attribution">Imagery © Esri, Maxar, Earthstar Geographics, and the GIS User Community</div>
                     </>
                   ) : (
                     <div className="map-blank-placeholder">

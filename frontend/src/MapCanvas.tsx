@@ -1,10 +1,9 @@
 import Map, { Layer, Marker, Source } from "react-map-gl/maplibre";
-import { detailedSatelliteStyle, detailedStreetStyle } from "./satelliteMapStyles";
+import { detailedSatelliteStyle } from "./satelliteMapStyles";
 
 type MapCanvasProps = {
   latitude: number;
   longitude: number;
-  realismEnabled: boolean;
 };
 
 function circleRing(longitude: number, latitude: number, radiusKm: number): number[][] {
@@ -29,14 +28,14 @@ function circleRing(longitude: number, latitude: number, radiusKm: number): numb
   return coordinates;
 }
 
-function MapCanvas({ latitude, longitude, realismEnabled }: MapCanvasProps) {
+function MapCanvas({ latitude, longitude }: MapCanvasProps) {
   return (
     <Map
       initialViewState={{ latitude, longitude, zoom: 10 }}
       longitude={longitude}
       latitude={latitude}
       zoom={10}
-      mapStyle={realismEnabled ? detailedSatelliteStyle : detailedStreetStyle}
+      mapStyle={detailedSatelliteStyle}
       scrollZoom={false}
       attributionControl={false}
     >

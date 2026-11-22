@@ -1,7 +1,7 @@
 {
   "city": "Ahmedabad",
-  "cached_at_utc": "2026-11-22T19:49:52.664153+00:00",
-  "expires_at_utc": "2026-11-22T21:49:52.664153+00:00",
+  "cached_at_utc": "2026-11-22T21:52:26.812784+00:00",
+  "expires_at_utc": "2026-11-22T23:52:26.812784+00:00",
   "ttl_seconds": 7200,
   "data": {
     "city": "Ahmedabad",
@@ -10,7 +10,7 @@
     "longitude": 72.5714,
     "elevation_m": 53.0,
     "timezone": "Asia/Kolkata",
-    "retrieved_at_utc": "2026-11-22T19:49:52.664153+00:00",
+    "retrieved_at_utc": "2026-11-22T21:52:26.812784+00:00",
     "is_cached": false,
     "cached_at_utc": null,
     "days": [

@@ -1,7 +1,7 @@
 {
   "city": "Pune",
-  "cached_at_utc": "2026-11-22T19:49:39.937085+00:00",
-  "expires_at_utc": "2026-11-22T21:49:39.937085+00:00",
+  "cached_at_utc": "2026-11-22T21:52:23.964953+00:00",
+  "expires_at_utc": "2026-11-22T23:52:23.964953+00:00",
   "ttl_seconds": 7200,
   "data": {
     "city": "Pune",
@@ -10,7 +10,7 @@
     "longitude": 73.8567,
     "elevation_m": 561.0,
     "timezone": "Asia/Kolkata",
-    "retrieved_at_utc": "2026-11-22T19:49:39.937085+00:00",
+    "retrieved_at_utc": "2026-11-22T21:52:23.964953+00:00",
     "is_cached": false,
     "cached_at_utc": null,
     "days": [
