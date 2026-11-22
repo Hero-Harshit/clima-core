@@ -4,6 +4,6 @@
   "private": true,
   "description": "ClimaCore Institutional Climate Risk Intelligence Platform",
   "scripts": {
-    "build": "if [ -d \"frontend\" ]; then cd frontend && npm install && npm run build; else npm install && npm run build; fi"
+    "build": "if [ -d \"frontend\" ]; then cd frontend && npm install && npm run build && cd .. && mkdir -p dist && cp -r frontend/dist/* dist/ && mkdir -p frontend/dist && cp -r dist/* frontend/dist/; else npm install && npm run build && mkdir -p frontend/dist && cp -r dist/* frontend/dist/; fi"
   }
 }

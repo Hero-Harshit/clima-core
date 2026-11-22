@@ -1,7 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "if [ -d \"frontend\" ]; then cd frontend && npm install && npm run build; else npm install && npm run build; fi",
-  "outputDirectory": "frontend/dist",
+  "buildCommand": "if [ -d \"frontend\" ]; then cd frontend && npm install && npm run build && cd .. && mkdir -p dist && cp -r frontend/dist/* dist/ && mkdir -p frontend/dist && cp -r dist/* frontend/dist/; else npm install && npm run build && mkdir -p frontend/dist && cp -r dist/* frontend/dist/; fi",
+  "outputDirectory": "dist",
+  "functions": {
+    "api/**/*.py": {
+      "includeFiles": "src/**,configs/**"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
