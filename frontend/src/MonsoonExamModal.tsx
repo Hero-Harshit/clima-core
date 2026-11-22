@@ -43,7 +43,7 @@ type MonsoonExamModalProps = {
   onClose: () => void;
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.PROD ? "" : "http://localhost:8000");
 
 const SHIFT_OPTIONS = [
   { id: "morning", label: "Morning (09:00 AM - 12:00 PM)", desc: "Gate arrival by 08:30 AM" },

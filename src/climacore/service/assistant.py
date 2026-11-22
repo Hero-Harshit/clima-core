@@ -208,6 +208,31 @@ You have access to specialized simulation and control tools:
 8. `convene_crisis_council`: Call this whenever the user asks to convene a Crisis Council, War Room deliberation, Incident Command debate, or resolve conflicting operational policies between Public Health, Power Grid, and Cold-Chain Logistics under severe climate stress.
 9. `replay_historical_disaster`: Call this whenever the user asks about historical disasters, backtesting, catastrophe replays, or how Clima-Core would have performed during landmark events (e.g. 2005 Mumbai Cloudburst 944mm, 2015 Chennai Floods 494mm, 2022 North India 49.2C Heatwave).
 
+OPERATIONAL COMMAND PROTOCOLS:
+The user or assistant toolbar may invoke specialized operational command modes:
+1. `/plan [role/scenario]` (Operational SOP Generator):
+   You MUST output a structured, professional Standard Operating Procedure (SOP).
+   Format with chronological phases:
+   - Phase 1: Immediate Action (T-0 to T+2h) with actionable checkmarks (`- [ ]`)
+   - Phase 2: Operational Defense (T+2 to T+6h) with actionable checkmarks (`- [ ]`)
+   - Phase 3: Recovery & Verification (T+6h+) with actionable checkmarks (`- [ ]`)
+   Ground the steps in the active persona, current weather risks, and official Indian regulatory standards (NDMA, IMD, CPCB).
+2. `/whatif [delta/event]` (Extreme Scenario Stress-Tester):
+   You MUST ground the query in ClimaCore physical hydrology, thermal stress, and supply chain models.
+   You MUST explicitly project these physical metrics:
+   - Drainage Capacity Breach Time
+   - Underpass Runoff Depth (in mm)
+   - Fleet Delay Advance (in minutes)
+   - Mandi Arrival Impact (tonnage/arrival delay)
+3. `/compare [cityA] [cityB]` (Multi-City Arbitrage & Disruption):
+   You MUST pull telemetry or Mandi pricing for both locations and format a side-by-side comparison table including:
+   - Risk Score
+   - Disruption Level
+   - Key Bottleneck
+   - Mandi Commodity Price Difference (if Mandi or commodities are specified)
+
+STRICT ENFORCEMENT: Never output em dashes (unicode U+2014). Use hyphens (-), colons (:), or bullets (*).
+
 STRICT PHYSICAL GROUNDING & INSTRUCTIONS:
 - Ground all advice strictly in the provided verified data and physical laws.
 - When answering a what-if question, cite the exact numbers returned by the simulation tool.
@@ -394,7 +419,86 @@ def _generate_localized_deterministic_synthesis(
     pm25 = metrics["pm25_ug_m3"]
     aqi_cat = metrics["air_quality_category"]
 
-    # 1. Umbrella / Rain Query
+    # 1. Greetings & Introductions
+    if re.search(r"\b(hi|hello|hey|namaste|pranam|greetings|help|shuru)\b", q_lower) and len(q_lower.split()) <= 6:
+        greetings = {
+            "hi": f"**नमस्ते! मैं आपका ClimaCore परिचालन खुफिया सहायक हूँ।**\n\nमैं **{city}** के लिए वास्तविक समय के मौसम और पर्यावरणीय जोखिमों की निगरानी कर रहा हूँ।\n* **आज का मौसम:** अधिकतम तापमान **{t_max:.1f}°C**, बारिश की संभावना **{rain_prob_pct}%**, वायु गुणवत्ता PM2.5 **{pm25:.1f} µg/m³** ({aqi_cat})।\n* आप मुझसे कल के मौसम, बारिश, या छाते की आवश्यकता के बारे में पूछ सकते हैं।",
+            "bn": f"**নমস্কার! আমি আপনার ClimaCore অপারেশনাল ইন্টেলিজেন্স সহকারী।**\n\nআমি **{city}**-এর রিয়েল-টাইম আবহাওয়া ও পরিবেশগত ঝুঁকি পর্যবেক্ষণ করছি।\n* **আজকের আবহাওয়া:** সর্বোচ্চ তাপমাত্রা **{t_max:.1f}°C**, বৃষ্টির সম্ভাবনা **{rain_prob_pct}%**, বাতাসের মান PM2.5 **{pm25:.1f} µg/m³** ({aqi_cat})।\n* আপনি কালকের আবহাওয়া, বৃষ্টি বা ছাতার প্রয়োজনীয়তা সম্পর্কে আমাকে জিজ্ঞাসা করতে পারেন।",
+            "ta": f"**வணக்கம்! நான் உங்கள் ClimaCore செயல்பாட்டு நுண்ணறிவு உதவியாளர்.**\n\nநான் **{city}**-க்கான நிகழ்நேர வானிலை மற்றும் சுற்றுச்சூழல் அபாயங்களைக் கண்காணித்து வருகிறேன்.\n* **இன்றைய வானிலை:** அதிகபட்ச வெப்பநிலை **{t_max:.1f}°C**, மழை வாய்ப்பு **{rain_prob_pct}%**, காற்றின் தரம் PM2.5 **{pm25:.1f} µg/m³** ({aqi_cat}).\n* நாளைய வானிலை, மழை அல்லது பாதுகாப்பு வழிமுறைகள் பற்றி நீங்கள் கேட்கலாம்.",
+            "te": f"**నమస్కారం! నేను మీ ClimaCore ఆపరేషనల్ ఇంటెలిజెన్స్ అసిస్టెంట్.**\n\nనేను **{city}** కోసం నిజ-సమయ వాతావరణం మరియు పర్యావరణ ప్రమాదాలను పర్యవేక్షిస్తున్నాను.\n* **నేటి వాతావరణం:** గరిష్ట ఉష్ణోగ్రత **{t_max:.1f}°C**, వర్షం అవకాశం **{rain_prob_pct}%**, గాలి నాణ్యత PM2.5 **{pm25:.1f} µg/m³** ({aqi_cat}).\n* రేపటి వాతావరణం లేదా గొడుగు అవసరం గురించి మీరు నన్ను అడగవచ్చు.",
+            "mr": f"**नमस्कार! मी तुमचा ClimaCore ऑपरेशनल इंटेलिजन्स सहाय्यक आहे.**\n\nमी **{city}** साठी रिअल-टाइम हवामान आणि पर्यावरणीय जोखमींवर लक्ष ठेवून आहे.\n* **आजचे हवामान:** कमाल तापमान **{t_max:.1f}°C**, पावसाची शक्यता **{rain_prob_pct}%**, हवेची गुणवत्ता PM2.5 **{pm25:.1f} µg/m³** ({aqi_cat}).\n* आपण मला उद्याचे हवामान, पाऊस किंवा सुरक्षेविषयी विचारू शकता.",
+            "gu": f"**નમસ્તે! હું તમારો ClimaCore ઓપરેશનલ ઇન્ટેલિજન્સ સહાયક છું.**\n\nહું **{city}** માટે રીઅલ-ટાઇમ હવામાન અને પર્યાવરણીય જોખમો પર નજર રાખી રહ્યો છું.\n* **આજનું હવામાન:** મહત્તમ તાપમાન **{t_max:.1f}°C**, વરસાદની શક્યતા **{rain_prob_pct}%**, હવાની ગુણવત્તા PM2.5 **{pm25:.1f} µg/m³** ({aqi_cat}).\n* તમે મને આવતીકાલના હવામાન અથવા વરસાદ વિશે પૂછી શકો છો.",
+        }
+        return greetings.get(lang, greetings["hi"])
+
+    # 2. About ClimaCore / Platform Inquiries
+    if re.search(r"\b(clima[- ]?core|climacore|about|platform|features|kya hai)\b", q_lower):
+        about_dict = {
+            "hi": f"### ClimaCore इंटेलिजेंस प्लेटफॉर्म\n\n**ClimaCore** भारत के प्रमुख शहरों, बुनियादी ढांचे और उच्च-जोखिम वाले कार्यक्षेत्रों के लिए एक भौतिकी-निर्देशित जलवायु जोखिम खुफिया मंच है।\n\n* **भौतिकी-आधारित जोखिम मॉडल:** SCS सतही जलभराव, वेट-बल्ब ग्लोब तापमान (WBGT) हीट स्ट्रेस, CPCB वायु गुणवत्ता, और पावर ग्रिड लोड पूर्वानुमान।\n* **विशिष्ट कार्यक्षेत्र परामर्श:** किसान, गिग वर्कर्स, दैनिक यात्री, छात्र और उद्योग जगत के लिए अनुकूलित प्रत्यक्ष परिचालन दिशा-निर्देश।\n* **सिमुलेशन उपकरण:** आपातकालीन योजना के लिए `/plan`, अप्रत्याशित चरम मौसम के लिए `/whatif`, और दो शहरों के जोखिम तुलना के लिए `/compare` का उपयोग करें।",
+            "bn": f"### ClimaCore ইন্টেলিজেন্স প্ল্যাটফর্ম\n\n**ClimaCore** ভারতের প্রধান শহর, অবকাঠামো ও শ্রমজীবী সম্প্রদায়ের জন্য নির্মিত একটি পদার্থবিজ্ঞান-নির্দেশিত জলবায়ু ঝুঁকি বিশ্লেষণ প্ল্যাটফর্ম।\n\n* **পদার্থবিজ্ঞান মডেল:** SCS সারফেস রানঅফ, ওয়েট-বাল্ব হিট স্ট্রেস, CPCB বায়ু মান এবং পাওয়ার গ্রিড লোড পূর্বাভাস।\n* **পেশাভিত্তিক পরামর্শ:** কৃষক, গিগ কর্মী, যাত্রী, শিক্ষার্থী এবং শিল্পের জন্য সরাসরি অপারেশনাল নির্দেশিকা।\n* **সিমুলেশন টুল:** জরুরি পরিকল্পনার জন্য `/plan`, আবহাওয়ার চরম পরিস্থিতির জন্য `/whatif` ব্যবহার করুন।",
+            "ta": f"### ClimaCore நுண்ணறிவு தளம்\n\n**ClimaCore** என்பது இந்தியாவின் முக்கிய நகரங்கள் மற்றும் உள்கட்டமைப்புகளுக்காக வடிவமைக்கப்பட்ட காலநிலை இடர் பகுப்பாய்வு அமைப்பாகும்.\n\n* **இயற்பியல் மாதிரிகள்:** மேற்பரப்பு நீர் வடிகால் (SCS), ஈரக்குமிழ் வெப்ப அழுத்தம் (WBGT), மற்றும் காற்றின் தரம் (CPCB).\n* **துறைசார் ஆலோசனைகள்:** விவசாயிகள், டெலிவரி தொழிலாளர்கள், மாணவர்கள் மற்றும் தொழில்துறைகளுக்கான பாதுகாப்பு நெறிமுறைகள்.",
+            "te": f"### ClimaCore ఇంటెలిజెన్స్ ప్లాట్‌ఫామ్\n\n**ClimaCore** అనేది భారతీయ నగరాలు మరియు కీలక మౌలిక సదుపాయాల కోసం రూపొందించబడిన వాతావరణ ముప్పు విశ్లేషణ వేదిక.\n\n* **భౌతిక నమూనాలు:** ఉపరితల నీటి ప్రవాహం (SCS), వెట్-బల్బ్ వేడి ఒత్తిడి (WBGT), మరియు గాలి నాణ్యత సూచిక.",
+            "mr": f"### ClimaCore इंटेलिजन्स प्लॅटफॉर्म\n\n**ClimaCore** ही भारतातील शहरे आणि पायाभूत सुविधांसाठी भौतिकशास्त्र-आधारित हवामान जोखीम बुद्धिमत्ता प्रणाली आहे.\n\n* **भौतिक मॉडेल:** पृष्ठभागावरील पाण्याचा निचरा (SCS), वेट-बल्ब उष्णता ताण (WBGT), आणि हवेची गुणवत्ता.",
+            "gu": f"### ClimaCore ઇન્ટેલિજન્સ પ્લેટફોર્મ\n\n**ClimaCore** એ ભારતીય શહેરો અને પાયાની સુવિધાઓ માટે ભૌતિકશાસ્ત્ર આધારિત આબોહવા જોખમ વિશ્લેષણ સિસ્ટમ છે.",
+        }
+        return about_dict.get(lang, about_dict["hi"])
+
+    # 3. Tomorrow Weather / Sunny / Umbrella Query
+    if re.search(r"\b(tomorrow|tommorow|tomorow|kal|aavtikaal|naalai|repu|udya)\b", q_lower):
+        tomorrow = pred.daily_predictions[1] if len(pred.daily_predictions) > 1 else pred.daily_predictions[0]
+        m1 = tomorrow.forecast_metrics
+        t_max1 = float(m1.get("temp_max", 30.0) or 30.0)
+        rain_mm1 = float(m1.get("precipitation_mm", 0.0) or 0.0)
+        raw_p1 = float(m1.get("rain_probability", 0.0) or 0.0)
+        rain_p1 = int(raw_p1 if raw_p1 > 1.0 else raw_p1 * 100.0)
+        is_sunny1 = (rain_p1 < 25 and rain_mm1 < 1.0)
+        is_rainy1 = (rain_p1 >= 35 or rain_mm1 >= 1.5)
+
+        # Umbrella specific check for tomorrow
+        if re.search(r"\b(umbrella|chata|chatri|kodai|godugu)\b", q_lower):
+            if is_rainy1:
+                tomorrow_umb_yes = {
+                    "hi": f"**हाँ, कल ({tomorrow.day_name}) {city} में आपको छाता साथ रखना चाहिए।**\n\n* **पूर्वानुमान:** {rain_mm1:.1f} मिमी बारिश की **{rain_p1}% संभावना** है।\n* **परामर्श:** यात्रा के दौरान भीगने से बचने के लिए छाता अवश्य रखें।",
+                    "bn": f"**হ্যাঁ, কাল ({tomorrow.day_name}) {city}-তে আপনার সাথে ছাতা রাখা উচিত।**\n\n* **পূর্বাভাস:** {rain_mm1:.1f} মিমি বৃষ্টির **{rain_p1}% সম্ভাবনা** রয়েছে।",
+                    "ta": f"**ஆம், நாளை ({tomorrow.day_name}) {city}-ல் குடை எடுத்துச் செல்ல வேண்டும்.**\n\n* **முன்னறிவிப்பு:** {rain_mm1:.1f} மி.மீ மழை பெய்ய **{rain_p1}% வாய்ப்பு** உள்ளது.",
+                    "te": f"**అవును, రేపు ({tomorrow.day_name}) {city}లో గొడుగు తీసుకెళ్లాలి.**\n\n* **సూచన:** {rain_mm1:.1f} మి.మీ వర్షం అవకాశం **{rain_p1}%**.",
+                    "mr": f"**होय, उद्या ({tomorrow.day_name}) {city} मध्ये छत्री सोबत ठेवावी.**\n\n* **अंदाज:** {rain_mm1:.1f} मिमी पावसाची **{rain_p1}% शक्यता** आहे.",
+                    "gu": f"**હા, આવતીકાલે ({tomorrow.day_name}) {city}માં છત્રી સાથે રાખવી પડશે.**\n\n* **આગાહી:** {rain_mm1:.1f} મીમી વરસાદની **{rain_p1}% શક્યતા** છે.",
+                }
+                return tomorrow_umb_yes.get(lang, tomorrow_umb_yes["hi"])
+            else:
+                tomorrow_umb_no = {
+                    "hi": f"**नहीं, कल ({tomorrow.day_name}) {city} में छाते की कोई आवश्यकता नहीं होगी।**\n\n* **पूर्वानुमान:** मौसम मुख्य रूप से शुष्क रहेगा और बारिश की संभावना केवल **{rain_p1}%** ({rain_mm1:.1f} मिमी) है।\n* **परिस्थिति:** आसमान साफ रहेगा और धूप खिली रहेगी।",
+                    "bn": f"**না, কাল ({tomorrow.day_name}) {city}-তে ছাতার কোনো প্রয়োজন নেই।**\n\n* **পূর্বাভাস:** আকাশ প্রধানত শুষ্ক ও পরিষ্কার থাকবে, বৃষ্টির সম্ভাবনা মাত্র **{rain_p1}%**।",
+                    "ta": f"**இல்லை, நாளை ({tomorrow.day_name}) {city}-ல் குடை தேவையில்லை.**\n\n* **முன்னறிவிப்பு:** வானம் வறண்டு காணப்படும், மழை வாய்ப்பு **{rain_p1}%** மட்டுமே.",
+                    "te": f"**లేదు, రేపు ({tomorrow.day_name}) {city}లో గొడుగు అవసరం లేదు.**\n\n* **పరిస్థితులు:** వాతావరణం పొడిగా ఉంటుంది, వర్షం అవకాశం **{rain_p1}%** మాత్రమే.",
+                    "mr": f"**नाही, उद्या ({tomorrow.day_name}) {city} मध्ये छत्रीची गरज नाही.**\n\n* **अंदाज:** हवामान कोरडे राहील, पावसाची शक्यता केवळ **{rain_p1}%** आहे.",
+                    "gu": f"**ના, આવતીકાલે ({tomorrow.day_name}) {city}માં છત્રીની જરૂર નથી.**\n\n* **આગાહી:** આકાશ સ્વચ્છ રહેશે, વરસાદની શક્યતા માત્ર **{rain_p1}%** છે.",
+                }
+                return tomorrow_umb_no.get(lang, tomorrow_umb_no["hi"])
+
+        if is_sunny1:
+            tomorrow_res = {
+                "hi": f"**हाँ, कल ({tomorrow.day_name}) {city} में मुख्य रूप से धूप खिली रहेगी और आसमान साफ रहेगा!**\n\n* **तापमान:** अधिकतम तापमान **{t_max1:.1f}°C** तक पहुंचेगा।\n* **वर्षा:** बारिश की संभावना केवल **{rain_p1}%** ({rain_mm1:.1f} मिमी) है। मौसम पूरी तरह शुष्क रहेगा।\n* **परामर्श:** बाहरी गतिविधियों और यात्रा के लिए परिस्थितियां अनुकूल हैं।",
+                "bn": f"**হ্যাঁ, কাল ({tomorrow.day_name}) {city}-তে প্রধানত রৌদ্রোজ্জ্বল ও পরিষ্কার আকাশ থাকবে!**\n\n* **তাপমাত্রা:** সর্বোচ্চ তাপমাত্রা **{t_max1:.1f}°C** পর্যন্ত হতে পারে।\n* **বৃষ্টিপাত:** বৃষ্টির সম্ভাবনা মাত্র **{rain_p1}%** ({rain_mm1:.1f} মিমি)। আবহাওয়া শুষ্ক থাকবে।\n* **পরামর্শ:** বাইরের কাজকর্মের জন্য পরিস্থিতি অনুকূল।",
+                "ta": f"**ஆம், நாளை ({tomorrow.day_name}) {city}-ல் பெரும்பாலும் வெயில் மற்றும் தெளிவான வானிலை நிலவும்!**\n\n* **வெப்பநிலை:** அதிகபட்ச வெப்பநிலை **{t_max1:.1f}°C** வரை இருக்கும்.\n* **மழைப்பொழிவு:** மழைக்கான வாய்ப்பு மிகக் குறைவு **{rain_p1}%** மட்டுமே ({rain_mm1:.1f} மி.மீ).\n* **பரிந்துரை:** வெளிப்புற பணிகளுக்கு சாதகமான சூழல் உள்ளது.",
+                "te": f"**అవును, రేపు ({tomorrow.day_name}) {city}లో ప్రధానంగా ఎండగా మరియు స్పష్టమైన ఆకాశం ఉంటుంది!**\n\n* **ఉష్ణోగ్రత:** గరిష్ట ఉష్ణోగ్రత **{t_max1:.1f}°C** చేరుకుంటుంది.\n* **వర్షపాతం:** వర్షం అవకాశం కేవలం **{rain_p1}%** మాత్రమే ({rain_mm1:.1f} మి.మీ).",
+                "mr": f"**होय, उद्या ({tomorrow.day_name}) {city} मध्ये मुख्यतः निरभ्र आणि सूर्यप्रकाशित हवामान राहील!**\n\n* **तापमान:** कमाल तापमान **{t_max1:.1f}°C** पर्यंत राहील.\n* **पाऊस:** पावसाची शक्यता केवळ **{rain_p1}%** ({rain_mm1:.1f} मिमी) आहे.",
+                "gu": f"**હા, આવતીકાલે ({tomorrow.day_name}) {city}માં મુખ્યત્વે તડકો અને સ્વચ્છ આકાશ રહેશે!**\n\n* **તાપમાન:** મહત્તમ તાપમાન **{t_max1:.1f}°C** રહેશે.\n* **વરસાદ:** વરસાદની શક્યતા માત્ર **{rain_p1}%** છે.",
+            }
+            return tomorrow_res.get(lang, tomorrow_res["hi"])
+        elif is_rainy1:
+            tomorrow_rain = {
+                "hi": f"**कल ({tomorrow.day_name}) {city} में बादल छाए रहेंगे और बारिश की संभावना है।**\n\n* **तापमान:** अधिकतम तापमान **{t_max1:.1f}°C** रहेगा।\n* **वर्षा:** **{rain_mm1:.1f} मिमी** बारिश की **{rain_p1}% संभावना** है।\n* **परामर्श:** यात्रा के समय छाता साथ रखें और निचले रास्तों पर जलभराव से बचें।",
+                "bn": f"**কাল ({tomorrow.day_name}) {city}-তে মেঘলা আকাশ এবং বৃষ্টির সম্ভাবনা রয়েছে।**\n\n* **তাপমাত্রা:** সর্বোচ্চ তাপমাত্রা **{t_max1:.1f}°C**।\n* **বৃষ্টিপাত:** **{rain_mm1:.1f} মিমি** বৃষ্টির **{rain_p1}% সম্ভাবনা** রয়েছে।\n* **পরামর্শ:** সাথে ছাতা রাখুন।",
+                "ta": f"**நாளை ({tomorrow.day_name}) {city}-ல் மேகமூட்டத்துடன் மழை பெய்ய வாய்ப்புள்ளது.**\n\n* **அதிகபட்ச வெப்பநிலை:** **{t_max1:.1f}°C**.\n* **மழை:** **{rain_mm1:.1f} மி.மீ** மழை பெய்ய **{rain_p1}% வாய்ப்பு** உள்ளது.",
+                "te": f"**రేపు ({tomorrow.day_name}) {city}లో మేఘావృతమై వర్షం పడే అవకాశం ఉంది.**\n\n* **గరిష్ట ఉష్ణోగ్రత:** **{t_max1:.1f}°C**.\n* **వర్షం:** **{rain_mm1:.1f} మి.మీ** వర్షం అవకాశం **{rain_p1}%**.",
+                "mr": f"**उद्या ({tomorrow.day_name}) {city} मध्ये ढगाळ हवामान आणि पावसाची शक्यता आहे.**\n\n* **कमाल तापमान:** **{t_max1:.1f}°C**.\n* **पाऊस:** **{rain_mm1:.1f} मिमी** पावसाची **{rain_p1}% शक्यता**.",
+                "gu": f"**આવતીકાલે ({tomorrow.day_name}) {city}માં વાદળછાયું વાતાવરણ અને વરસાદની સંભાવના છે.**\n\n* **મહત્તમ તાપમાન:** **{t_max1:.1f}°C**.\n* **વરસાદ:** **{rain_mm1:.1f} મીમી** વરસાદની **{rain_p1}% શક્યતા**.",
+            }
+            return tomorrow_rain.get(lang, tomorrow_rain["hi"])
+
+    # 4. Umbrella / Rain Query
     if re.search(r"\b(umbrella|rain|raining|rainy|shower|showers|monsoon|deluge|pour|downpour)\b", q_lower):
         if is_rainy:
             umbrella_yes = {
@@ -518,7 +622,7 @@ def generate_deterministic_synthesis(
     retrieved_standards: Optional[List[Dict[str, Any]]] = None,
     language: str = "en",
 ) -> str:
-    """Intelligent rule-based synthesis answering basic weather queries when Gemini API key is absent."""
+    """Intelligent rule-based synthesis answering conversational & weather queries when Gemini API quota is unavailable."""
     metrics = build_metrics_summary(pred, persona_id)
     q_lower = query.strip().lower()
     city = metrics["city"]
@@ -531,8 +635,10 @@ def generate_deterministic_synthesis(
     aqi_cat = metrics["air_quality_category"]
 
     today = pred.daily_predictions[0]
+    tomorrow = pred.daily_predictions[1] if len(pred.daily_predictions) > 1 else pred.daily_predictions[0]
     personas_dict = today.personas or {}
     persona_data = personas_dict.get(persona_id, {})
+    persona_title = persona_data.get("persona_title", persona_id.replace("_", " ").title()) if isinstance(persona_data, dict) else persona_id.replace("_", " ").title()
     restrictions = persona_data.get("operational_restrictions", []) if isinstance(persona_data, dict) else []
 
     is_rainy = (rain_prob_pct >= 35) or (rain_mm >= 1.5)
@@ -548,7 +654,100 @@ def generate_deterministic_synthesis(
             language=norm_lang,
         )
 
-    # 1. Agriculture / Pesticide / Crop Query
+    # 1. Platform Overview / "About ClimaCore" / "What is Clima Core"
+    if re.search(r"\b(clima[- ]?core|climacore|about|what is this|tell me about|platform|features|capabilities|how does it work)\b", q_lower):
+        return (
+            f"### ClimaCore Intelligence Platform\n\n"
+            f"**ClimaCore** is an institutional-grade, physics-guided climate and weather intelligence system built specifically for Indian cities, critical infrastructure, and high-vulnerability communities.\n\n"
+            f"**Key Capabilities for {city} ({persona_title}):**\n"
+            f"* **Physics-Calibrated Risk Models:** Real-time SCS surface runoff hydrology, Wet-Bulb Globe Temperature (WBGT) heat strain, CPCB-standard multipollutant air quality, and power grid peak load surge modeling.\n"
+            f"* **Sector-Specific Directives:** Personalized risk metrics and actionable standard operating procedures calibrated for Farmers, Gig Workers, Commuters, Students, and Industrial Operations.\n"
+            f"* **Counterfactual Scenario Stress-Testing:** Type `/whatif` to simulate cloudbursts or heat spikes, `/compare` to assess risk between Indian cities, or `/plan` to generate emergency operational SOPs.\n"
+            f"* **Verified Environmental Telemetry:** Grounded in high-resolution IMD, ECMWF, and CPCB observational feeds with conformal 90% confidence uncertainty bounds."
+        )
+
+    # 2. Greeting / Introduction Queries ("Hi", "Hello", "Hey", "Good morning", "Help")
+    if re.search(r"\b(hi|hello|hey|greetings|namaste|good morning|good afternoon|good evening|who are you|what can you do|help)\b", q_lower) and len(q_lower.split()) <= 7:
+        return (
+            f"**Hello! I am your ClimaCore Operational Intelligence Assistant.**\n\n"
+            f"I am actively monitoring live physical environmental telemetry for **{city}** calibrated for the **{persona_title}** sector.\n\n"
+            f"**Current Status for {city}:**\n"
+            f"* **Today's Weather:** High of **{t_max:.1f}°C**, Precipitation: **{rain_mm:.1f} mm** ({rain_prob_pct}% probability), PM2.5: **{pm25:.1f} µg/m³** ({aqi_cat}).\n"
+            f"* **Threat Level:** **{metrics['peak_risk_category']}** (Compound score {metrics['peak_compound_risk']:.1f}/100).\n\n"
+            f"Feel free to ask me questions like *'Will it be sunny tomorrow?'*, *'Should I carry an umbrella today?'*, *'What is the air quality outlook?'*, or use operational commands like `/plan`, `/whatif`, or `/compare`."
+        )
+
+    # 3. Tomorrow / Future Weather Queries ("Will it be sunny tomorrow?", "Tomorrow weather", "Rain tomorrow")
+    if re.search(r"\b(tomorrow|tommorow|tomorow|next day|kal)\b", q_lower):
+        m1 = tomorrow.forecast_metrics
+        t_max1 = float(m1.get("temp_max", 30.0) or 30.0)
+        t_min1 = float(m1.get("temp_min", 20.0) or 20.0)
+        apparent1 = float(m1.get("apparent_temp_max", t_max1) or t_max1)
+        rain_mm1 = float(m1.get("precipitation_mm", 0.0) or 0.0)
+        raw_p1 = float(m1.get("rain_probability", 0.0) or 0.0)
+        rain_p1 = int(raw_p1 if raw_p1 > 1.0 else raw_p1 * 100.0)
+        wind1 = float(m1.get("wind_speed_kmh", 12.0) or 12.0)
+        pm25_1 = float(m1.get("pm2_5", 35.0) or 35.0)
+        is_sunny_tomorrow = (rain_p1 < 25 and rain_mm1 < 1.0)
+        is_rainy_tomorrow = (rain_p1 >= 35 or rain_mm1 >= 1.5)
+
+        # Specific query intentions for tomorrow
+        if re.search(r"\b(umbrella|carry.*umbrella|need.*umbrella)\b", q_lower):
+            if is_rainy_tomorrow:
+                lead = f"**Yes, you should definitely carry an umbrella tomorrow ({tomorrow.day_name}, {tomorrow.date}) in {city}.**"
+            else:
+                lead = f"**No, you will not need an umbrella tomorrow ({tomorrow.day_name}, {tomorrow.date}) in {city}.**"
+        elif re.search(r"\b(rain|raining|rainy|shower|showers|downpour|drizzle|precipitation)\b", q_lower):
+            if is_rainy_tomorrow:
+                lead = f"**Yes, rain is expected tomorrow ({tomorrow.day_name}, {tomorrow.date}) in {city}.**"
+            else:
+                lead = f"**No, rain is not expected tomorrow ({tomorrow.day_name}, {tomorrow.date}) in {city}.**"
+        elif re.search(r"\b(sunny|sun|clear|bright)\b", q_lower):
+            if is_sunny_tomorrow:
+                lead = f"**Yes, tomorrow ({tomorrow.day_name}, {tomorrow.date}) in {city} will be predominantly sunny and clear!**"
+            else:
+                lead = f"**No, tomorrow ({tomorrow.day_name}, {tomorrow.date}) in {city} will be mostly overcast with a chance of precipitation.**"
+        elif re.search(r"\b(hot|cold|temperature|temp|degrees)\b", q_lower):
+            lead = f"**Tomorrow ({tomorrow.day_name}, {tomorrow.date}) in {city}: High of {t_max1:.1f}°C and low of {t_min1:.1f}°C.**"
+        elif is_rainy_tomorrow:
+            lead = f"**Tomorrow ({tomorrow.day_name}, {tomorrow.date}) in {city} will see overcast skies and expected showers.**"
+        else:
+            lead = f"**Tomorrow ({tomorrow.day_name}, {tomorrow.date}) in {city} will have generally clear and stable conditions.**"
+
+        condition_desc = "Sunny and clear skies" if is_sunny_tomorrow else ("Scattered rain and overcast" if is_rainy_tomorrow else "Partly cloudy with dry spells")
+
+        return (
+            f"{lead}\n\n"
+            f"* **Sky Condition:** {condition_desc}\n"
+            f"* **Temperature Range:** High of **{t_max1:.1f}°C** (Low: **{t_min1:.1f}°C**, Feels like: **{apparent1:.1f}°C**)\n"
+            f"* **Precipitation:** **{rain_mm1:.1f} mm** expected (**{rain_p1}%** rain probability)\n"
+            f"* **Wind & Atmosphere:** Wind speed around **{wind1:.1f} km/h**; PM2.5 is **{pm25_1:.1f} µg/m³**\n"
+            f"* **Operational Advisory ({persona_title}):** "
+            + ("Dry, sunny conditions favor normal field and commute operations." if is_sunny_tomorrow else ("Plan for moisture protection and check low-lying transit routes." if is_rainy_tomorrow else "Standard operational parameters apply."))
+        )
+
+    # 4. Sunny / Clear / General Weather Outlook for Today
+    if re.search(r"\b(sunny|clear sky|clear skies|how is the weather|weather today|weather outlook|is it hot|is it warm|climate today)\b", q_lower):
+        if not is_rainy and rain_prob_pct < 25:
+            lead = f"**Yes, conditions in {city} are sunny and clear today!**"
+            condition_desc = "predominantly sunny with clear visibility"
+        elif is_rainy:
+            lead = f"**Conditions in {city} today are overcast with rain expected.**"
+            condition_desc = f"cloudy with {rain_mm:.1f} mm of rainfall ({rain_prob_pct}% probability)"
+        else:
+            lead = f"**Conditions in {city} today are mild and partly cloudy.**"
+            condition_desc = "partly cloudy with dry conditions"
+
+        return (
+            f"{lead}\n\n"
+            f"* **Current State:** Skies are {condition_desc}.\n"
+            f"* **Temperature:** High of **{t_max:.1f}°C** (Apparent feel: **{metrics['apparent_temp_max_c']:.1f}°C**, Wet-Bulb: {wet_bulb or 'N/A'}°C).\n"
+            f"* **Precipitation Risk:** **{rain_mm:.1f} mm** ({rain_prob_pct}% probability).\n"
+            f"* **Air Quality:** PM2.5 is **{pm25:.1f} µg/m³** ({aqi_cat}).\n"
+            f"* **Sector Context ({persona_title}):** Overall operational threat level is **{metrics['peak_risk_category']}** (Compound score {metrics['peak_compound_risk']:.1f}/100)."
+        )
+
+    # 5. Agriculture / Pesticide / Crop Query
     if re.search(r"\b(pesticide|spray|spraying|crop|crops|wheat|paddy|rice|cotton|mustard|potato|irrigate|irrigation|farming|sowing|soil)\b", q_lower):
         icar_ref = ""
         if retrieved_standards:
@@ -573,7 +772,7 @@ def generate_deterministic_synthesis(
                 f"* **Soil Deficit:** Soil moisture deficit index is {metrics['soil_moisture_deficit_index']}.{icar_ref}"
             )
 
-    # 2. Water Quality / Chemical Potability / Aquifer Contamination (RAG Driven)
+    # 6. Water Quality / Chemical Potability / Aquifer Contamination (RAG Driven)
     if re.search(r"\b(fluoride|nitrate|arsenic|lead|uranium|hardness|tds|potable|drinking water|water quality|borewell|aquifer)\b", q_lower):
         wq_std = None
         if retrieved_standards:
@@ -588,7 +787,7 @@ def generate_deterministic_synthesis(
                 f"* **Official Citation:** {wq_std['citation']}"
             )
 
-    # 3. Critical Infrastructure, Railway Track Safety & Energy Grid (RAG Driven)
+    # 7. Critical Infrastructure, Railway Track Safety & Energy Grid (RAG Driven)
     if re.search(r"\b(railway|rail|track|buckling|patrolling|transformer|grid|substation|transmission|bitumen|asphalt|power plant)\b", q_lower):
         infra_std = None
         if retrieved_standards:
@@ -603,7 +802,7 @@ def generate_deterministic_synthesis(
                 f"* **Official Reference:** {infra_std['citation']}"
             )
 
-    # 4. Air Quality & GRAP Emergency Countermeasures (RAG Driven)
+    # 8. Air Quality & GRAP Emergency Countermeasures (RAG Driven)
     if re.search(r"\b(aqi|pm2.5|pm10|grap|stubble|inversion|stagnation|kiln|smog)\b", q_lower):
         air_std = None
         if retrieved_standards:
@@ -618,8 +817,8 @@ def generate_deterministic_synthesis(
                 f"* **Statutory Citation:** {air_std['citation']}"
             )
 
-    # 5. Umbrella / Rain Query
-    if re.search(r"\b(umbrella|rain|raining|rainy|shower|showers|monsoon|deluge|pour|downpour)\b", q_lower):
+    # 9. Umbrella / Rain Query
+    if re.search(r"\b(umbrella|rain|raining|rainy|shower|showers|monsoon|deluge|pour|downpour|drizzle|precipitation)\b", q_lower):
         if is_rainy:
             return (
                 f"**Yes, you should definitely carry an umbrella today in {city}.**\n\n"
@@ -635,8 +834,8 @@ def generate_deterministic_synthesis(
                 f"* **Conditions:** Skies are predominantly dry. You can travel without rain protection."
             )
 
-    # 6. Heat / Outdoor Activity Query
-    if re.search(r"\b(heat|heatwave|hot|sun|outdoor|sports|jog|exercise)\b", q_lower):
+    # 10. Heat / Outdoor Activity Query
+    if re.search(r"\b(heat|heatwave|hot|sun|thermal|outdoor|sports|jog|exercise)\b", q_lower):
         ndma_ref = ""
         if retrieved_standards:
             ndma_std = next((s for s in retrieved_standards if s.get("domain") in ["public_health_disaster", "heat_disaster"]), None)
@@ -657,34 +856,9 @@ def generate_deterministic_synthesis(
                 f"Thermal strain is within normal operational limits.{ndma_ref}"
             )
 
-    # 4. Agriculture / Pesticide / Crop Query
-    if any(k in q_lower for k in ["pesticide", "spray", "crop", "irrigate", "farming", "sowing", "soil"]):
-        icar_ref = ""
-        if retrieved_standards:
-            icar = next((s for s in retrieved_standards if "pesticide" in s.get("id", "") or "spray" in s.get("id", "") or s.get("domain") == "agriculture"), None)
-            if icar:
-                icar_ref = (
-                    f"\n* **ICAR-CRIDA Scientific Standard ({icar['title']}):** {icar['rule_text']}\n"
-                    f"* **Mandatory Directive:** {icar['mandatory_directive']} ({icar['citation']})"
-                )
-
-        if is_rainy:
-            return (
-                f"**Hold off on chemical pesticide spraying in {city} today.**\n\n"
-                f"* **Reason:** Rainfall is forecast at {rain_mm:.1f} mm ({rain_prob_pct}% probability). "
-                f"Chemicals applied now will suffer severe surface wash-off, reducing efficacy and causing pesticide runoff into drainage channels.\n"
-                f"* **Recommendation:** Delay chemical applications until dry conditions return.{icar_ref}"
-            )
-        else:
-            return (
-                f"**Field spraying conditions in {city} are favorable today.**\n\n"
-                f"* **Forecast:** Precipitation probability is low ({rain_prob_pct}%), and wind speed is {metrics['wind_speed_kmh']} km/h (within safe spray drift threshold < 15 km/h).\n"
-                f"* **Soil Deficit:** Soil moisture deficit index is {metrics['soil_moisture_deficit_index']}.{icar_ref}"
-            )
-
-    # 5. Default Comprehensive Synthesis
+    # 11. Default Comprehensive Synthesis (only when query has no specific match)
     lines = [
-        f"### Environmental Risk Summary for **{city}** ({persona_id.capitalize()} Context)\n",
+        f"### Environmental Risk Summary for **{city}** ({persona_title} Context)\n",
         f"* **Thermal State:** High of **{t_max:.1f}°C** (Wet-Bulb: {wet_bulb or 'N/A'}°C), 90% confidence range: {metrics['conformal_intervals_90pct']['temperature_range']}.",
         f"* **Hydrology:** **{rain_mm:.1f} mm** precipitation expected with **{rain_prob_pct}%** probability.",
         f"* **Air Quality:** PM2.5 is **{pm25:.1f} µg/m³** ({aqi_cat}).",
@@ -695,7 +869,7 @@ def generate_deterministic_synthesis(
 
     if retrieved_standards:
         top_std = retrieved_standards[0]
-        if top_std.get("relevance_score", 0.0) >= 0.25:
+        if top_std.get("relevance_score", 0.0) >= 0.50:
             lines.append(
                 f"\n**Institutional Regulatory Benchmark ({top_std['authority']}):**\n"
                 f"- **{top_std['title']}**: {top_std['rule_text']}\n"
@@ -969,9 +1143,23 @@ class AssistantEngine:
         tool_calls: List[Dict[str, Any]] = []
         provider = "climacore-deterministic-agent"
 
+        # Explicit operational command tools (/plan, /whatif, /compare)
+        norm_cmd = req.message.strip().lower()
+        if norm_cmd.startswith(("/plan", "/whatif", "/compare")):
+            cmd_result = detect_and_execute_offline_scenario(
+                query=req.message,
+                current_city=prediction_result.city,
+                current_persona=req.persona,
+                executor=executor,
+            )
+            if cmd_result is not None:
+                ai_text, action, tool_data = cmd_result
+                tool_calls.append({"name": "operational_command_engine", "data": tool_data})
+                provider = "climacore-intelligence-engine"
+
         # 1. Attempt Gemini Agent Call with Native Function Calling
         key = self.api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-        if key:
+        if not ai_text and key:
             try:
                 ai_text, action, tool_calls = await call_gemini_agent_with_tools(
                     system_prompt=system_prompt,
@@ -1010,8 +1198,14 @@ class AssistantEngine:
 
         latency_ms = (time.perf_counter() - t0) * 1000.0
 
+        if ai_text:
+            ai_text = ai_text.replace(chr(8212), " - ")
+            ai_text = ai_text.replace("Gemini 1.5 Flash", "ClimaCore Intelligence").replace("Gemini", "ClimaCore Intelligence")
+
+        clean_provider = "ClimaCore Intelligence"
+
         return AssistantChatResponse(
-            response=ai_text,
+            response=ai_text or "ClimaCore Intelligence synthesized operational response.",
             city=prediction_result.city,
             persona=req.persona,
             metrics_used=metrics,
@@ -1019,7 +1213,7 @@ class AssistantEngine:
             action=action,
             tool_calls=tool_calls,
             retrieved_standards=retrieved_standards,
-            provider=provider,
+            provider=clean_provider,
             latency_ms=round(latency_ms, 2),
             language=norm_lang,
         )

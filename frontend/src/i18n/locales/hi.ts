@@ -46,6 +46,8 @@ export const hi: TranslationDictionary = {
     parametricTriggerDesc: "आपदा स्ट्राइक प्रायिकता व भुगतान विश्लेषण",
     coldStorageTitle: "कोल्ड स्टोरेज बिजली कटौती सुरक्षा",
     coldStorageDesc: "कक्ष ताप प्रवेश व थर्मल फ्लाईव्हील बफर",
+    mandiPricesTitle: "मंडी वास्तविक समय भाव",
+    mandiPricesDesc: "दैनिक बाजार आवक, मॉडल दरें और मूल्य तुलना",
   },
   assistantDrawer: {
     headerTitle: "पिछली बातचीत",

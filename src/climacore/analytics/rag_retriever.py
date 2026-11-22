@@ -241,9 +241,9 @@ def score_standards_list(
         if overlap_count > 0:
             scores[idx] += min(0.40, overlap_count * 0.12)
 
-        # Regional Alignment Boost
+        # Regional Alignment Boost (only boost if there is already topical relevance)
         std_region = std.get("region", "National")
-        if target_region and std_region != "National":
+        if target_region and std_region != "National" and (overlap_count > 0 or scores[idx] > 0.15):
             if std_region.lower() == target_region.lower():
                 scores[idx] += 0.25
 

@@ -33,7 +33,7 @@ type ColdStorageModalProps = {
   onClose: () => void;
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.PROD ? "" : "http://localhost:8000");
 
 const COMMODITY_OPTIONS = [
   { id: "vaccines_pharmaceuticals_2_8c", label: "Vaccines & Biologicals (Target 2°C - 8°C)" },

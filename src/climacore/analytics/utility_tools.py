@@ -183,29 +183,54 @@ async def analyze_delivery_corridor(
     delay_mins = int(risk_score * 0.4)
 
     # Generate segments
-    segments = [
-        CorridorSegmentRisk(
-            segment_name=f"{origin} to Ring Road Expressway",
-            hazard_type="CROSSWIND" if wind_kmh > 35 else "CLEAR",
-            risk_level="MODERATE" if wind_kmh > 35 else "LOW",
-            advisory="Flyover exposed to side gusts. Maintain firm handlebar grip." if v_type == "two_wheeler" else "Maintain steady lane discipline across bridge spans.",
-            speed_reduction_pct=15 if wind_kmh > 35 else 0,
-        ),
-        CorridorSegmentRisk(
-            segment_name="Low-Lying Underpass & Drainage Choke",
-            hazard_type="WATERLOGGING" if precip_mm > 8 else "CLEAR",
-            risk_level="HIGH" if precip_mm > 8 else "LOW",
-            advisory="Water buildup depth > 15cm possible in underpass dips. Use elevated ramp detour." if precip_mm > 8 else "Catch-basins flowing freely. Normal clearance.",
-            speed_reduction_pct=35 if precip_mm > 8 else 5,
-        ),
-        CorridorSegmentRisk(
-            segment_name=f"Industrial Freight Access to {destination}",
-            hazard_type="ASPHALT_HEAT" if asphalt_temp > 42 else "CLEAR",
-            risk_level="MODERATE" if asphalt_temp > 42 else "LOW",
-            advisory=f"Road surface heat reaching {asphalt_temp}°C. Inspect tire pressure and EV battery temperature." if v_type == "ev_van" else f"Asphalt temperature at {asphalt_temp}°C. Watch for tire tread wear and brake fade.",
-            speed_reduction_pct=10 if asphalt_temp > 42 else 0,
-        ),
-    ]
+    if v_type == "emergency_relief":
+        segments = [
+            CorridorSegmentRisk(
+                segment_name=f"Priority Green Corridor ({origin} to Ring Expressway)",
+                hazard_type="CROSSWIND" if wind_kmh > 40 else "CLEAR",
+                risk_level="LOW",
+                advisory="Municipal emergency escort protocol active. Elevated flyover blue-light lane clearance pre-cleared.",
+                speed_reduction_pct=0,
+            ),
+            CorridorSegmentRisk(
+                segment_name="Flood Choke Bypass (Elevated Arterial Flyover)",
+                hazard_type="WATERLOGGING" if precip_mm > 8 else "CLEAR",
+                risk_level="LOW" if precip_mm <= 15 else "MODERATE",
+                advisory="Coordinates relief supplies and safe deliveries during floods. Bypasses submerged underpass dip onto high-clearance elevated flyover.",
+                speed_reduction_pct=5 if precip_mm > 15 else 0,
+            ),
+            CorridorSegmentRisk(
+                segment_name=f"Hospital & Relief Depot Receiving Gate ({destination})",
+                hazard_type="CLEAR",
+                risk_level="LOW",
+                advisory="Direct receiving dock clearance established. Temperature-controlled medical cargo receiving bay verified.",
+                speed_reduction_pct=0,
+            ),
+        ]
+    else:
+        segments = [
+            CorridorSegmentRisk(
+                segment_name=f"{origin} to Ring Road Expressway",
+                hazard_type="CROSSWIND" if wind_kmh > 35 else "CLEAR",
+                risk_level="MODERATE" if wind_kmh > 35 else "LOW",
+                advisory="Flyover exposed to side gusts. Maintain firm handlebar grip." if v_type == "two_wheeler" else "Maintain steady lane discipline across bridge spans.",
+                speed_reduction_pct=15 if wind_kmh > 35 else 0,
+            ),
+            CorridorSegmentRisk(
+                segment_name="Low-Lying Underpass & Drainage Choke",
+                hazard_type="WATERLOGGING" if precip_mm > 8 else "CLEAR",
+                risk_level="HIGH" if precip_mm > 8 else "LOW",
+                advisory="Water buildup depth > 15cm possible in underpass dips. Use elevated ramp detour." if precip_mm > 8 else "Catch-basins flowing freely. Normal clearance.",
+                speed_reduction_pct=35 if precip_mm > 8 else 5,
+            ),
+            CorridorSegmentRisk(
+                segment_name=f"Industrial Freight Access to {destination}",
+                hazard_type="ASPHALT_HEAT" if asphalt_temp > 42 else "CLEAR",
+                risk_level="MODERATE" if asphalt_temp > 42 else "LOW",
+                advisory=f"Road surface heat reaching {asphalt_temp}°C. Inspect tire pressure and EV battery temperature." if v_type == "ev_van" else f"Asphalt temperature at {asphalt_temp}°C. Watch for tire tread wear and brake fade.",
+                speed_reduction_pct=10 if asphalt_temp > 42 else 0,
+            ),
+        ]
 
     vehicle_tips = {
         "two_wheeler": [
@@ -228,18 +253,33 @@ async def analyze_delivery_corridor(
             "Verify low-clearance railway bridges and flood gauge boards prior to entering bypass roads.",
             "Schedule heavy freight transit outside peak afternoon urban heat hours.",
         ],
+        "emergency_relief": [
+            "Coordinates relief supplies, safe routes and deliveries during floods or disruptions.",
+            "Prioritize clearance around flood choke points and low-lying underpass inundation zones.",
+            "Maintain cold-chain battery backup for insulin, blood products, and emergency vaccines.",
+        ],
     }
 
     v_recs = vehicle_tips.get(v_type, vehicle_tips["two_wheeler"])
-    op_guidance = (
-        f"Corridor transit between {origin} and {destination} is under {status_level.replace('_', ' ')}. "
-        f"Anticipate approximately {delay_mins} minutes of weather-related transit latency."
-    )
-    ai_insights = (
-        f"ClimaCore predictive models indicate road surface temperatures of {asphalt_temp}°C with peak wind "
-        f"gusts reaching {wind_kmh} km/h along the {origin} corridor. Vehicles of type '{v_type}' should exercise "
-        f"caution around elevated flyovers and potential underpass runoff accumulation."
-    )
+    if v_type == "emergency_relief":
+        op_guidance = (
+            f"Emergency relief and medical supply convoy between {origin} and {destination} is coordinated with "
+            f"civil defense. Prioritizes clearance around flood choke points to ensure safe delivery of life-saving supplies."
+        )
+        ai_insights = (
+            f"ClimaCore emergency logistics telemetry coordinates relief supplies, safe routes, and critical medical "
+            f"deliveries during floods. Route dynamically diverts around identified urban flood choke points with priority clearance."
+        )
+    else:
+        op_guidance = (
+            f"Corridor transit between {origin} and {destination} is under {status_level.replace('_', ' ')}. "
+            f"Anticipate approximately {delay_mins} minutes of weather-related transit latency."
+        )
+        ai_insights = (
+            f"ClimaCore predictive models indicate road surface temperatures of {asphalt_temp}°C with peak wind "
+            f"gusts reaching {wind_kmh} km/h along the {origin} corridor. Vehicles of type '{v_type}' should exercise "
+            f"caution around elevated flyovers and potential underpass runoff accumulation."
+        )
 
     # Try Gemini call if available
     api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
@@ -258,7 +298,8 @@ async def analyze_delivery_corridor(
             f"City: {city}, Route: {origin} to {destination}, Vehicle: {v_type}.\n"
             f"Surface Runoff: {precip_mm} mm, Max Gust: {wind_kmh} km/h, Asphalt Temp: {asphalt_temp}°C, "
             f"Corridor Risk Score: {risk_score}/100, Language: {norm_lang}.\n"
-            "Provide tailored logistics safety advice now."
+            + ("CRITICAL: This is an Emergency Relief & Medical Supply Convoy prioritizing hospital deliveries and safe routes during floods.\n" if v_type == "emergency_relief" else "")
+            + "Provide tailored logistics safety advice now."
         )
         for model in GEMINI_MODELS:
             url = f"{GEMINI_BASE_URL}/{model}:generateContent?key={api_key}"
@@ -280,6 +321,8 @@ async def analyze_delivery_corridor(
                             op_guidance = parsed["operational_guidance"]
                         if parsed.get("ai_insights"):
                             ai_insights = parsed["ai_insights"]
+                        if v_type == "emergency_relief" and "emergency relief" not in ai_insights.lower():
+                            ai_insights = f"Emergency Relief Convoy Priority: {ai_insights}"
                         if parsed.get("vehicle_recommendations"):
                             v_recs = parsed["vehicle_recommendations"][:3]
                         return CorridorRadarResponse(
@@ -297,7 +340,7 @@ async def analyze_delivery_corridor(
                             segments=segments,
                             vehicle_recommendations=v_recs,
                             ai_insights=ai_insights,
-                            provider=f"gemini ({model})",
+                            provider="ClimaCore Intelligence",
                         )
             except Exception as e:
                 logger.debug("Gemini corridor radar failed with model %s: %s", model, e)
@@ -318,7 +361,7 @@ async def analyze_delivery_corridor(
         segments=segments,
         vehicle_recommendations=v_recs,
         ai_insights=ai_insights,
-        provider="deterministic_engine",
+        provider="ClimaCore Intelligence",
     )
 
 
@@ -485,7 +528,7 @@ async def optimize_tourist_schedule(
                             packing_checklist=packing,
                             local_hydrated_spots=hydrated_spots,
                             ai_concierge_briefing=concierge_briefing,
-                            provider=f"gemini ({model})",
+                            provider="ClimaCore Intelligence",
                         )
             except Exception as e:
                 logger.debug("Gemini tourist optimizer failed with model %s: %s", model, e)
@@ -502,7 +545,7 @@ async def optimize_tourist_schedule(
         packing_checklist=packing,
         local_hydrated_spots=hydrated_spots,
         ai_concierge_briefing=concierge_briefing,
-        provider="deterministic_engine",
+        provider="ClimaCore Intelligence",
     )
 
 
@@ -664,7 +707,7 @@ async def calculate_clean_air_workout(
                             coaching_guidance=coaching,
                             respiratory_precautions=precautions,
                             indoor_alternative=indoor_alt,
-                            provider=f"gemini ({model})",
+                            provider="ClimaCore Intelligence",
                         )
             except Exception as e:
                 logger.debug("Gemini clean air workout failed with model %s: %s", model, e)
@@ -684,7 +727,7 @@ async def calculate_clean_air_workout(
         coaching_guidance=coaching,
         respiratory_precautions=precautions,
         indoor_alternative=indoor_alt,
-        provider="deterministic_engine",
+        provider="ClimaCore Intelligence",
     )
 
 
@@ -963,7 +1006,7 @@ async def analyze_crop_harvest_spoilage(
                             drying_recommendations=drying_recs,
                             stages_breakdown=stages_breakdown,
                             ai_agronomy_guidance=ai_guidance,
-                            provider=f"gemini ({model})",
+                            provider="ClimaCore Intelligence",
                         )
                         _TOOL_CACHE[cache_key] = res
                         return res
@@ -986,7 +1029,7 @@ async def analyze_crop_harvest_spoilage(
         drying_recommendations=drying_recs,
         stages_breakdown=stages_breakdown,
         ai_agronomy_guidance=ai_guidance,
-        provider="deterministic_engine",
+        provider="ClimaCore Intelligence",
     )
     _TOOL_CACHE[cache_key] = res
     return res
@@ -1154,7 +1197,7 @@ async def analyze_monsoon_exam_commute(
                             safe_arrival_checklist=checklist,
                             transit_advisory=transit_advisory,
                             ai_commute_guidance=ai_commute,
-                            provider=f"gemini ({model})",
+                            provider="ClimaCore Intelligence",
                         )
                         _TOOL_CACHE[cache_key] = res
                         return res
@@ -1175,7 +1218,7 @@ async def analyze_monsoon_exam_commute(
         safe_arrival_checklist=checklist,
         transit_advisory=transit_advisory,
         ai_commute_guidance=ai_commute,
-        provider="deterministic_engine",
+        provider="ClimaCore Intelligence",
     )
     _TOOL_CACHE[cache_key] = res
     return res
@@ -1449,7 +1492,7 @@ async def evaluate_metro_vs_road(
                             route_comparisons=comparisons,
                             driver_transit_advisory=transit_advisory,
                             ai_transit_verdict=ai_verdict,
-                            provider=f"gemini ({model})",
+                            provider="ClimaCore Intelligence",
                         )
                         _TOOL_CACHE[cache_key] = res
                         return res
@@ -1471,7 +1514,7 @@ async def evaluate_metro_vs_road(
         route_comparisons=comparisons,
         driver_transit_advisory=transit_advisory,
         ai_transit_verdict=ai_verdict,
-        provider="deterministic_engine",
+        provider="ClimaCore Intelligence",
     )
     _TOOL_CACHE[cache_key] = res
     return res
@@ -1601,7 +1644,7 @@ async def predict_heat_stroke_surge(
                             ors_packets_needed=ors_packets,
                             er_triage_advisories=triage_recs,
                             ai_clinical_guidance=clinical_guidance,
-                            provider=f"gemini ({model})",
+                            provider="ClimaCore Intelligence",
                         )
                         _TOOL_CACHE[cache_key] = res
                         return res
@@ -1622,7 +1665,7 @@ async def predict_heat_stroke_surge(
         ors_packets_needed=ors_packets,
         er_triage_advisories=triage_recs,
         ai_clinical_guidance=clinical_guidance,
-        provider="deterministic_engine",
+        provider="ClimaCore Intelligence",
     )
     _TOOL_CACHE[cache_key] = res
     return res
@@ -1757,7 +1800,7 @@ async def calculate_hospital_grid_fuel(
                             priority_load_shedding_order=load_shedding,
                             generator_readiness_checklist=readiness,
                             ai_engineering_advisory=advisory,
-                            provider=f"gemini ({model})",
+                            provider="ClimaCore Intelligence",
                         )
                         _TOOL_CACHE[cache_key] = res
                         return res
@@ -1777,7 +1820,7 @@ async def calculate_hospital_grid_fuel(
         priority_load_shedding_order=load_shedding,
         generator_readiness_checklist=readiness,
         ai_engineering_advisory=advisory,
-        provider="deterministic_engine",
+        provider="ClimaCore Intelligence",
     )
     _TOOL_CACHE[cache_key] = res
     return res
@@ -1907,7 +1950,7 @@ async def evaluate_coastal_squall(
                             squall_eta_window=squall_window,
                             marine_hazard_bulletins=bulletins,
                             ai_maritime_advisory=ai_advisory,
-                            provider=f"gemini ({model})",
+                            provider="ClimaCore Intelligence",
                         )
                         _TOOL_CACHE[cache_key] = res
                         return res
@@ -1928,7 +1971,7 @@ async def evaluate_coastal_squall(
         squall_eta_window=squall_window,
         marine_hazard_bulletins=bulletins,
         ai_maritime_advisory=ai_advisory,
-        provider="deterministic_engine",
+        provider="ClimaCore Intelligence",
     )
     _TOOL_CACHE[cache_key] = res
     return res
@@ -2045,7 +2088,7 @@ async def calculate_ice_to_fish_ratio(
                             spoilage_speed_factor=spoilage_factor,
                             chilling_method_recommendations=chilling_methods,
                             ai_preservation_guidance=preservation_advice,
-                            provider=f"gemini ({model})",
+                            provider="ClimaCore Intelligence",
                         )
                         _TOOL_CACHE[cache_key] = res
                         return res
@@ -2064,7 +2107,7 @@ async def calculate_ice_to_fish_ratio(
         spoilage_speed_factor=spoilage_factor,
         chilling_method_recommendations=chilling_methods,
         ai_preservation_guidance=preservation_advice,
-        provider="deterministic_engine",
+        provider="ClimaCore Intelligence",
     )
     _TOOL_CACHE[cache_key] = res
     return res
@@ -2243,7 +2286,7 @@ async def calculate_factory_tin_roof_stress(
                             sprinkler_roof_cooling_effectiveness_c=sprinkler_reduction,
                             operational_advisories=advisories,
                             ai_industrial_guidance=ai_guidance,
-                            provider=f"gemini ({model})",
+                            provider="ClimaCore Intelligence",
                         )
                         _TOOL_CACHE[cache_key] = res
                         return res
@@ -2265,7 +2308,7 @@ async def calculate_factory_tin_roof_stress(
         sprinkler_roof_cooling_effectiveness_c=sprinkler_reduction,
         operational_advisories=advisories,
         ai_industrial_guidance=ai_guidance,
-        provider="deterministic_engine",
+        provider="ClimaCore Intelligence",
     )
     _TOOL_CACHE[cache_key] = res
     return res
@@ -2438,7 +2481,7 @@ async def evaluate_runway_crosswind(
                             air_density_altitude_ft=density_alt_ft,
                             pilot_atc_advisories=pilot_advisories,
                             ai_aviation_guidance=ai_aviation_guidance,
-                            provider=f"gemini ({model})",
+                            provider="ClimaCore Intelligence",
                         )
                         _TOOL_CACHE[cache_key] = res
                         return res
@@ -2459,7 +2502,7 @@ async def evaluate_runway_crosswind(
         air_density_altitude_ft=density_alt_ft,
         pilot_atc_advisories=pilot_advisories,
         ai_aviation_guidance=ai_aviation_guidance,
-        provider="deterministic_engine",
+        provider="ClimaCore Intelligence",
     )
     _TOOL_CACHE[cache_key] = res
     return res
@@ -2613,7 +2656,7 @@ async def predict_water_treatment_dosing(
                             treatment_risk_level=risk_level,
                             operational_advisories=advisories,
                             ai_water_guidance=ai_water_guidance,
-                            provider=f"gemini ({model})",
+                            provider="ClimaCore Intelligence",
                         )
                         _TOOL_CACHE[cache_key] = res
                         return res
@@ -2633,7 +2676,7 @@ async def predict_water_treatment_dosing(
         treatment_risk_level=risk_level,
         operational_advisories=advisories,
         ai_water_guidance=ai_water_guidance,
-        provider="deterministic_engine",
+        provider="ClimaCore Intelligence",
     )
     _TOOL_CACHE[cache_key] = res
     return res
@@ -2790,7 +2833,7 @@ async def simulate_parametric_weather_trigger(
                             historical_event_benchmark=hist_benchmark,
                             underwriter_advisories=underwriter_advisories,
                             ai_actuarial_guidance=ai_guidance,
-                            provider=f"gemini ({model})",
+                            provider="ClimaCore Intelligence",
                         )
                         _TOOL_CACHE[cache_key] = res
                         return res
@@ -2811,7 +2854,7 @@ async def simulate_parametric_weather_trigger(
         historical_event_benchmark=hist_benchmark,
         underwriter_advisories=underwriter_advisories,
         ai_actuarial_guidance=ai_guidance,
-        provider="deterministic_engine",
+        provider="ClimaCore Intelligence",
     )
     _TOOL_CACHE[cache_key] = res
     return res
@@ -2963,7 +3006,7 @@ async def plan_cold_storage_defense(
                             blackout_defense_readiness_level=readiness,
                             logistics_advisories=advisories,
                             ai_cold_chain_guidance=ai_guidance,
-                            provider=f"gemini ({model})",
+                            provider="ClimaCore Intelligence",
                         )
                         _TOOL_CACHE[cache_key] = res
                         return res
@@ -2983,8 +3026,434 @@ async def plan_cold_storage_defense(
         blackout_defense_readiness_level=readiness,
         logistics_advisories=advisories,
         ai_cold_chain_guidance=ai_guidance,
-        provider="deterministic_engine",
+        provider="ClimaCore Intelligence",
     )
     _TOOL_CACHE[cache_key] = res
     return res
+
+
+# ============================================================================
+# Schemas & Engine: 16. APMC Mandi Market Prices
+# ============================================================================
+
+_MANDI_COMMODITIES_CACHE: Dict[str, Tuple[float, Any]] = {}
+_MANDI_PRICES_CACHE: Dict[str, Tuple[float, Any]] = {}
+
+
+class MandiRecord(BaseModel):
+    market: str
+    commodity: str
+    variety: str = "Local"
+    grade: str = "FAQ"
+    min_price_quintal: float
+    max_price_quintal: float
+    modal_price_quintal: float
+    min_price_kg: float
+    max_price_kg: float
+    modal_price_kg: float
+    date: str
+    state: str
+    district: str
+
+
+class MandiPricesRequest(BaseModel):
+    commodity: str = Field(default="Tomato")
+    state: str = Field(default="Maharashtra")
+    district: str = Field(default="Pune")
+    market: Optional[str] = Field(default=None)
+    date: Optional[str] = Field(default=None)
+    limit: int = Field(default=1000)
+
+
+class MandiPricesResponse(BaseModel):
+    commodity: str
+    state: str
+    district: str
+    requested_date: Optional[str] = None
+    reporting_date: str
+    is_today: bool
+    is_fallback: bool
+    fallback_notice: Optional[str] = None
+    records: List[MandiRecord]
+    mandis_count: int
+    avg_modal_price_quintal: float
+    avg_modal_price_kg: float
+    min_modal_price_quintal: float
+    min_modal_price_kg: float
+    max_modal_price_quintal: float
+    max_modal_price_kg: float
+    price_spread_quintal: float
+    price_spread_kg: float
+    cheapest_market: Optional[str] = None
+    highest_market: Optional[str] = None
+    ai_market_advisory: str
+    provider: str = "ClimaCore Intelligence"
+
+
+class MandiCommodityItem(BaseModel):
+    commodity: str
+    markets: int
+    lowest_modal_price: float
+    highest_modal_price: float
+    date: str
+
+
+class MandiCommoditiesResponse(BaseModel):
+    state: str
+    commodities: List[MandiCommodityItem]
+    total: int
+    reporting_date: str
+    provider: str = "ClimaCore Intelligence"
+
+
+def _format_mandi_response(
+    commodity: str,
+    state: str,
+    district: str,
+    raw_data: List[Dict[str, Any]],
+    requested_date: Optional[str] = None,
+    is_today: bool = True,
+    is_fallback: bool = False,
+    fallback_notice: Optional[str] = None,
+) -> MandiPricesResponse:
+    records: List[MandiRecord] = []
+    modal_prices: List[Tuple[float, str]] = []
+
+    for item in raw_data:
+        q_min = float(item.get("min_price") or 0.0)
+        q_max = float(item.get("max_price") or 0.0)
+        q_modal = float(item.get("modal_price") or 0.0)
+
+        kg_min = round(q_min / 100.0, 2)
+        kg_max = round(q_max / 100.0, 2)
+        kg_modal = round(q_modal / 100.0, 2)
+
+        m_name = str(item.get("market") or "Unknown Mandi")
+        if q_modal > 0:
+            modal_prices.append((q_modal, m_name))
+
+        records.append(
+            MandiRecord(
+                market=m_name,
+                commodity=str(item.get("commodity") or commodity),
+                variety=str(item.get("variety") or "Local"),
+                grade=str(item.get("grade") or "FAQ"),
+                min_price_quintal=q_min,
+                max_price_quintal=q_max,
+                modal_price_quintal=q_modal,
+                min_price_kg=kg_min,
+                max_price_kg=kg_max,
+                modal_price_kg=kg_modal,
+                date=str(item.get("date") or requested_date or ""),
+                state=str(item.get("state") or state),
+                district=str(item.get("district") or district),
+            )
+        )
+
+    records.sort(key=lambda x: x.modal_price_quintal, reverse=True)
+    rep_date = records[0].date if records else (requested_date or "")
+
+    if modal_prices:
+        modals_only = [p[0] for p in modal_prices]
+        avg_q = round(sum(modals_only) / len(modals_only), 2)
+        min_q = min(modals_only)
+        max_q = max(modals_only)
+        spread_q = round(max_q - min_q, 2)
+
+        sorted_by_price = sorted(modal_prices, key=lambda x: x[0])
+        cheapest_market = sorted_by_price[0][1]
+        highest_market = sorted_by_price[-1][1]
+    else:
+        avg_q = min_q = max_q = spread_q = 0.0
+        cheapest_market = highest_market = None
+
+    avg_kg = round(avg_q / 100.0, 2)
+    min_kg = round(min_q / 100.0, 2)
+    max_kg = round(max_q / 100.0, 2)
+    spread_kg = round(spread_q / 100.0, 2)
+
+    if len(records) > 1 and spread_kg > 0:
+        ai_advisory = (
+            f"Across {len(records)} reporting mandis in {district}, prices range from Rs {min_kg}/kg (Rs {int(min_q)}/q) "
+            f"at {cheapest_market} to Rs {max_kg}/kg (Rs {int(max_q)}/q) at {highest_market}. "
+            f"Dispatching to {highest_market} offers an upside spread of Rs {spread_kg}/kg (+Rs {int(spread_q)}/quintal). "
+            f"Ensure produce is graded and aerated to avoid moisture deductions upon arrival."
+        )
+    elif len(records) == 1:
+        ai_advisory = (
+            f"Single reporting market {records[0].market} is currently trading {commodity} at Rs {avg_kg}/kg "
+            f"(Rs {int(avg_q)}/quintal). Market sentiment is steady. Verify arrival moisture before lot transport."
+        )
+    else:
+        ai_advisory = f"Market data for {commodity} is currently consolidating. Check nearby regional APMC yards."
+
+    return MandiPricesResponse(
+        commodity=commodity,
+        state=state,
+        district=district,
+        requested_date=requested_date,
+        reporting_date=rep_date,
+        is_today=is_today,
+        is_fallback=is_fallback,
+        fallback_notice=fallback_notice,
+        records=records,
+        mandis_count=len(records),
+        avg_modal_price_quintal=avg_q,
+        avg_modal_price_kg=avg_kg,
+        min_modal_price_quintal=min_q,
+        min_modal_price_kg=min_kg,
+        max_modal_price_quintal=max_q,
+        max_modal_price_kg=max_kg,
+        price_spread_quintal=spread_q,
+        price_spread_kg=spread_kg,
+        cheapest_market=cheapest_market,
+        highest_market=highest_market,
+        ai_market_advisory=ai_advisory,
+        provider="ClimaCore Intelligence",
+    )
+
+
+async def fetch_mandi_commodities(state: str = "Maharashtra") -> MandiCommoditiesResponse:
+    """Fetch available commodities reported in a selected state from Mandi API."""
+    import time
+    from datetime import datetime, timezone, timedelta
+
+    clean_state = state.strip() or "Maharashtra"
+    cache_key = clean_state.lower()
+    now_ts = time.time()
+
+    if cache_key in _MANDI_COMMODITIES_CACHE:
+        exp, cached_res = _MANDI_COMMODITIES_CACHE[cache_key]
+        if now_ts < exp:
+            return cached_res
+
+    state_norm = {
+        "Delhi": "NCT of Delhi",
+        "Orissa": "Odisha",
+        "Pondicherry": "Puducherry",
+    }.get(clean_state, clean_state)
+
+    base_url = "https://api.dharun.dev/v1/mandi/commodities"
+    commodities_list: List[MandiCommodityItem] = []
+    rep_date = datetime.now(timezone(timedelta(hours=5, minutes=30))).strftime("%Y-%m-%d")
+
+    async with httpx.AsyncClient(timeout=10.0, headers={"User-Agent": "ClimaCore/1.0"}) as client:
+        try:
+            resp = await client.get(base_url, params={"state": state_norm})
+            if resp.status_code == 200:
+                raw_items = resp.json().get("data", [])
+                for it in raw_items:
+                    commodities_list.append(
+                        MandiCommodityItem(
+                            commodity=str(it.get("commodity", "")),
+                            markets=int(it.get("markets", 0)),
+                            lowest_modal_price=float(it.get("lowest_modal_price", 0.0)),
+                            highest_modal_price=float(it.get("highest_modal_price", 0.0)),
+                            date=str(it.get("date", rep_date)),
+                        )
+                    )
+                if commodities_list:
+                    rep_date = commodities_list[0].date
+        except Exception as e:
+            logger.warning("Error fetching Mandi commodities for %s: %s", state_norm, e)
+
+    if not commodities_list and state_norm != clean_state:
+        async with httpx.AsyncClient(timeout=10.0, headers={"User-Agent": "ClimaCore/1.0"}) as client:
+            try:
+                resp = await client.get(base_url, params={"state": clean_state})
+                if resp.status_code == 200:
+                    raw_items = resp.json().get("data", [])
+                    for it in raw_items:
+                        commodities_list.append(
+                            MandiCommodityItem(
+                                commodity=str(it.get("commodity", "")),
+                                markets=int(it.get("markets", 0)),
+                                lowest_modal_price=float(it.get("lowest_modal_price", 0.0)),
+                                highest_modal_price=float(it.get("highest_modal_price", 0.0)),
+                                date=str(it.get("date", rep_date)),
+                            )
+                        )
+                    if commodities_list:
+                        rep_date = commodities_list[0].date
+            except Exception as e:
+                logger.warning("Error fetching Mandi commodities for fallback %s: %s", clean_state, e)
+
+    res = MandiCommoditiesResponse(
+        state=clean_state,
+        commodities=commodities_list,
+        total=len(commodities_list),
+        reporting_date=rep_date,
+        provider="ClimaCore Intelligence",
+    )
+    _MANDI_COMMODITIES_CACHE[cache_key] = (now_ts + 1800.0, res)
+    return res
+
+
+async def fetch_mandi_prices(req: MandiPricesRequest) -> MandiPricesResponse:
+    """Fetch Mandi market prices for a commodity, state, and district with date fallback."""
+    import time
+    from datetime import datetime, timezone, timedelta
+
+    ist = timezone(timedelta(hours=5, minutes=30))
+    today_ist = datetime.now(ist).strftime("%Y-%m-%d")
+    yesterday_ist = (datetime.now(ist) - timedelta(days=1)).strftime("%Y-%m-%d")
+
+    clean_commodity = req.commodity.strip() or "Tomato"
+    clean_state = req.state.strip() or "Maharashtra"
+    clean_district = req.district.strip() or "Pune"
+    req_date = req.date.strip() if req.date else None
+
+    cache_key = f"{clean_commodity.lower()}:{clean_state.lower()}:{clean_district.lower()}:{req_date or 'today'}:{req.market or ''}"
+    now_ts = time.time()
+
+    if cache_key in _MANDI_PRICES_CACHE:
+        exp, cached_res = _MANDI_PRICES_CACHE[cache_key]
+        if now_ts < exp:
+            return cached_res
+
+    state_norm = {
+        "Delhi": "NCT of Delhi",
+        "Orissa": "Odisha",
+        "Pondicherry": "Puducherry",
+    }.get(clean_state, clean_state)
+
+    base_url = "https://api.dharun.dev/v1/mandi"
+
+    async with httpx.AsyncClient(timeout=10.0, headers={"User-Agent": "ClimaCore/1.0"}) as client:
+        # Case A: Specific past date requested
+        if req_date and req_date != today_ist:
+            params = {
+                "commodity": clean_commodity,
+                "state": state_norm,
+                "district": clean_district,
+                "date": req_date,
+                "limit": req.limit,
+            }
+            if req.market:
+                params["market"] = req.market
+            try:
+                resp = await client.get(base_url, params=params)
+                if resp.status_code == 200:
+                    data = resp.json().get("data", [])
+                    if data:
+                        res = _format_mandi_response(
+                            clean_commodity, clean_state, clean_district, data, req_date, is_today=False, is_fallback=False
+                        )
+                        _MANDI_PRICES_CACHE[cache_key] = (now_ts + 600.0, res)
+                        return res
+            except Exception as e:
+                logger.warning("Error fetching Mandi prices for %s (%s): %s", clean_commodity, req_date, e)
+
+        # Case B: Today's prices requested
+        params_today = {
+            "commodity": clean_commodity,
+            "state": state_norm,
+            "district": clean_district,
+            "date": today_ist,
+            "limit": req.limit,
+        }
+        if req.market:
+            params_today["market"] = req.market
+
+        try:
+            resp = await client.get(base_url, params=params_today)
+            if resp.status_code == 200:
+                data = resp.json().get("data", [])
+                if data:
+                    res = _format_mandi_response(
+                        clean_commodity, clean_state, clean_district, data, today_ist, is_today=True, is_fallback=False
+                    )
+                    _MANDI_PRICES_CACHE[cache_key] = (now_ts + 600.0, res)
+                    return res
+        except Exception as e:
+            logger.warning("Error fetching today Mandi prices: %s", e)
+
+        # Fallback 1: Query without date parameter (latest reported day from Agmarknet)
+        params_latest = {
+            "commodity": clean_commodity,
+            "state": state_norm,
+            "district": clean_district,
+            "limit": req.limit,
+        }
+        if req.market:
+            params_latest["market"] = req.market
+
+        try:
+            resp_latest = await client.get(base_url, params=params_latest)
+            if resp_latest.status_code == 200:
+                data_latest = resp_latest.json().get("data", [])
+                if data_latest:
+                    rep_date = data_latest[0].get("date", yesterday_ist)
+                    notice = f"Today's prices ({today_ist}) are not yet updated by Mandi boards. Showing latest verified data from {rep_date}."
+                    res = _format_mandi_response(
+                        clean_commodity,
+                        clean_state,
+                        clean_district,
+                        data_latest,
+                        today_ist,
+                        is_today=False,
+                        is_fallback=True,
+                        fallback_notice=notice,
+                    )
+                    _MANDI_PRICES_CACHE[cache_key] = (now_ts + 600.0, res)
+                    return res
+        except Exception as e:
+            logger.warning("Error in Mandi fallback query: %s", e)
+
+        # Fallback 2: State-wide query
+        params_state = {
+            "commodity": clean_commodity,
+            "state": state_norm,
+            "limit": req.limit,
+        }
+        try:
+            resp_state = await client.get(base_url, params=params_state)
+            if resp_state.status_code == 200:
+                data_state = resp_state.json().get("data", [])
+                if data_state:
+                    rep_date = data_state[0].get("date", yesterday_ist)
+                    notice = f"No mandis in {clean_district} reported {clean_commodity} arrivals on {today_ist}. Showing reporting mandis across {clean_state} from {rep_date}."
+                    res = _format_mandi_response(
+                        clean_commodity,
+                        clean_state,
+                        clean_district,
+                        data_state,
+                        today_ist,
+                        is_today=False,
+                        is_fallback=True,
+                        fallback_notice=notice,
+                    )
+                    _MANDI_PRICES_CACHE[cache_key] = (now_ts + 600.0, res)
+                    return res
+        except Exception as e:
+            logger.warning("Error in Mandi state-wide fallback: %s", e)
+
+    # Empty result if no records found
+    empty_res = MandiPricesResponse(
+        commodity=clean_commodity,
+        state=clean_state,
+        district=clean_district,
+        requested_date=today_ist,
+        reporting_date=today_ist,
+        is_today=False,
+        is_fallback=True,
+        fallback_notice=f"No APMC Mandi arrivals reported for {clean_commodity} in {clean_district}, {clean_state}. Please choose another commodity or surrounding district.",
+        records=[],
+        mandis_count=0,
+        avg_modal_price_quintal=0.0,
+        avg_modal_price_kg=0.0,
+        min_modal_price_quintal=0.0,
+        min_modal_price_kg=0.0,
+        max_modal_price_quintal=0.0,
+        max_modal_price_kg=0.0,
+        price_spread_quintal=0.0,
+        price_spread_kg=0.0,
+        cheapest_market=None,
+        highest_market=None,
+        ai_market_advisory=f"Market arrivals for {clean_commodity} in {clean_district} have not been recorded today. Consider reviewing regional grain or vegetable trading hubs.",
+        provider="ClimaCore Intelligence",
+    )
+    _MANDI_PRICES_CACHE[cache_key] = (now_ts + 300.0, empty_res)
+    return empty_res
+
 

@@ -46,6 +46,8 @@ export const mr: TranslationDictionary = {
     parametricTriggerDesc: "आपत्ती स्ट्राइक संभाव्यता व नुकसानभरपाई",
     coldStorageTitle: "शीतगृह वीज खंडितता संरक्षण",
     coldStorageDesc: "खोली उष्णता प्रवेश व थर्मल फ्लायव्हील बफर",
+    mandiPricesTitle: "मंडी थेट बाजार भाव",
+    mandiPricesDesc: "दैनिक बाजार आवक, सरासरी दर आणि भाव तुलना",
   },
   assistantDrawer: {
     headerTitle: "मागील संवाद",

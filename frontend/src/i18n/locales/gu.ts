@@ -46,6 +46,8 @@ export const gu: TranslationDictionary = {
     parametricTriggerDesc: "આપત્તિ સ્ટ્રાઇક સંભાવના અને વળતર ગણતરી",
     coldStorageTitle: "કોલ્ડ સ્ટોરેજ વીજળી કાપ સુરક્ષા",
     coldStorageDesc: "ચેમ્બર ગરમી પ્રવેશ અને થર્મલ ફ્લાયવ્હીલ બફર",
+    mandiPricesTitle: "મંડી લાઈવ બજાર ભાવ",
+    mandiPricesDesc: "દૈનિક બજાર આવક, મોડલ દરો અને ભાવ સરખામણી",
   },
   assistantDrawer: {
     headerTitle: "અગાઉની વાતચીત",

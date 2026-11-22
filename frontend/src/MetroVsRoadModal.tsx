@@ -43,7 +43,7 @@ type MetroVsRoadModalProps = {
   onClose: () => void;
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.PROD ? "" : "http://localhost:8000");
 
 const CORRIDOR_OPTIONS = [
   { id: "central_to_suburban", label: "Central City to Suburban Radial" },

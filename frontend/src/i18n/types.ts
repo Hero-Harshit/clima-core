@@ -52,6 +52,8 @@ export interface TranslationDictionary {
     parametricTriggerDesc: string;
     coldStorageTitle: string;
     coldStorageDesc: string;
+    mandiPricesTitle: string;
+    mandiPricesDesc: string;
   };
   assistantDrawer: {
     headerTitle: string;

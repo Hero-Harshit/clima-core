@@ -34,7 +34,7 @@ type RunwayCrosswindModalProps = {
   onClose: () => void;
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.PROD ? "" : "http://localhost:8000");
 
 const AIRPORT_OPTIONS = [
   { id: "BOM", code: "BOM", name: "Mumbai (CSMI Airport - BOM / VABB)", label: "Mumbai (CSMI Airport - BOM / VABB)", defaultRwy: 270 },

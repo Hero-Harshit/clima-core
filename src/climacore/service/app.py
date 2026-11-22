@@ -315,6 +315,8 @@ def create_app() -> FastAPI:
                 "/api/tools/water-turbidity",
                 "/api/tools/parametric-trigger",
                 "/api/tools/cold-storage-defense",
+                "/api/tools/mandi-commodities",
+                "/api/tools/mandi-prices",
             ],
         }
 
@@ -400,7 +402,8 @@ def create_app() -> FastAPI:
         metrics: Dict[str, Any] = {}
         try:
             live_engine = get_live_engine()
-            pred = live_engine.predict(query=req.city, persona=req.persona, days=7, force_refresh=False)
+            target_city = (req.city or "").strip() or "New Delhi"
+            pred = live_engine.predict(query=target_city, persona=req.persona, days=7, force_refresh=False)
             target_day = pred.daily_predictions[min(req.day_offset, len(pred.daily_predictions) - 1)] if pred.daily_predictions else None
 
             if target_day:
@@ -441,8 +444,9 @@ def create_app() -> FastAPI:
             # Retrieve or fetch live prediction contract for context grounding
             canonical_ids = {p["id"] for p in CANONICAL_PERSONAS}
             persona_to_fetch = req.persona if req.persona in canonical_ids else "all"
+            target_city = (req.city or "").strip() or "New Delhi"
             pred = live_engine.predict(
-                query=req.city,
+                query=target_city,
                 persona=persona_to_fetch,
                 force_refresh=req.force_refresh,
             )
@@ -861,6 +865,83 @@ def create_app() -> FastAPI:
             monitor.latency_profiler.record(lat_ms, is_error=True)
             logger.error(f"Error in cold storage defense planning for {req.city}: {e}")
             raise HTTPException(status_code=500, detail=f"Cold storage defense planning failed: {str(e)}")
+
+    @app.get("/api/tools/mandi-commodities")
+    async def get_mandi_commodities(state: str = Query(default="Maharashtra")) -> Dict[str, Any]:
+        """Fetch available commodities reported in the selected state from Agmarknet Mandi API."""
+        from climacore.analytics.utility_tools import fetch_mandi_commodities
+        monitor = get_monitoring_service()
+        t0 = time.perf_counter()
+        try:
+            res = await fetch_mandi_commodities(state=state)
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=False)
+            data = res.model_dump()
+            data["latency_ms"] = round(lat_ms, 2)
+            return data
+        except Exception as e:
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=True)
+            logger.error(f"Error fetching Mandi commodities for {state}: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to fetch Mandi commodities: {str(e)}")
+
+    @app.get("/api/tools/mandi-prices")
+    async def get_mandi_prices_get(
+        commodity: str = Query(default="Tomato"),
+        state: str = Query(default="Maharashtra"),
+        district: str = Query(default="Pune"),
+        date: Optional[str] = Query(default=None),
+        market: Optional[str] = Query(default=None),
+    ) -> Dict[str, Any]:
+        """Fetch and compare Mandi commodity prices across markets via GET query parameters."""
+        from climacore.analytics.utility_tools import fetch_mandi_prices, MandiPricesRequest
+        monitor = get_monitoring_service()
+        t0 = time.perf_counter()
+        try:
+            req = MandiPricesRequest(
+                commodity=commodity,
+                state=state,
+                district=district,
+                date=date,
+                market=market,
+            )
+            res = await fetch_mandi_prices(req=req)
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=False)
+            data = res.model_dump()
+            data["latency_ms"] = round(lat_ms, 2)
+            return data
+        except Exception as e:
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=True)
+            logger.error(f"Error fetching Mandi prices for {commodity} in {district}: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to fetch Mandi prices: {str(e)}")
+
+    @app.post("/api/tools/mandi-prices")
+    async def post_mandi_prices(req: Dict[str, Any]) -> Dict[str, Any]:
+        """Fetch and compare Mandi commodity prices across markets via POST body."""
+        from climacore.analytics.utility_tools import fetch_mandi_prices, MandiPricesRequest
+        monitor = get_monitoring_service()
+        t0 = time.perf_counter()
+        try:
+            parsed_req = MandiPricesRequest(
+                commodity=str(req.get("commodity") or "Tomato"),
+                state=str(req.get("state") or "Maharashtra"),
+                district=str(req.get("district") or "Pune"),
+                date=req.get("date"),
+                market=req.get("market"),
+            )
+            res = await fetch_mandi_prices(req=parsed_req)
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=False)
+            data = res.model_dump()
+            data["latency_ms"] = round(lat_ms, 2)
+            return data
+        except Exception as e:
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=True)
+            logger.error(f"Error fetching Mandi prices via POST for {req}: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to fetch Mandi prices: {str(e)}")
 
     @app.post("/api/predict/custom")
     def predict_custom(req: CustomPredictionRequest) -> Dict[str, Any]:

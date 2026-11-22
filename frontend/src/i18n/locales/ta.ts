@@ -46,6 +46,8 @@ export const ta: TranslationDictionary = {
     parametricTriggerDesc: "பேரிடர் புள்ளி நிகழ்தகவு மற்றும் இழப்பீடு அளவு",
     coldStorageTitle: "குளிர்பதன கிடங்கு மின்தடை பாதுகாப்பு",
     coldStorageDesc: "வெப்ப உட்புகுதல் மற்றும் வெப்ப நிலைத்தன்மை இருப்பு",
+    mandiPricesTitle: "மண்டி நிகழ்நேர விலைகள்",
+    mandiPricesDesc: "தினசரி சந்தை வரத்து, மாதிரி விகிதங்கள் மற்றும் விலை ஒப்பீடு",
   },
   assistantDrawer: {
     headerTitle: "முந்தைய உரையாடல்கள்",

@@ -33,7 +33,7 @@ type WaterTurbidityModalProps = {
   onClose: () => void;
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.PROD ? "" : "http://localhost:8000");
 
 const SOURCE_OPTIONS = [
   { id: "surface_river_run_of_the_river", label: "Surface River (Run-of-the-River Catchment)" },

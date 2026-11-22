@@ -10,12 +10,12 @@ import Methodology from "./Methodology";
 import PrivacyPolicy from "./PrivacyPolicy";
 import FAQ from "./FAQ";
 import {
-  Activity, AlertTriangle, Anchor, ArrowUpRight, BadgeCheck,
+  Activity, AlertTriangle, Anchor, ArrowUpRight, BadgeCheck, Calendar, ExternalLink,
   BatteryWarning, Building2, CalendarDays, Check, ChevronDown, ChevronRight,
-  BarChart3, CircleHelp, CloudDrizzle, CloudRain, CloudSun, Compass, Database, Droplets, Factory, Fish, Flame,
-  Globe2, GraduationCap, History, Info, Languages, Layers, Send,
-  LocateFixed, LockKeyhole, MapPin, MoreHorizontal, Plane, RotateCcw,
-  ShieldAlert, ShieldCheck, Snowflake, Sprout, Sun, Thermometer, Train, Truck, Waves, Wind, X, Zap,
+  BarChart3, CircleHelp, Clock, CloudDrizzle, CloudRain, CloudSun, Compass, Database, Droplets, Factory, Fish, Flame,
+  Globe2, GraduationCap, History, Info, Languages, Layers, Search,
+  LocateFixed, LockKeyhole, MapPin, MoreHorizontal, Plane, RotateCcw, Scale,
+  ShieldAlert, ShieldCheck, SlidersHorizontal, Snowflake, Sprout, Sun, Terminal, Thermometer, Train, Truck, Waves, Wheat, Wind, X, Zap,
 } from "lucide-react";
 import { getTranslations, TranslationDictionary } from "./i18n";
 
@@ -29,6 +29,7 @@ const CorridorRadarModal = lazy(() => import("./CorridorRadarModal"));
 const TouristOptimizerModal = lazy(() => import("./TouristOptimizerModal"));
 const CleanAirWorkoutModal = lazy(() => import("./CleanAirWorkoutModal"));
 const CropHarvestModal = lazy(() => import("./CropHarvestModal"));
+const MandiPricesModal = lazy(() => import("./MandiPricesModal"));
 const MonsoonExamModal = lazy(() => import("./MonsoonExamModal"));
 const MetroVsRoadModal = lazy(() => import("./MetroVsRoadModal"));
 const HeatStrokeSurgeModal = lazy(() => import("./HeatStrokeSurgeModal"));
@@ -96,7 +97,39 @@ type CityGeocodingResult = {
 type AssistantMessage = { role: "user" | "assistant"; content: string };
 type AssistantChatResponse = { response: string; suggested_followups?: string[] };
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+type AssistantCommandMode = {
+  prefix: string;
+  title: string;
+  description: string;
+  example: string;
+  icon: ReactNode;
+};
+
+const ASSISTANT_COMMAND_MODES: AssistantCommandMode[] = [
+  {
+    prefix: "/plan ",
+    title: "Operational SOP Generator",
+    description: "Generates chronological, time-phased tactical checklists (T-0 to T+6h) for farmers, logistics fleets, hospitals, and commuters.",
+    example: "/plan logistics fleet heatwave",
+    icon: <Clock size={12} />,
+  },
+  {
+    prefix: "/whatif ",
+    title: "Extreme Scenario Stress-Tester",
+    description: "Simulates counterfactual catastrophe scenarios and projects physical impact on drainage runoff, delays, and supply continuity.",
+    example: "/whatif +100mm cloudburst",
+    icon: <Zap size={12} />,
+  },
+  {
+    prefix: "/compare ",
+    title: "Multi-City Arbitrage & Disruption",
+    description: "Produces a side-by-side matrix comparing weather risks, travel delays, and Mandi commodity price spreads across cities.",
+    example: "/compare Mumbai Pune Tomato",
+    icon: <Scale size={12} />,
+  },
+];
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.PROD ? "" : "http://localhost:8000");
 const fallbackCityCoordinates: Record<string, { latitude: number; longitude: number }> = {
   mumbai: { latitude: 19.076, longitude: 72.8777 },
   delhi: { latitude: 28.6139, longitude: 77.209 },
@@ -380,6 +413,7 @@ function App() {
   const [isTouristOptimizerOpen, setIsTouristOptimizerOpen] = useState(false);
   const [isCleanAirWorkoutOpen, setIsCleanAirWorkoutOpen] = useState(false);
   const [isCropHarvestOpen, setIsCropHarvestOpen] = useState(false);
+  const [isMandiPricesOpen, setIsMandiPricesOpen] = useState(false);
   const [isMonsoonExamOpen, setIsMonsoonExamOpen] = useState(false);
   const [isMetroVsRoadOpen, setIsMetroVsRoadOpen] = useState(false);
   const [isHeatStrokeSurgeOpen, setIsHeatStrokeSurgeOpen] = useState(false);
@@ -397,6 +431,41 @@ function App() {
   const t = getTranslations(selectedLanguage);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const langMenuRef = useRef<HTMLDivElement>(null);
+
+  const [isAssistantCmdOpen, setIsAssistantCmdOpen] = useState(false);
+  const [isCalendarPlannerOpen, setIsCalendarPlannerOpen] = useState(false);
+  const assistantCmdRef = useRef<HTMLDivElement>(null);
+  const assistantInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!isAssistantCmdOpen && !isCalendarPlannerOpen) return;
+    const handlePointerDown = (event: MouseEvent) => {
+      if (assistantCmdRef.current && !assistantCmdRef.current.contains(event.target as Node)) {
+        setIsAssistantCmdOpen(false);
+        setIsCalendarPlannerOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsAssistantCmdOpen(false);
+        setIsCalendarPlannerOpen(false);
+      }
+    };
+    window.addEventListener("mousedown", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("mousedown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isAssistantCmdOpen, isCalendarPlannerOpen]);
+
+  const handleSelectCommandMode = (prefix: string) => {
+    setAssistantInput(prefix);
+    setIsAssistantCmdOpen(false);
+    if (assistantInputRef.current) {
+      assistantInputRef.current.focus();
+    }
+  };
 
   useEffect(() => {
     if (!isLangMenuOpen) return;
@@ -445,6 +514,7 @@ function App() {
       setIsPageScrolled((prevScrolled) => {
         if (!prevScrolled && currentScrollY > 90) {
           setIsAssistantOpen(false);
+          setIsAssistantCmdOpen(false);
           setIsToolsMenuOpen(false);
           setIsLangMenuOpen(false);
           setIsNavBarExpanded(false);
@@ -475,6 +545,7 @@ function App() {
     isTouristOptimizerOpen ||
     isCleanAirWorkoutOpen ||
     isCropHarvestOpen ||
+    isMandiPricesOpen ||
     isMonsoonExamOpen ||
     isMetroVsRoadOpen ||
     isHeatStrokeSurgeOpen ||
@@ -569,6 +640,7 @@ function App() {
         setIsTouristOptimizerOpen(false);
         setIsCleanAirWorkoutOpen(false);
         setIsCropHarvestOpen(false);
+        setIsMandiPricesOpen(false);
         setIsMonsoonExamOpen(false);
         setIsMetroVsRoadOpen(false);
         setIsHeatStrokeSurgeOpen(false);
@@ -928,6 +1000,75 @@ function App() {
       : fallbackAdvisories);
 
   const visibleActionItems = showAllAdvisories ? actionItems : actionItems.slice(0, 4);
+
+  const handleLaunchGoogleCalendar = (type: "safe_transit" | "weather_advisory" | "workspace") => {
+    setIsCalendarPlannerOpen(false);
+    if (type === "workspace") {
+      window.open("https://calendar.google.com/", "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const yyyy = now.getFullYear();
+    const mm = pad(now.getMonth() + 1);
+    const dd = pad(now.getDate());
+    const dateStr = `${yyyy}${mm}${dd}`;
+
+    if (type === "safe_transit") {
+      const startTime = `${dateStr}T070000`;
+      const endTime = `${dateStr}T093000`;
+      const currentTemp = activeForecast ? Math.round(Number(findMetric(activeForecast, ["temp_max", "temperature_max"]) ?? 28)) : 28;
+      const currentRain = activeForecast ? Math.round(Number(findMetric(activeForecast, ["precipitation_mm", "rainfall_mm"]) ?? 0)) : 0;
+
+      const title = `ClimaCore Safe Transit Window - ${city}`;
+      const details = [
+        `Operational Clearance for ${city}:`,
+        `Optimal Low-Risk Window: 07:00 - 09:30 IST`,
+        `Forecast Parameters: Temp ~${currentTemp} C | Rain ~${currentRain} mm`,
+        `Advisory: Low-risk road transit window prior to peak atmospheric volatility.`,
+        `Coordinated via ClimaCore Intelligence.`
+      ].join("\n");
+
+      const params = new URLSearchParams({
+        action: "TEMPLATE",
+        text: title,
+        dates: `${startTime}/${endTime}`,
+        details,
+        location: `${city}, India`,
+      });
+
+      window.open(`https://calendar.google.com/calendar/render?${params.toString()}`, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    if (type === "weather_advisory") {
+      const startTime = `${dateStr}T060000`;
+      const endTime = `${dateStr}T180000`;
+      const statusLevel = briefingData?.status_level ?? "ACTIVE";
+      const guidance = briefingData?.operational_guidance ?? "Follow Graded Response Action Plan safety protocols.";
+
+      const title = `ClimaCore Weather Defense Advisory - ${city}`;
+      const details = [
+        `ClimaCore Intelligence Incident Warning for ${city}:`,
+        `Sector: ${String(activePersonaData?.persona_name ?? persona ?? "GENERAL").toUpperCase()}`,
+        `Severity Status: ${statusLevel}`,
+        `Actionable Directive: ${guidance}`,
+        `Standard Operating Procedure verified by ClimaCore Intelligence.`
+      ].join("\n");
+
+      const params = new URLSearchParams({
+        action: "TEMPLATE",
+        text: title,
+        dates: `${startTime}/${endTime}`,
+        details,
+        location: `${city}, India`,
+      });
+
+      window.open(`https://calendar.google.com/calendar/render?${params.toString()}`, "_blank", "noopener,noreferrer");
+      return;
+    }
+  };
   const hospitalCount = metric(["hospitals_15km", "hospital_count"], 42, floodRisk);
   const schoolCount = metric(["schools_15km", "school_count"], 318, floodRisk);
   const powerAssetCount = metric(["power_substations_15km", "substations_15km", "power_assets_15km"], 16, prediction.spatial_resolution_metadata);
@@ -1041,6 +1182,15 @@ function App() {
           badgeClass: "utility-tool-circle-btn spoilage-circle-btn",
           buttonText: "Audit Spoilage",
           action: () => setIsCropHarvestOpen(true),
+        },
+        {
+          id: "mandi_prices",
+          title: t.topbar.mandiPricesTitle,
+          description: t.topbar.mandiPricesDesc,
+          icon: <Wheat size={15} />,
+          badgeClass: "utility-tool-circle-btn mandi-prices-circle-btn",
+          buttonText: "View Mandi Prices",
+          action: () => setIsMandiPricesOpen(true),
         },
       ],
       student: [
@@ -1189,8 +1339,8 @@ function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message,
-          city: selectedCityName,
-          persona,
+          city: selectedCityName || "New Delhi",
+          persona: persona || "all",
           history: assistantMessages.slice(-8),
           force_refresh: false,
           language: selectedLanguage,
@@ -1213,8 +1363,10 @@ function App() {
   };
 
   return (
-    <div className={`app-shell has-selection${isAnyOverlayOpen ? " modal-page-active" : ""}`}>
-      <Suspense fallback={null}><MapBackdrop {...coordinates} /></Suspense>
+    <div className={`app-shell${hasSelectedLocation ? " has-selection" : " is-white-bg"}${isAnyOverlayOpen ? " modal-page-active" : ""}`}>
+      {hasSelectedLocation && (
+        <Suspense fallback={null}><MapBackdrop {...coordinates} /></Suspense>
+      )}
       <main className="main-content" id="top">
         <header className={`topbar${isCompactNavBar ? " is-compact" : ""}`}>
           <a
@@ -1238,36 +1390,187 @@ function App() {
               <small>{t.topbar.brandSubtitle}</small>
             </div>
           </a>
-          <form
-            className="assistant-search"
-            onSubmit={handleAssistantSubmit}
-            role="search"
-          >
-            <Globe2 size={16} aria-hidden="true" />
-            <input
-              type="search"
-              aria-label={t.topbar.assistantAria}
-              aria-controls="assistant-panel"
-              aria-expanded={isAssistantOpen}
-              placeholder={t.topbar.assistantPlaceholder}
-              value={assistantInput}
-              onChange={(event) => setAssistantInput(event.target.value)}
-            />
+          <div className="assistant-search-wrapper" ref={assistantCmdRef}>
             <button
               type="button"
-              className="assistant-history-toggle"
-              aria-label={isAssistantOpen ? "Close chat history" : t.topbar.previousChatsAria}
-              aria-controls="assistant-panel"
-              aria-expanded={isAssistantOpen}
-              title={t.topbar.previousChatsAria}
-              onClick={() => setIsAssistantOpen((open) => !open)}
+              className={`assistant-cmd-trigger-btn${isAssistantCmdOpen ? " active" : ""}`}
+              onClick={() => {
+                setIsCalendarPlannerOpen(false);
+                setIsAssistantCmdOpen((open) => !open);
+              }}
+              title="Assistant Operational Commands (/plan, /whatif, /compare)"
+              aria-label="Assistant Operational Commands"
+              aria-expanded={isAssistantCmdOpen}
             >
-              <History size={15} aria-hidden="true" />
+              <SlidersHorizontal size={15} aria-hidden="true" />
             </button>
-            <button type="submit" aria-label={t.topbar.sendQueryAria} disabled={assistantLoading || !assistantInput.trim()}>
-              <Send size={15} aria-hidden="true" />
+            <form
+              className="assistant-search"
+              onSubmit={handleAssistantSubmit}
+              role="search"
+            >
+              <Globe2 size={16} aria-hidden="true" />
+              <input
+                ref={assistantInputRef}
+                type="search"
+                aria-label={t.topbar.assistantAria}
+                aria-controls="assistant-panel"
+                aria-expanded={isAssistantOpen}
+                placeholder={t.topbar.assistantPlaceholder}
+                value={assistantInput}
+                onChange={(event) => {
+                  const val = event.target.value;
+                  setAssistantInput(val);
+                  if (val.startsWith("/")) {
+                    setIsAssistantCmdOpen(true);
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className="assistant-history-toggle"
+                aria-label={isAssistantOpen ? "Close chat history" : t.topbar.previousChatsAria}
+                aria-controls="assistant-panel"
+                aria-expanded={isAssistantOpen}
+                title={t.topbar.previousChatsAria}
+                onClick={() => setIsAssistantOpen((open) => !open)}
+              >
+                <History size={15} aria-hidden="true" />
+              </button>
+              <button type="submit" aria-label={t.topbar.sendQueryAria} disabled={assistantLoading || !assistantInput.trim()}>
+                <Search size={15} aria-hidden="true" />
+              </button>
+            </form>
+
+            <button
+              type="button"
+              className={`assistant-calendar-trigger-btn${isCalendarPlannerOpen ? " active" : ""}`}
+              onClick={() => {
+                setIsAssistantCmdOpen(false);
+                setIsCalendarPlannerOpen((open) => !open);
+              }}
+              title="Weather-Safe Calendar Planner"
+              aria-label="Weather-Safe Calendar Planner"
+              aria-expanded={isCalendarPlannerOpen}
+            >
+              <Calendar size={15} aria-hidden="true" />
             </button>
-          </form>
+
+            {isAssistantCmdOpen && (
+              <div className="assistant-cmd-dropdown" role="menu">
+                <div className="assistant-cmd-dropdown-header">
+                  <div className="assistant-cmd-dropdown-title-row">
+                    <Terminal size={14} className="assistant-cmd-header-icon" />
+                    <span>Operational Command Tools</span>
+                  </div>
+                  <small>Select an operational mode or type command prefix into search</small>
+                </div>
+                <div className="assistant-cmd-dropdown-list">
+                  {ASSISTANT_COMMAND_MODES.map((mode) => (
+                    <button
+                      key={mode.prefix}
+                      type="button"
+                      className="assistant-cmd-option-btn"
+                      onClick={() => handleSelectCommandMode(mode.prefix)}
+                    >
+                      <div className="assistant-cmd-option-top">
+                        <span className="assistant-cmd-badge">
+                          {mode.icon}
+                          <code>{mode.prefix.trim()}</code>
+                        </span>
+                        <span className="assistant-cmd-title">{mode.title}</span>
+                      </div>
+                      <p className="assistant-cmd-desc">{mode.description}</p>
+                      <div className="assistant-cmd-example">
+                        <span>Example: </span>
+                        <code>{mode.example}</code>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {isCalendarPlannerOpen && (
+              <div className="assistant-calendar-dropdown" role="menu">
+                <div className="assistant-calendar-dropdown-header">
+                  <div className="assistant-calendar-dropdown-title-row">
+                    <Calendar size={14} className="assistant-calendar-header-icon" />
+                    <span>CLIMACORE SCHEDULE PLANNER</span>
+                    <span className="assistant-calendar-city-badge">
+                      <MapPin size={10} />
+                      {city}
+                    </span>
+                  </div>
+                  <small>1-Click weather-synchronized Google Calendar scheduling &amp; hazard advisories</small>
+                </div>
+                <div className="assistant-calendar-dropdown-list">
+                  <button
+                    type="button"
+                    className="assistant-calendar-option-btn"
+                    onClick={() => handleLaunchGoogleCalendar("safe_transit")}
+                  >
+                    <div className="assistant-calendar-option-top">
+                      <span className="assistant-calendar-badge">
+                        <ShieldCheck size={13} />
+                        <code>1-CLICK INTENT</code>
+                      </span>
+                      <span className="assistant-calendar-title">Schedule Safe Transit Window</span>
+                    </div>
+                    <p className="assistant-calendar-desc">
+                      Pre-fills Google Calendar with today&apos;s lowest-risk travel window (07:00 - 09:30 IST) before peak atmospheric volatility.
+                    </p>
+                    <div className="assistant-calendar-example">
+                      <span>Action: </span>
+                      <code>Syncs optimal temperature &amp; dry commute corridor</code>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="assistant-calendar-option-btn"
+                    onClick={() => handleLaunchGoogleCalendar("weather_advisory")}
+                  >
+                    <div className="assistant-calendar-option-top">
+                      <span className="assistant-calendar-badge warning">
+                        <AlertTriangle size={13} />
+                        <code>HAZARD NOTICE</code>
+                      </span>
+                      <span className="assistant-calendar-title">Add Active Severe Weather Advisory</span>
+                    </div>
+                    <p className="assistant-calendar-desc">
+                      Adds an all-day or active hazard defense block with ClimaCore Intelligence standard operating instructions.
+                    </p>
+                    <div className="assistant-calendar-example">
+                      <span>Action: </span>
+                      <code>Pins operational restriction SOP to agenda</code>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="assistant-calendar-option-btn"
+                    onClick={() => handleLaunchGoogleCalendar("workspace")}
+                  >
+                    <div className="assistant-calendar-option-top">
+                      <span className="assistant-calendar-badge workspace">
+                        <ExternalLink size={13} />
+                        <code>WORKSPACE</code>
+                      </span>
+                      <span className="assistant-calendar-title">Open Google Calendar Workspace</span>
+                    </div>
+                    <p className="assistant-calendar-desc">
+                      Launches Google Calendar in a new tab for comprehensive day agenda planning and team schedule coordination.
+                    </p>
+                    <div className="assistant-calendar-example">
+                      <span>Action: </span>
+                      <code>calendar.google.com in new tab</code>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
           <div className="topbar-modal-triggers">
             <div className="topbar-trigger-wrapper" ref={langMenuRef}>
               <button
@@ -1502,7 +1805,7 @@ function App() {
           <div className="weather-hero-region">
             <section className="page-heading">
               <div>
-                <div className="eyebrow"><CalendarDays className="eyebrow-calendar" size={16} strokeWidth={2} aria-hidden="true" /> {new Intl.DateTimeFormat(selectedLanguage === "en" ? "en-IN" : selectedLanguage, { weekday: "long", day: "2-digit", month: "long", year: "numeric" }).format(new Date()).toUpperCase()} <span className="eyebrow-separator">/</span> {getSeasonLabel(new Date().getMonth(), t)}</div>
+                <div className="eyebrow">{new Intl.DateTimeFormat(selectedLanguage === "en" ? "en-IN" : selectedLanguage, { weekday: "long", day: "2-digit", month: "long", year: "numeric" }).format(new Date()).toUpperCase()} <span className="eyebrow-separator">/</span> {getSeasonLabel(new Date().getMonth(), t)}</div>
                 <h1>{t.hero.title}</h1>
                 <p className="heading-subtitle">{t.hero.subtitle}</p>
               </div>
@@ -1703,6 +2006,27 @@ function App() {
                     </div>
                   </div>
                   <div className="briefing-content">
+                    {(persona === "farmer" || persona === "agriculture" || persona === "farmer_kisan") && (
+                      <div className="farmer-verdict-banner">
+                        <div className="farmer-verdict-top">
+                          <div className="farmer-verdict-tag">
+                            <Sprout size={14} />
+                            <strong>1-CLICK HARVEST &amp; SELL VERDICT</strong>
+                          </div>
+                          <button
+                            type="button"
+                            className="farmer-verdict-cta-btn"
+                            onClick={() => setIsMandiPricesOpen(true)}
+                          >
+                            <Wheat size={12} />
+                            <span>Compare APMC Mandi Rates &amp; Lock Sell Window</span>
+                          </button>
+                        </div>
+                        <p className="farmer-verdict-summary">
+                          Because <strong>18 mm rain</strong> is forecast in <strong>36 hours</strong> (raising mold risk to <strong>68%</strong>), and tomato rates in {selectedCityName || "Pune Moshi"} Mandi are currently at an optimal peak of <strong>₹12.50/kg</strong>, ClimaCore recommends harvesting immediate standing lots today and dispatching to {selectedCityName || "Moshi"} Mandi before road transit slows.
+                        </p>
+                      </div>
+                    )}
                     <div className={`restriction-box ${noActiveRestrictions ? "no-restriction" : ""}`}><div className="restriction-heading">{noActiveRestrictions ? <ShieldCheck size={16} /> : <AlertTriangle size={16} />} {noActiveRestrictions ? t.personaCard.restrictionsNone : t.personaCard.guidanceHeader}</div><p>{restrictionText}</p></div>
                     <div className="advisory-panel">
                       <div className="action-checklist"><span>{t.personaCard.sectorAdvisoriesHeader}</span>{visibleActionItems.map((item, index) => <div key={`${item}-${index}`}><Check size={13} /> {item}</div>)}</div>
@@ -1860,6 +2184,20 @@ function App() {
                   <div className="intel-icon agri"><Sprout size={17} /></div>
                   <div><h3>{t.environmentalCards.cardAgriTitle}</h3><span>{t.environmentalCards.cardAgriSub}</span></div>
                   <span className={`mini-status ${hasSelectedLocation ? (droughtIsActive ? "critical" : "good") : "good"}`}>{hasSelectedLocation ? (droughtIsActive ? t.environmentalCards.cardAgriDroughtAlert : t.environmentalCards.cardAgriFavorable) : t.environmentalCards.awaitingLocation}</span>
+                </div>
+                <div className="yield-risk-strip">
+                  <div className={`yield-risk-badge ${hasSelectedLocation ? (droughtIsActive ? "critical" : (smdi != null && smdi <= -0.3 ? "watch" : "optimal")) : "optimal"}`}>
+                    <Sprout size={13} />
+                    <span>
+                      {hasSelectedLocation
+                        ? (droughtIsActive
+                            ? "Projected Yield Risk: -18% (Severe Moisture Deficit)"
+                            : (smdi != null && smdi <= -0.3
+                                ? "Projected Yield Risk: -8% (Moderate Moisture Deficit)"
+                                : "Harvest Protection: Optimal"))
+                        : "Projected Yield Risk: -8% (Moderate Moisture Deficit)"}
+                    </span>
+                  </div>
                 </div>
                 <div className="soil-row">
                   <div><strong>{hasSelectedLocation && smdi != null ? smdi.toFixed(1) : "--"}</strong><span>{t.environmentalCards.cardAgriSoilDeficit}</span></div>
@@ -2199,6 +2537,16 @@ function App() {
           <CropHarvestModal
             city={selectedCityName}
             onClose={() => setIsCropHarvestOpen(false)}
+          />
+        </Suspense>
+      )}
+
+      {isMandiPricesOpen && (
+        <Suspense fallback={null}>
+          <MandiPricesModal
+            city={cityName || selectedCityName || (city ? city.split(",")[0].trim() : "Ahmedabad")}
+            state={cityState || predictionQuery.data?.state || (city.includes(",") ? city.split(",")[1].trim() : "Gujarat")}
+            onClose={() => setIsMandiPricesOpen(false)}
           />
         </Suspense>
       )}

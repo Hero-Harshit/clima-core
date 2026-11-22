@@ -47,13 +47,14 @@ type CorridorRadarModalProps = {
   onClose: () => void;
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.PROD ? "" : "http://localhost:8000");
 
 const VEHICLE_OPTIONS: UtilitySelectOption[] = [
   { id: "two_wheeler", label: "Two-Wheeler (Bike/EV)", desc: "High crosswind & slip sensitivity" },
   { id: "ev_van", label: "Electric Delivery Van", desc: "Battery thermal & traction control" },
   { id: "light_commercial", label: "Light Commercial (Pickup)", desc: "Braking & underpass clearance" },
   { id: "heavy_truck", label: "Heavy Freight Truck", desc: "Bridge stability & jackknife safety" },
+  { id: "emergency_relief", label: "Emergency Relief & Medical Supply Convoy", desc: "Coordinates relief supplies & safe deliveries during floods" },
 ];
 
 export default function CorridorRadarModal({ city, onClose }: CorridorRadarModalProps) {
@@ -221,6 +222,18 @@ export default function CorridorRadarModal({ city, onClose }: CorridorRadarModal
 
           {data && (
             <>
+              {vehicleType === "emergency_relief" && (
+                <div className="convoy-priority-banner">
+                  <div className="convoy-priority-header">
+                    <ShieldCheck size={16} className="convoy-priority-icon" />
+                    <strong>EMERGENCY RELIEF & MEDICAL SUPPLY CONVOY MODE</strong>
+                  </div>
+                  <p>
+                    Coordinates relief supplies, safe routes and deliveries during floods or disruptions. Prioritizes clearance around flood choke points and low-lying underpasses to safeguard life-saving cargo.
+                  </p>
+                </div>
+              )}
+
               {/* Telemetry Summary Card */}
               <div className="utility-score-grid">
                 <div className="utility-score-dial-card">

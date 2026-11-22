@@ -50,7 +50,7 @@ type DisasterReplayModalProps = {
   onClose: () => void;
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.PROD ? "" : "http://localhost:8000");
 
 const BENCHMARKS: { id: string; label: string; icon: typeof Waves; metric: string }[] = [
   { id: "MUMBAI_2005_CLOUDBURST", label: "Mumbai 2005 Deluge", icon: Waves, metric: "944.2 mm 24h Rain" },

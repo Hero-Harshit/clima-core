@@ -46,6 +46,8 @@ export const bn: TranslationDictionary = {
     parametricTriggerDesc: "দুর্যোগ স্ট্রাইক সম্ভাবনা ও ক্ষতিপূরণ ট্রাঞ্চ",
     coldStorageTitle: "হিমাগার বিদ্যুৎ বিভ্রাট সুরক্ষা",
     coldStorageDesc: "কক্ষ তাপ প্রবেশ ও তাপীয় ফ্লাইহুইল বাফার",
+    mandiPricesTitle: "মান্ডির রিয়েল-টাইম দর",
+    mandiPricesDesc: "দৈনিক বাজার আগমন, মডেল হার ও দামের তুলনা",
   },
   assistantDrawer: {
     headerTitle: "পূর্ববর্তী চ্যাট",

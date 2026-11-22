@@ -297,7 +297,7 @@ def generate_deterministic_briefing(
         "advisories": advisories,
         "workability_score": workability,
         "status_level": status_level,
-        "provider": "climacore-deterministic-synthesis",
+        "provider": "ClimaCore Intelligence",
         "language": norm_lang,
     }
 
@@ -417,7 +417,7 @@ async def generate_gemini_persona_briefing(
                                 "advisories": advisories_list[:5],
                                 "workability_score": int(parsed.get("workability_score", 70)),
                                 "status_level": str(parsed.get("status_level", "CAUTION")).upper(),
-                                "provider": f"gemini ({model})",
+                                "provider": "ClimaCore Intelligence",
                                 "language": norm_lang,
                             }
                             _BRIEFING_CACHE[cache_key] = result

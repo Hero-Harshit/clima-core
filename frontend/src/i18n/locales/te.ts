@@ -46,6 +46,8 @@ export const te: TranslationDictionary = {
     parametricTriggerDesc: "విపత్తు స్ట్రైక్ సంభావ్యత మరియు చెల్లింపు విశ్లేషణ",
     coldStorageTitle: "కోల్డ్ స్టోరేజ్ విద్యుత్ అంతరాయ రక్షణ",
     coldStorageDesc: "గది ఉష్ణ ప్రవేశం మరియు థర్మల్ ఫ్లైవీల్ నిల్వ",
+    mandiPricesTitle: "మండీ రియల్-టైమ్ ధరలు",
+    mandiPricesDesc: "రోజువారీ మార్కెట్ రాకలు, మోడల్ రేట్లు మరియు ధరల పోలిక",
   },
   assistantDrawer: {
     headerTitle: "మునుపటి సంభాషణలు",

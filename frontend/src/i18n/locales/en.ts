@@ -46,6 +46,8 @@ export const en: TranslationDictionary = {
     parametricTriggerDesc: "Catastrophe strike probability & payout tranches",
     coldStorageTitle: "Cold Storage Blackout Defense",
     coldStorageDesc: "Chamber heat ingress & thermal flywheel buffer",
+    mandiPricesTitle: "APMC Mandi Real-Time Prices",
+    mandiPricesDesc: "Daily market arrivals, modal rates & price comparison",
   },
   assistantDrawer: {
     headerTitle: "Previous chats",
