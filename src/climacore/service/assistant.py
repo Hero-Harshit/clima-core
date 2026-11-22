@@ -42,7 +42,9 @@ class ChatMessage(BaseModel):
 
 
 class AssistantChatRequest(BaseModel):
-    message: str = Field(..., description="User query or instruction")
+    message: Optional[str] = Field(default=None, description="User query or instruction")
+    query: Optional[str] = Field(default=None, description="Alternative user query field")
+    prompt: Optional[str] = Field(default=None, description="Alternative prompt field")
     city: str = Field(default="Mumbai", description="Target Indian city or coordinates")
     persona: str = Field(default="general", description="Occupation / persona identifier (e.g. farmer, student, commuter)")
     history: List[ChatMessage] = Field(default_factory=list, description="Prior conversational turns")
@@ -1113,6 +1115,7 @@ class AssistantEngine:
         live_engine: Optional[Any] = None,
     ) -> AssistantChatResponse:
         t0 = time.perf_counter()
+        req.message = (req.message or req.query or req.prompt or "").strip()
         metrics = build_metrics_summary(prediction_result, req.persona)
 
         # 0. Retrieve Institutional Regulatory Standards via Federated Multi-Shard RAG
