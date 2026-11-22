@@ -10,12 +10,12 @@ import Methodology from "./Methodology";
 import PrivacyPolicy from "./PrivacyPolicy";
 import FAQ from "./FAQ";
 import {
-  Activity, AlertTriangle, ArrowUpRight, BadgeCheck,
+  Activity, AlertTriangle, Anchor, ArrowUpRight, BadgeCheck,
   BatteryWarning, Building2, CalendarDays, Check, ChevronDown, ChevronRight,
-  BarChart3, CircleHelp, CloudDrizzle, CloudRain, CloudSun, Compass, Database, Droplets, Factory, Flame,
-  Globe2, History, Info, Languages, Layers, Send,
-  LocateFixed, LockKeyhole, MapPin, MoreHorizontal, RotateCcw,
-  ShieldCheck, Sprout, Sun, Thermometer, Truck, Waves, Wind, X, Zap,
+  BarChart3, CircleHelp, CloudDrizzle, CloudRain, CloudSun, Compass, Database, Droplets, Factory, Fish, Flame,
+  Globe2, GraduationCap, History, Info, Languages, Layers, Send,
+  LocateFixed, LockKeyhole, MapPin, MoreHorizontal, Plane, RotateCcw,
+  ShieldAlert, ShieldCheck, Snowflake, Sprout, Sun, Thermometer, Train, Truck, Waves, Wind, X, Zap,
 } from "lucide-react";
 import { getTranslations, TranslationDictionary } from "./i18n";
 
@@ -28,6 +28,18 @@ const DisasterReplayModal = lazy(() => import("./DisasterReplayModal"));
 const CorridorRadarModal = lazy(() => import("./CorridorRadarModal"));
 const TouristOptimizerModal = lazy(() => import("./TouristOptimizerModal"));
 const CleanAirWorkoutModal = lazy(() => import("./CleanAirWorkoutModal"));
+const CropHarvestModal = lazy(() => import("./CropHarvestModal"));
+const MonsoonExamModal = lazy(() => import("./MonsoonExamModal"));
+const MetroVsRoadModal = lazy(() => import("./MetroVsRoadModal"));
+const HeatStrokeSurgeModal = lazy(() => import("./HeatStrokeSurgeModal"));
+const HospitalGridFuelModal = lazy(() => import("./HospitalGridFuelModal"));
+const CoastalSquallModal = lazy(() => import("./CoastalSquallModal"));
+const IceToFishRatioModal = lazy(() => import("./IceToFishRatioModal"));
+const FactoryTinRoofModal = lazy(() => import("./FactoryTinRoofModal"));
+const RunwayCrosswindModal = lazy(() => import("./RunwayCrosswindModal"));
+const WaterTurbidityModal = lazy(() => import("./WaterTurbidityModal"));
+const ParametricTriggerModal = lazy(() => import("./ParametricTriggerModal"));
+const ColdStorageModal = lazy(() => import("./ColdStorageModal"));
 
 type Persona = { id: string; key?: string; title: string; icon?: string; description?: string };
 type PersonasResponse = Persona[] | { personas?: Persona[] };
@@ -367,6 +379,18 @@ function App() {
   const [isCorridorRadarOpen, setIsCorridorRadarOpen] = useState(false);
   const [isTouristOptimizerOpen, setIsTouristOptimizerOpen] = useState(false);
   const [isCleanAirWorkoutOpen, setIsCleanAirWorkoutOpen] = useState(false);
+  const [isCropHarvestOpen, setIsCropHarvestOpen] = useState(false);
+  const [isMonsoonExamOpen, setIsMonsoonExamOpen] = useState(false);
+  const [isMetroVsRoadOpen, setIsMetroVsRoadOpen] = useState(false);
+  const [isHeatStrokeSurgeOpen, setIsHeatStrokeSurgeOpen] = useState(false);
+  const [isHospitalGridFuelOpen, setIsHospitalGridFuelOpen] = useState(false);
+  const [isCoastalSquallOpen, setIsCoastalSquallOpen] = useState(false);
+  const [isIceToFishRatioOpen, setIsIceToFishRatioOpen] = useState(false);
+  const [isFactoryTinRoofOpen, setIsFactoryTinRoofOpen] = useState(false);
+  const [isRunwayCrosswindOpen, setIsRunwayCrosswindOpen] = useState(false);
+  const [isWaterTurbidityOpen, setIsWaterTurbidityOpen] = useState(false);
+  const [isParametricTriggerOpen, setIsParametricTriggerOpen] = useState(false);
+  const [isColdStorageOpen, setIsColdStorageOpen] = useState(false);
   const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
   const toolsMenuRef = useRef<HTMLDivElement>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
@@ -804,6 +828,199 @@ function App() {
           ])
     : [];
   const selectedPersona = people.find((item) => (item.id ?? item.key) === persona);
+  const currentPersonaTools = useMemo(() => {
+    if (!persona) return [];
+    const map: Record<string, {
+      id: string;
+      title: string;
+      description: string;
+      icon: ReactNode;
+      badgeClass: string;
+      buttonText: string;
+      action: () => void;
+    }[]> = {
+      city_official: [
+        {
+          id: "disaster_replay",
+          title: t.topbar.disasterReplayTitle,
+          description: t.topbar.disasterReplayDesc,
+          icon: <RotateCcw size={15} />,
+          badgeClass: "disaster-replay-circle-btn",
+          buttonText: "Launch Replay",
+          action: () => setIsDisasterReplayOpen(true),
+        },
+        {
+          id: "crisis_council",
+          title: t.topbar.crisisCouncilTitle,
+          description: t.topbar.crisisCouncilDesc,
+          icon: <span style={{ fontWeight: 800, fontSize: 15, lineHeight: 1 }}>!</span>,
+          badgeClass: "war-room-circle-btn",
+          buttonText: "Enter War Room",
+          action: () => setIsCrisisCouncilOpen(true),
+        },
+      ],
+      gig_worker: [
+        {
+          id: "corridor_radar",
+          title: t.topbar.corridorRadarTitle,
+          description: t.topbar.corridorRadarDesc,
+          icon: <Truck size={15} />,
+          badgeClass: "utility-tool-circle-btn corridor-circle-btn",
+          buttonText: "Analyze Route",
+          action: () => setIsCorridorRadarOpen(true),
+        },
+      ],
+      tourism: [
+        {
+          id: "tourist_optimizer",
+          title: t.topbar.touristOptimizerTitle,
+          description: t.topbar.touristOptimizerDesc,
+          icon: <Compass size={15} />,
+          badgeClass: "utility-tool-circle-btn tourist-circle-btn",
+          buttonText: "Plan Itinerary",
+          action: () => setIsTouristOptimizerOpen(true),
+        },
+      ],
+      commuter: [
+        {
+          id: "clean_air_workout",
+          title: t.topbar.cleanAirWorkoutTitle,
+          description: t.topbar.cleanAirWorkoutDesc,
+          icon: <Activity size={15} />,
+          badgeClass: "utility-tool-circle-btn workout-circle-btn",
+          buttonText: "Scan Window",
+          action: () => setIsCleanAirWorkoutOpen(true),
+        },
+        {
+          id: "metro_vs_road",
+          title: t.topbar.metroVsRoadTitle,
+          description: t.topbar.metroVsRoadDesc,
+          icon: <Train size={15} />,
+          badgeClass: "utility-tool-circle-btn metro-road-circle-btn",
+          buttonText: "Compare Transit",
+          action: () => setIsMetroVsRoadOpen(true),
+        },
+      ],
+      farmer: [
+        {
+          id: "crop_spoilage",
+          title: t.topbar.cropHarvestTitle,
+          description: t.topbar.cropHarvestDesc,
+          icon: <Sprout size={15} />,
+          badgeClass: "utility-tool-circle-btn spoilage-circle-btn",
+          buttonText: "Audit Spoilage",
+          action: () => setIsCropHarvestOpen(true),
+        },
+      ],
+      student: [
+        {
+          id: "monsoon_exam",
+          title: t.topbar.monsoonExamTitle,
+          description: t.topbar.monsoonExamDesc,
+          icon: <GraduationCap size={15} />,
+          badgeClass: "utility-tool-circle-btn monsoon-exam-circle-btn",
+          buttonText: "Plan Commute",
+          action: () => setIsMonsoonExamOpen(true),
+        },
+      ],
+      healthcare: [
+        {
+          id: "heat_stroke_surge",
+          title: t.topbar.heatStrokeSurgeTitle,
+          description: t.topbar.heatStrokeSurgeDesc,
+          icon: <Flame size={15} />,
+          badgeClass: "utility-tool-circle-btn heat-surge-circle-btn",
+          buttonText: "Predict Surge",
+          action: () => setIsHeatStrokeSurgeOpen(true),
+        },
+        {
+          id: "hospital_grid_fuel",
+          title: t.topbar.hospitalGridFuelTitle,
+          description: t.topbar.hospitalGridFuelDesc,
+          icon: <BatteryWarning size={15} />,
+          badgeClass: "utility-tool-circle-btn grid-fuel-circle-btn",
+          buttonText: "Audit Fuel",
+          action: () => setIsHospitalGridFuelOpen(true),
+        },
+      ],
+      maritime: [
+        {
+          id: "coastal_squall",
+          title: t.topbar.coastalSquallTitle,
+          description: t.topbar.coastalSquallDesc,
+          icon: <Anchor size={15} />,
+          badgeClass: "utility-tool-circle-btn coastal-squall-circle-btn",
+          buttonText: "Check Sea State",
+          action: () => setIsCoastalSquallOpen(true),
+        },
+        {
+          id: "ice_to_fish_ratio",
+          title: t.topbar.iceToFishRatioTitle,
+          description: t.topbar.iceToFishRatioDesc,
+          icon: <Fish size={15} />,
+          badgeClass: "utility-tool-circle-btn ice-ratio-circle-btn",
+          buttonText: "Calculate Ice",
+          action: () => setIsIceToFishRatioOpen(true),
+        },
+      ],
+      industry: [
+        {
+          id: "factory_tin_roof",
+          title: t.topbar.factoryTinRoofTitle,
+          description: t.topbar.factoryTinRoofDesc,
+          icon: <Factory size={15} />,
+          badgeClass: "utility-tool-circle-btn tin-roof-circle-btn",
+          buttonText: "Audit Heat",
+          action: () => setIsFactoryTinRoofOpen(true),
+        },
+      ],
+      aviation: [
+        {
+          id: "runway_crosswind",
+          title: t.topbar.runwayCrosswindTitle,
+          description: t.topbar.runwayCrosswindDesc,
+          icon: <Plane size={15} />,
+          badgeClass: "utility-tool-circle-btn runway-crosswind-circle-btn",
+          buttonText: "Check Crosswind",
+          action: () => setIsRunwayCrosswindOpen(true),
+        },
+      ],
+      water: [
+        {
+          id: "water_turbidity",
+          title: t.topbar.waterTurbidityTitle,
+          description: t.topbar.waterTurbidityDesc,
+          icon: <Droplets size={15} />,
+          badgeClass: "utility-tool-circle-btn water-turbidity-circle-btn",
+          buttonText: "Predict Dosing",
+          action: () => setIsWaterTurbidityOpen(true),
+        },
+      ],
+      insurance: [
+        {
+          id: "parametric_trigger",
+          title: t.topbar.parametricTriggerTitle,
+          description: t.topbar.parametricTriggerDesc,
+          icon: <ShieldAlert size={15} />,
+          badgeClass: "utility-tool-circle-btn parametric-trigger-circle-btn",
+          buttonText: "Simulate Strike",
+          action: () => setIsParametricTriggerOpen(true),
+        },
+      ],
+      cold_chain: [
+        {
+          id: "cold_storage_defense",
+          title: t.topbar.coldStorageTitle,
+          description: t.topbar.coldStorageDesc,
+          icon: <Snowflake size={15} />,
+          badgeClass: "utility-tool-circle-btn cold-storage-circle-btn",
+          buttonText: "Plan Defense",
+          action: () => setIsColdStorageOpen(true),
+        },
+      ],
+    };
+    return map[persona] ?? [];
+  }, [persona, t]);
   const cityName = predictionQuery.data?.city ?? selectedCityName;
   const cityState = predictionQuery.data?.state ?? (city.includes(",") ? city.split(",")[1]?.trim() : "");
   const coordinates = useMemo(() => ({
@@ -992,33 +1209,30 @@ function App() {
                   setIsLangMenuOpen(false);
                   setIsToolsMenuOpen((open) => !open);
                 }}
-                title="Simulations & emergency tools"
-                aria-label="Simulations and emergency tools"
+                title={t.footer.heading}
+                aria-label={t.footer.heading}
                 aria-expanded={isToolsMenuOpen}
                 tabIndex={isCompactNavBar ? -1 : 0}
               >
                 <MoreHorizontal size={17} aria-hidden="true" />
               </button>
               {isToolsMenuOpen && !isCompactNavBar && (
-                <div className="tools-menu-popover" role="dialog" aria-label="Simulations and emergency tools">
-                  <div className="tools-menu-header">
-                    <span>{t.topbar.toolsMenuTitle}</span>
-                  </div>
+                <div className="tools-menu-popover" role="dialog" aria-label={t.footer.heading}>
                   <div className="tools-menu-list">
                     <button
                       type="button"
                       className="tools-menu-item"
                       onClick={() => {
-                        setIsDisasterReplayOpen(true);
+                        openNavigationPage("provenance");
                         setIsToolsMenuOpen(false);
                       }}
+                      title={t.footer.linkTransparency}
                     >
-                      <span className="disaster-replay-circle-btn" aria-hidden="true">
-                        <RotateCcw size={14} />
+                      <span className="tools-menu-page-icon" aria-hidden="true">
+                        <ShieldCheck size={15} />
                       </span>
                       <div className="tools-menu-item-info">
-                        <strong>{t.topbar.disasterReplayTitle}</strong>
-                        <small>{t.topbar.disasterReplayDesc}</small>
+                        <strong>{t.footer.linkTransparency}</strong>
                       </div>
                     </button>
 
@@ -1026,16 +1240,16 @@ function App() {
                       type="button"
                       className="tools-menu-item"
                       onClick={() => {
-                        setIsCrisisCouncilOpen(true);
+                        openNavigationPage("privacy");
                         setIsToolsMenuOpen(false);
                       }}
+                      title={t.footer.linkPrivacy}
                     >
-                      <span className="war-room-circle-btn" aria-hidden="true">
-                        !
+                      <span className="tools-menu-page-icon" aria-hidden="true">
+                        <LockKeyhole size={15} />
                       </span>
                       <div className="tools-menu-item-info">
-                        <strong>{t.topbar.crisisCouncilTitle}</strong>
-                        <small>{t.topbar.crisisCouncilDesc}</small>
+                        <strong>{t.footer.linkPrivacy}</strong>
                       </div>
                     </button>
 
@@ -1043,16 +1257,16 @@ function App() {
                       type="button"
                       className="tools-menu-item"
                       onClick={() => {
-                        setIsCorridorRadarOpen(true);
+                        openNavigationPage("about");
                         setIsToolsMenuOpen(false);
                       }}
+                      title={t.footer.linkAbout}
                     >
-                      <span className="utility-tool-circle-btn corridor-circle-btn" aria-hidden="true">
-                        <Truck size={14} />
+                      <span className="tools-menu-page-icon" aria-hidden="true">
+                        <Info size={15} />
                       </span>
                       <div className="tools-menu-item-info">
-                        <strong>{t.topbar.corridorRadarTitle}</strong>
-                        <small>{t.topbar.corridorRadarDesc}</small>
+                        <strong>{t.footer.linkAbout}</strong>
                       </div>
                     </button>
 
@@ -1060,16 +1274,16 @@ function App() {
                       type="button"
                       className="tools-menu-item"
                       onClick={() => {
-                        setIsTouristOptimizerOpen(true);
+                        openNavigationPage("methodology");
                         setIsToolsMenuOpen(false);
                       }}
+                      title={t.footer.linkMethodology}
                     >
-                      <span className="utility-tool-circle-btn tourist-circle-btn" aria-hidden="true">
-                        <Compass size={14} />
+                      <span className="tools-menu-page-icon" aria-hidden="true">
+                        <Layers size={15} />
                       </span>
                       <div className="tools-menu-item-info">
-                        <strong>{t.topbar.touristOptimizerTitle}</strong>
-                        <small>{t.topbar.touristOptimizerDesc}</small>
+                        <strong>{t.footer.linkMethodology}</strong>
                       </div>
                     </button>
 
@@ -1077,16 +1291,50 @@ function App() {
                       type="button"
                       className="tools-menu-item"
                       onClick={() => {
-                        setIsCleanAirWorkoutOpen(true);
+                        openNavigationPage("data-sources");
                         setIsToolsMenuOpen(false);
                       }}
+                      title={t.footer.linkDataSources}
                     >
-                      <span className="utility-tool-circle-btn workout-circle-btn" aria-hidden="true">
-                        <Activity size={14} />
+                      <span className="tools-menu-page-icon" aria-hidden="true">
+                        <Database size={15} />
                       </span>
                       <div className="tools-menu-item-info">
-                        <strong>{t.topbar.cleanAirWorkoutTitle}</strong>
-                        <small>{t.topbar.cleanAirWorkoutDesc}</small>
+                        <strong>{t.footer.linkDataSources}</strong>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="tools-menu-item"
+                      onClick={() => {
+                        openNavigationPage("model-performance");
+                        setIsToolsMenuOpen(false);
+                      }}
+                      title={t.footer.linkPerformance}
+                    >
+                      <span className="tools-menu-page-icon" aria-hidden="true">
+                        <BarChart3 size={15} />
+                      </span>
+                      <div className="tools-menu-item-info">
+                        <strong>{t.footer.linkPerformance}</strong>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="tools-menu-item"
+                      onClick={() => {
+                        openNavigationPage("faq");
+                        setIsToolsMenuOpen(false);
+                      }}
+                      title={t.footer.linkFAQ}
+                    >
+                      <span className="tools-menu-page-icon" aria-hidden="true">
+                        <CircleHelp size={15} />
+                      </span>
+                      <div className="tools-menu-item-info">
+                        <strong>{t.footer.linkFAQ}</strong>
                       </div>
                     </button>
                   </div>
@@ -1155,36 +1403,88 @@ function App() {
               </div>
             </div>
 
-            <section className={`threat-banner ${hasSelectedLocationAndOccupation ? tone : "is-unselected"}`}>
-              <div className="threat-left">
-                <div>
-                  <div className="threat-kicker">{t.threatBanner.kicker}{cityName ? ` · ${cityName.toUpperCase()}` : ""}</div>
-                  <div className="threat-title">
-                    {!hasSelectedLocationAndOccupation
-                      ? t.threatBanner.awaitSelectionTitle
-                      : tone === "critical"
-                        ? t.threatBanner.criticalTitle
-                        : tone === "high"
-                          ? t.threatBanner.highTitle
-                          : tone === "moderate"
-                            ? t.threatBanner.moderateTitle
-                            : t.threatBanner.lowTitle}
+            <div className="hero-cards-row is-split">
+              <section className={`threat-banner ${hasSelectedLocationAndOccupation ? tone : "is-unselected"}`}>
+                <div className="threat-left">
+                  <div>
+                    <div className="threat-kicker">{t.threatBanner.kicker}{cityName ? ` · ${cityName.toUpperCase()}` : ""}</div>
+                    <div className="threat-title">
+                      {!hasSelectedLocationAndOccupation
+                        ? t.threatBanner.awaitSelectionTitle
+                        : tone === "critical"
+                          ? t.threatBanner.criticalTitle
+                          : tone === "high"
+                            ? t.threatBanner.highTitle
+                            : tone === "moderate"
+                              ? t.threatBanner.moderateTitle
+                              : t.threatBanner.lowTitle}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="threat-right">
-                {hasSelectedLocationAndOccupation && risk != null && (
-                  <div className="risk-score">
-                    <strong>{risk}</strong>
-                    <span>{t.threatBanner.unitScale}</span>
+                {hasSelectedLocationAndOccupation && (
+                  <div className="threat-right">
+                    {risk != null && (
+                      <div className="risk-score">
+                        <strong>{risk}</strong>
+                        <span>{t.threatBanner.unitScale}</span>
+                      </div>
+                    )}
+                    <span className={`risk-pill ${tone}`}>
+                      <span />
+                      {peakRiskCategory}
+                    </span>
                   </div>
                 )}
-                <span className={`risk-pill ${!hasSelectedLocationAndOccupation ? "is-unselected" : tone}`}>
-                  <span />
-                  {hasSelectedLocationAndOccupation ? peakRiskCategory : t.threatBanner.pillAwaiting}
-                </span>
-              </div>
-            </section>
+              </section>
+
+              <section className={`persona-tools-card ${!selectedPersona ? "is-unselected" : ""}`} aria-label="Persona operational tools">
+                <div className="persona-tools-header">
+                  <div className="persona-tools-header-text">
+                    <div className="persona-tools-kicker">
+                      {t.personaTools.kicker}{selectedPersona ? ` · ${(t.personas[selectedPersona.id as keyof typeof t.personas] ?? selectedPersona.title ?? "").toUpperCase()}` : ""}
+                    </div>
+                    <h3 className="persona-tools-title">
+                      {selectedPersona
+                        ? `${t.personaTools.calibratedTitlePrefix} ${t.personas[selectedPersona.id as keyof typeof t.personas] ?? selectedPersona.title ?? ""}`
+                        : t.personaTools.defaultTitle}
+                    </h3>
+                  </div>
+                </div>
+
+                {!selectedPersona ? (
+                  <div className="persona-tools-empty is-awaiting">
+                    <p>{t.personaTools.awaitingPrompt}</p>
+                  </div>
+                ) : currentPersonaTools.length > 0 ? (
+                  <div className={`persona-tools-grid ${currentPersonaTools.length === 1 ? "is-single-tool" : "is-multi-tool"}`}>
+                    {currentPersonaTools.map((tool) => (
+                      <button
+                        key={tool.id}
+                        type="button"
+                        className="persona-tool-item"
+                        onClick={tool.action}
+                      >
+                        <div className="persona-tool-icon-wrap">
+                          <span className={tool.badgeClass} aria-hidden="true">
+                            {tool.icon}
+                          </span>
+                        </div>
+                        <div className="persona-tool-details">
+                          <div className="persona-tool-name-row">
+                            <strong>{tool.title}</strong>
+                          </div>
+                          <p>{tool.description}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="persona-tools-empty">
+                    <p>{t.personaTools.inDevelopmentNotice}</p>
+                  </div>
+                )}
+              </section>
+            </div>
           </div>
 
           <section className="section-block">
@@ -1673,39 +1973,6 @@ function App() {
               <div className="source-list"><span>{t.modelConfidence.dataSources}</span><div>{hasSelectedLocation ? <><i>IMD</i><i>CWC</i><i>CGWB</i><b>+4</b></> : <i>{t.modelConfidence.awaitingLocation}</i>}</div></div>
             </article>
           </section>
-
-          <footer className="home-footer">
-            <div className="home-footer-heading">
-              <span className="section-kicker">{t.footer.kicker}</span>
-              <span>{t.footer.heading}</span>
-            </div>
-            <nav className="footer-page-nav" aria-label="Site pages">
-              <button type="button" className="footer-page-button" onClick={() => openNavigationPage("provenance")} title={t.footer.linkTransparency}>
-                <span className="footer-page-icon"><ShieldCheck size={19} aria-hidden="true" /></span>
-                <span className="footer-page-label">{t.footer.linkTransparency}</span>
-              </button>
-              <button type="button" className="footer-page-button" onClick={() => openNavigationPage("privacy")} title={t.footer.linkPrivacy}>
-                <span className="footer-page-icon"><LockKeyhole size={19} aria-hidden="true" /></span>
-                <span className="footer-page-label">{t.footer.linkPrivacy}</span>
-              </button>
-              <button type="button" className="footer-page-button" onClick={() => openNavigationPage("about")} title={t.footer.linkAbout}>
-                <span className="footer-page-icon"><Info size={19} aria-hidden="true" /></span>
-                <span className="footer-page-label">{t.footer.linkAbout}</span>
-              </button>
-              {additionalPages.map(({ id, title, Icon }) => {
-                const localizedTitle = id === "methodology" ? t.footer.linkMethodology
-                  : id === "data-sources" ? t.footer.linkDataSources
-                  : id === "model-performance" ? t.footer.linkPerformance
-                  : id === "faq" ? t.footer.linkFAQ : title;
-                return (
-                  <button key={id} type="button" className="footer-page-button" onClick={() => openNavigationPage(id)} title={localizedTitle}>
-                    <span className="footer-page-icon"><Icon size={19} aria-hidden="true" /></span>
-                    <span className="footer-page-label">{localizedTitle}</span>
-                  </button>
-                );
-              })}
-            </nav>
-          </footer>
         </div>
       </main>
 
@@ -1782,6 +2049,114 @@ function App() {
           <CleanAirWorkoutModal
             city={selectedCityName}
             onClose={() => setIsCleanAirWorkoutOpen(false)}
+          />
+        </Suspense>
+      )}
+
+      {isCropHarvestOpen && (
+        <Suspense fallback={null}>
+          <CropHarvestModal
+            city={selectedCityName}
+            onClose={() => setIsCropHarvestOpen(false)}
+          />
+        </Suspense>
+      )}
+
+      {isMonsoonExamOpen && (
+        <Suspense fallback={null}>
+          <MonsoonExamModal
+            city={selectedCityName}
+            onClose={() => setIsMonsoonExamOpen(false)}
+          />
+        </Suspense>
+      )}
+
+      {isMetroVsRoadOpen && (
+        <Suspense fallback={null}>
+          <MetroVsRoadModal
+            city={selectedCityName}
+            onClose={() => setIsMetroVsRoadOpen(false)}
+          />
+        </Suspense>
+      )}
+
+      {isHeatStrokeSurgeOpen && (
+        <Suspense fallback={null}>
+          <HeatStrokeSurgeModal
+            city={selectedCityName}
+            onClose={() => setIsHeatStrokeSurgeOpen(false)}
+          />
+        </Suspense>
+      )}
+
+      {isHospitalGridFuelOpen && (
+        <Suspense fallback={null}>
+          <HospitalGridFuelModal
+            city={selectedCityName}
+            onClose={() => setIsHospitalGridFuelOpen(false)}
+          />
+        </Suspense>
+      )}
+
+      {isCoastalSquallOpen && (
+        <Suspense fallback={null}>
+          <CoastalSquallModal
+            city={selectedCityName}
+            onClose={() => setIsCoastalSquallOpen(false)}
+          />
+        </Suspense>
+      )}
+
+      {isIceToFishRatioOpen && (
+        <Suspense fallback={null}>
+          <IceToFishRatioModal
+            city={selectedCityName}
+            onClose={() => setIsIceToFishRatioOpen(false)}
+          />
+        </Suspense>
+      )}
+
+      {isFactoryTinRoofOpen && (
+        <Suspense fallback={null}>
+          <FactoryTinRoofModal
+            city={selectedCityName}
+            onClose={() => setIsFactoryTinRoofOpen(false)}
+          />
+        </Suspense>
+      )}
+
+      {isRunwayCrosswindOpen && (
+        <Suspense fallback={null}>
+          <RunwayCrosswindModal
+            city={selectedCityName}
+            onClose={() => setIsRunwayCrosswindOpen(false)}
+          />
+        </Suspense>
+      )}
+
+      {isWaterTurbidityOpen && (
+        <Suspense fallback={null}>
+          <WaterTurbidityModal
+            city={selectedCityName}
+            onClose={() => setIsWaterTurbidityOpen(false)}
+          />
+        </Suspense>
+      )}
+
+      {isParametricTriggerOpen && (
+        <Suspense fallback={null}>
+          <ParametricTriggerModal
+            city={selectedCityName}
+            onClose={() => setIsParametricTriggerOpen(false)}
+          />
+        </Suspense>
+      )}
+
+      {isColdStorageOpen && (
+        <Suspense fallback={null}>
+          <ColdStorageModal
+            city={selectedCityName}
+            onClose={() => setIsColdStorageOpen(false)}
           />
         </Suspense>
       )}

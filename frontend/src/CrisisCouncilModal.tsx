@@ -149,18 +149,23 @@ export default function CrisisCouncilModal({
       <section className="crisis-council-modal" role="dialog" aria-modal="true" aria-labelledby="war-room-title">
         {/* Top Header */}
         <header className="war-room-header">
-          <div className="war-room-title-block">
-            <div className="war-room-kicker-row">
-              <span className="war-room-badge"><Radio size={12} className="live-ping-icon" /> ICS-201 INCIDENT COMMAND</span>
-              <span className={`severity-tag severity-${severityClass}`}>
-                <span className="dot" />
-                {councilData?.severity_tier ?? "ACTIVE DELIBERATION"}
-              </span>
+          <div className="utility-modal-title-wrap">
+            <div className="utility-tool-circle-btn war-room-circle-btn" style={{ width: 36, height: 36 }}>
+              <span style={{ fontWeight: 800, fontSize: 16, lineHeight: 1 }}>!</span>
             </div>
-            <h2 id="war-room-title">Crisis Council War Room · <span>{city}</span></h2>
-            <p className="war-room-incident-meta">
-              Incident ID: <code>{councilData?.incident_id ?? "SYNTHESIZING..."}</code> · {councilData?.incident_type?.replace(/_/g, " ") ?? "MULTI-SECTOR SHOCK"}
-            </p>
+            <div className="war-room-title-block">
+              <div className="war-room-kicker-row">
+                <span className="war-room-badge"><Radio size={12} className="live-ping-icon" /> ICS-201 INCIDENT COMMAND</span>
+                <span className={`severity-tag severity-${severityClass}`}>
+                  <span className="dot" />
+                  {councilData?.severity_tier ?? "ACTIVE DELIBERATION"}
+                </span>
+              </div>
+              <h2 id="war-room-title">Crisis Council War Room · <span>{city}</span></h2>
+              <p className="war-room-incident-meta">
+                Incident ID: <code>{councilData?.incident_id ?? "SYNTHESIZING..."}</code> · {councilData?.incident_type?.replace(/_/g, " ") ?? "MULTI-SECTOR SHOCK"}
+              </p>
+            </div>
           </div>
           <button className="icon-btn close-warroom-btn" onClick={onClose} aria-label="Exit War Room">
             <X size={18} />

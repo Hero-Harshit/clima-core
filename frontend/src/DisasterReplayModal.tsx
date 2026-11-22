@@ -119,24 +119,29 @@ export default function DisasterReplayModal({ currentCity, onClose }: DisasterRe
       <section className="disaster-replay-modal" role="dialog" aria-modal="true" aria-labelledby="time-machine-title">
         {/* Header */}
         <header className="replay-modal-header">
-          <div className="replay-header-info">
-            <div className="replay-kicker-row">
-              <span className="section-kicker">HISTORICAL CATASTROPHE TIME MACHINE · COUNTERFACTUAL ENGINE</span>
-              <span className="replay-live-tag">
-                <RotateCcw size={11} className="spin-icon" /> BACKTEST MODE
-              </span>
+          <div className="utility-modal-title-wrap">
+            <div className="utility-tool-circle-btn disaster-replay-circle-btn" style={{ width: 36, height: 36 }}>
+              <RotateCcw size={18} />
             </div>
-            <h2 id="time-machine-title">Disaster Replay Time Machine · <span>{replayData?.name ?? "Catastrophe Dossier"}</span></h2>
-            <div className="replay-meta-tags">
-              <span className="replay-meta-pill">
-                <Calendar size={12} /> {replayData?.historical_date ?? "HISTORICAL DATE"}
-              </span>
-              <span className="replay-meta-pill metric-highlight">
-                <Zap size={12} /> {replayData?.historical_peak_metric ?? "PEAK IMPACT"}
-              </span>
-              <span className="replay-meta-pill category-pill">
-                {replayData?.category?.replace(/_/g, " ") ?? "METEOROLOGICAL SHOCK"}
-              </span>
+            <div className="replay-header-info">
+              <div className="replay-kicker-row">
+                <span className="section-kicker">HISTORICAL CATASTROPHE TIME MACHINE · COUNTERFACTUAL ENGINE</span>
+                <span className="replay-live-tag">
+                  <RotateCcw size={11} className="spin-icon" /> BACKTEST MODE
+                </span>
+              </div>
+              <h2 id="time-machine-title">Disaster Replay Time Machine · <span>{replayData?.name ?? "Catastrophe Dossier"}</span></h2>
+              <div className="replay-meta-tags">
+                <span className="replay-meta-pill">
+                  <Calendar size={12} /> {replayData?.historical_date ?? "HISTORICAL DATE"}
+                </span>
+                <span className="replay-meta-pill metric-highlight">
+                  <Zap size={12} /> {replayData?.historical_peak_metric ?? "PEAK IMPACT"}
+                </span>
+                <span className="replay-meta-pill category-pill">
+                  {replayData?.category?.replace(/_/g, " ") ?? "METEOROLOGICAL SHOCK"}
+                </span>
+              </div>
             </div>
           </div>
           <button className="icon-btn close-replay-btn" onClick={onClose} aria-label="Exit Time Machine">

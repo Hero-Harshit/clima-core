@@ -133,14 +133,19 @@ export default function TouristOptimizerModal({ city, onClose }: TouristOptimize
       <div className="utility-modal-window" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="utility-modal-header">
-          <div className="utility-modal-header-info">
-            <div className="utility-modal-kicker">
-              <Compass size={13} className="inline-icon" /> TOURISM & RECREATION PLANNING
+          <div className="utility-modal-title-wrap">
+            <div className="utility-tool-circle-btn tourist-circle-btn" style={{ width: 36, height: 36 }}>
+              <Compass size={18} />
             </div>
-            <h2>Tourist Itinerary Optimizer</h2>
-            <p className="utility-modal-subtitle">
-              Diurnal weather curve, UV index, and heat avoidance scheduler for {city}
-            </p>
+            <div className="utility-modal-header-info">
+              <div className="utility-modal-kicker">
+                <Compass size={13} className="inline-icon" /> TOURISM & RECREATION PLANNING
+              </div>
+              <h2>Tourist Itinerary Optimizer</h2>
+              <p className="utility-modal-subtitle">
+                Diurnal weather curve, UV index, and heat avoidance scheduler for {city}
+              </p>
+            </div>
           </div>
           <button
             type="button"

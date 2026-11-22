@@ -33,6 +33,18 @@ from climacore.analytics.utility_tools import (
     CorridorRadarRequest,
     TouristOptimizerRequest,
     CleanAirWorkoutRequest,
+    CropHarvestRequest,
+    MonsoonExamRequest,
+    MetroVsRoadRequest,
+    HeatStrokeSurgeRequest,
+    HospitalGridFuelRequest,
+    CoastalSquallRequest,
+    IceToFishRatioRequest,
+    FactoryTinRoofRequest,
+    RunwayCrosswindRequest,
+    WaterTurbidityRequest,
+    ParametricTriggerRequest,
+    ColdStorageBlackoutRequest,
 )
 
 logger = get_logger("climacore.service.app")
@@ -291,6 +303,18 @@ def create_app() -> FastAPI:
                 "/api/tools/corridor-radar",
                 "/api/tools/tourist-optimizer",
                 "/api/tools/clean-air-workout",
+                "/api/tools/crop-spoilage",
+                "/api/tools/monsoon-exam",
+                "/api/tools/metro-vs-road",
+                "/api/tools/heat-stroke-surge",
+                "/api/tools/hospital-grid-fuel",
+                "/api/tools/coastal-squall",
+                "/api/tools/ice-to-fish-ratio",
+                "/api/tools/factory-tin-roof",
+                "/api/tools/runway-crosswind",
+                "/api/tools/water-turbidity",
+                "/api/tools/parametric-trigger",
+                "/api/tools/cold-storage-defense",
             ],
         }
 
@@ -529,6 +553,7 @@ def create_app() -> FastAPI:
                     "temp_min": m.get("temperature_min_c") or m.get("temp_min") or 24.0,
                     "precipitation_mm": m.get("precipitation_mm") or 0.0,
                     "wind_speed_kmh": m.get("wind_speed_kmh") or 14.0,
+                    "relative_humidity": m.get("relative_humidity_pct") or m.get("relative_humidity") or m.get("humidity") or 72.0,
                     "aqi": m.get("aqi") or 95,
                     "pm25": m.get("pm2_5_ug_m3") or m.get("pm2_5") or 42.0,
                     "wbgt": m.get("wet_bulb_temp_c") or 27.5,
@@ -596,6 +621,246 @@ def create_app() -> FastAPI:
             monitor.latency_profiler.record(lat_ms, is_error=True)
             logger.error(f"Error in clean air workout for {req.city}: {e}")
             raise HTTPException(status_code=500, detail=f"Clean air workout calculation failed: {str(e)}")
+
+    @app.post("/api/tools/crop-spoilage")
+    async def post_crop_spoilage(req: CropHarvestRequest) -> Dict[str, Any]:
+        """Crop Harvest Spoilage Radar moisture, dew condensation, and post-harvest drying risk."""
+        from climacore.analytics.utility_tools import analyze_crop_harvest_spoilage
+        monitor = get_monitoring_service()
+        t0 = time.perf_counter()
+        try:
+            live_weather = _extract_live_tool_metrics(req.city)
+            res = await analyze_crop_harvest_spoilage(req=req, current_weather=live_weather)
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=False)
+            data = res.model_dump()
+            data["latency_ms"] = round(lat_ms, 2)
+            return data
+        except Exception as e:
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=True)
+            logger.error(f"Error in crop harvest spoilage analysis for {req.city}: {e}")
+            raise HTTPException(status_code=500, detail=f"Crop spoilage analysis failed: {str(e)}")
+
+    @app.post("/api/tools/monsoon-exam")
+    async def post_monsoon_exam(req: MonsoonExamRequest) -> Dict[str, Any]:
+        """Monsoon Exam Commute Planner flood transit, choke points, and safe arrival buffers."""
+        from climacore.analytics.utility_tools import analyze_monsoon_exam_commute
+        monitor = get_monitoring_service()
+        t0 = time.perf_counter()
+        try:
+            live_weather = _extract_live_tool_metrics(req.city)
+            res = await analyze_monsoon_exam_commute(req=req, current_weather=live_weather)
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=False)
+            data = res.model_dump()
+            data["latency_ms"] = round(lat_ms, 2)
+            return data
+        except Exception as e:
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=True)
+            logger.error(f"Error in monsoon exam commute planning for {req.city}: {e}")
+            raise HTTPException(status_code=500, detail=f"Monsoon exam commute planning failed: {str(e)}")
+
+    @app.post("/api/tools/metro-vs-road")
+    async def post_metro_vs_road(req: MetroVsRoadRequest) -> Dict[str, Any]:
+        """Metro vs Road Flood Intuition decision engine."""
+        from climacore.analytics.utility_tools import evaluate_metro_vs_road
+        monitor = get_monitoring_service()
+        t0 = time.perf_counter()
+        try:
+            live_weather = _extract_live_tool_metrics(req.city)
+            res = await evaluate_metro_vs_road(req=req, current_weather=live_weather)
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=False)
+            data = res.model_dump()
+            data["latency_ms"] = round(lat_ms, 2)
+            return data
+        except Exception as e:
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=True)
+            logger.error(f"Error in metro vs road evaluation for {req.city}: {e}")
+            raise HTTPException(status_code=500, detail=f"Metro vs road evaluation failed: {str(e)}")
+
+    @app.post("/api/tools/heat-stroke-surge")
+    async def post_heat_stroke_surge(req: HeatStrokeSurgeRequest) -> Dict[str, Any]:
+        """Heat Stroke & Dehydration Surge Predictor for emergency hospital wards."""
+        from climacore.analytics.utility_tools import predict_heat_stroke_surge
+        monitor = get_monitoring_service()
+        t0 = time.perf_counter()
+        try:
+            live_weather = _extract_live_tool_metrics(req.city)
+            res = await predict_heat_stroke_surge(req=req, current_weather=live_weather)
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=False)
+            data = res.model_dump()
+            data["latency_ms"] = round(lat_ms, 2)
+            return data
+        except Exception as e:
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=True)
+            logger.error(f"Error in heat stroke surge prediction for {req.city}: {e}")
+            raise HTTPException(status_code=500, detail=f"Heat stroke surge prediction failed: {str(e)}")
+
+    @app.post("/api/tools/hospital-grid-fuel")
+    async def post_hospital_grid_fuel(req: HospitalGridFuelRequest) -> Dict[str, Any]:
+        """Hospital Grid Outage and Backup Generator Fuel Buffer Calculator."""
+        from climacore.analytics.utility_tools import calculate_hospital_grid_fuel
+        monitor = get_monitoring_service()
+        t0 = time.perf_counter()
+        try:
+            live_weather = _extract_live_tool_metrics(req.city)
+            res = await calculate_hospital_grid_fuel(req=req, current_weather=live_weather)
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=False)
+            data = res.model_dump()
+            data["latency_ms"] = round(lat_ms, 2)
+            return data
+        except Exception as e:
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=True)
+            logger.error(f"Error in hospital grid fuel calculation for {req.city}: {e}")
+            raise HTTPException(status_code=500, detail=f"Hospital grid fuel calculation failed: {str(e)}")
+
+    @app.post("/api/tools/coastal-squall")
+    async def post_coastal_squall(req: CoastalSquallRequest) -> Dict[str, Any]:
+        """Coastal Squall and Small Craft Sea State Advisory for marine fisheries."""
+        from climacore.analytics.utility_tools import evaluate_coastal_squall
+        monitor = get_monitoring_service()
+        t0 = time.perf_counter()
+        try:
+            live_weather = _extract_live_tool_metrics(req.coastal_zone)
+            res = await evaluate_coastal_squall(req=req, current_weather=live_weather)
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=False)
+            data = res.model_dump()
+            data["latency_ms"] = round(lat_ms, 2)
+            return data
+        except Exception as e:
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=True)
+            logger.error(f"Error in coastal squall advisory for {req.coastal_zone}: {e}")
+            raise HTTPException(status_code=500, detail=f"Coastal squall advisory failed: {str(e)}")
+
+    @app.post("/api/tools/ice-to-fish-ratio")
+    async def post_ice_to_fish_ratio(req: IceToFishRatioRequest) -> Dict[str, Any]:
+        """Catch Freshness and Ice-to-Fish Thermal Ratio Calculator."""
+        from climacore.analytics.utility_tools import calculate_ice_to_fish_ratio
+        monitor = get_monitoring_service()
+        t0 = time.perf_counter()
+        try:
+            live_weather = _extract_live_tool_metrics(req.coastal_zone)
+            res = await calculate_ice_to_fish_ratio(req=req, current_weather=live_weather)
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=False)
+            data = res.model_dump()
+            data["latency_ms"] = round(lat_ms, 2)
+            return data
+        except Exception as e:
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=True)
+            logger.error(f"Error in ice-to-fish ratio calculation for {req.coastal_zone}: {e}")
+            raise HTTPException(status_code=500, detail=f"Ice-to-fish ratio calculation failed: {str(e)}")
+
+    @app.post("/api/tools/factory-tin-roof")
+    async def post_factory_tin_roof(req: FactoryTinRoofRequest) -> Dict[str, Any]:
+        """Factory Tin Roof Heat Stress & HVAC Load Shedder for manufacturing plants."""
+        from climacore.analytics.utility_tools import calculate_factory_tin_roof_stress
+        monitor = get_monitoring_service()
+        t0 = time.perf_counter()
+        try:
+            live_weather = _extract_live_tool_metrics(req.city)
+            res = await calculate_factory_tin_roof_stress(req=req, current_weather=live_weather)
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=False)
+            data = res.model_dump()
+            data["latency_ms"] = round(lat_ms, 2)
+            return data
+        except Exception as e:
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=True)
+            logger.error(f"Error in factory tin roof calculation for {req.city}: {e}")
+            raise HTTPException(status_code=500, detail=f"Factory tin roof calculation failed: {str(e)}")
+
+    @app.post("/api/tools/runway-crosswind")
+    async def post_runway_crosswind(req: RunwayCrosswindRequest) -> Dict[str, Any]:
+        """Runway Crosswind & Convective Divergent Radar for airport operations."""
+        from climacore.analytics.utility_tools import evaluate_runway_crosswind
+        monitor = get_monitoring_service()
+        t0 = time.perf_counter()
+        try:
+            live_weather = _extract_live_tool_metrics(req.airport_code_or_city)
+            res = await evaluate_runway_crosswind(req=req, current_weather=live_weather)
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=False)
+            data = res.model_dump()
+            data["latency_ms"] = round(lat_ms, 2)
+            return data
+        except Exception as e:
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=True)
+            logger.error(f"Error in runway crosswind evaluation for {req.airport_code_or_city}: {e}")
+            raise HTTPException(status_code=500, detail=f"Runway crosswind evaluation failed: {str(e)}")
+
+    @app.post("/api/tools/water-turbidity")
+    async def post_water_turbidity(req: WaterTurbidityRequest) -> Dict[str, Any]:
+        """Water Treatment Turbidity & Coagulant Dosing Predictor for municipal water plants."""
+        from climacore.analytics.utility_tools import predict_water_treatment_dosing
+        monitor = get_monitoring_service()
+        t0 = time.perf_counter()
+        try:
+            live_weather = _extract_live_tool_metrics(req.city)
+            res = await predict_water_treatment_dosing(req=req, current_weather=live_weather)
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=False)
+            data = res.model_dump()
+            data["latency_ms"] = round(lat_ms, 2)
+            return data
+        except Exception as e:
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=True)
+            logger.error(f"Error in water turbidity prediction for {req.city}: {e}")
+            raise HTTPException(status_code=500, detail=f"Water turbidity prediction failed: {str(e)}")
+
+    @app.post("/api/tools/parametric-trigger")
+    async def post_parametric_trigger(req: ParametricTriggerRequest) -> Dict[str, Any]:
+        """Parametric Weather Contract Trigger Simulator for catastrophe insurance."""
+        from climacore.analytics.utility_tools import simulate_parametric_weather_trigger
+        monitor = get_monitoring_service()
+        t0 = time.perf_counter()
+        try:
+            live_weather = _extract_live_tool_metrics(req.city)
+            res = await simulate_parametric_weather_trigger(req=req, current_weather=live_weather)
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=False)
+            data = res.model_dump()
+            data["latency_ms"] = round(lat_ms, 2)
+            return data
+        except Exception as e:
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=True)
+            logger.error(f"Error in parametric trigger simulation for {req.city}: {e}")
+            raise HTTPException(status_code=500, detail=f"Parametric trigger simulation failed: {str(e)}")
+
+    @app.post("/api/tools/cold-storage-defense")
+    async def post_cold_storage_defense(req: ColdStorageBlackoutRequest) -> Dict[str, Any]:
+        """Cold Storage Pre-Cooling & Grid Blackout Defense Planner for cold chain logistics."""
+        from climacore.analytics.utility_tools import plan_cold_storage_defense
+        monitor = get_monitoring_service()
+        t0 = time.perf_counter()
+        try:
+            live_weather = _extract_live_tool_metrics(req.city)
+            res = await plan_cold_storage_defense(req=req, current_weather=live_weather)
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=False)
+            data = res.model_dump()
+            data["latency_ms"] = round(lat_ms, 2)
+            return data
+        except Exception as e:
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            monitor.latency_profiler.record(lat_ms, is_error=True)
+            logger.error(f"Error in cold storage defense planning for {req.city}: {e}")
+            raise HTTPException(status_code=500, detail=f"Cold storage defense planning failed: {str(e)}")
 
     @app.post("/api/predict/custom")
     def predict_custom(req: CustomPredictionRequest) -> Dict[str, Any]:

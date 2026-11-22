@@ -112,14 +112,19 @@ export default function CleanAirWorkoutModal({ city, onClose }: CleanAirWorkoutM
       <div className="utility-modal-window" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="utility-modal-header">
-          <div className="utility-modal-header-info">
-            <div className="utility-modal-kicker">
-              <Activity size={13} className="inline-icon" /> ATHLETIC PHYSIOLOGY & AIR QUALITY
+          <div className="utility-modal-title-wrap">
+            <div className="utility-tool-circle-btn workout-circle-btn" style={{ width: 36, height: 36 }}>
+              <Activity size={18} />
             </div>
-            <h2>Clean Air Athletic Window</h2>
-            <p className="utility-modal-subtitle">
-              Atmospheric inversion dissipation, particulate trapping, and outdoor fitness radar for {city}
-            </p>
+            <div className="utility-modal-header-info">
+              <div className="utility-modal-kicker">
+                <Activity size={13} className="inline-icon" /> ATHLETIC PHYSIOLOGY & AIR QUALITY
+              </div>
+              <h2>Clean Air Athletic Window</h2>
+              <p className="utility-modal-subtitle">
+                Atmospheric inversion dissipation, particulate trapping, and outdoor fitness radar for {city}
+              </p>
+            </div>
           </div>
           <button
             type="button"

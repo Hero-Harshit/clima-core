@@ -28,6 +28,30 @@ export interface TranslationDictionary {
     touristOptimizerDesc: string;
     cleanAirWorkoutTitle: string;
     cleanAirWorkoutDesc: string;
+    cropHarvestTitle: string;
+    cropHarvestDesc: string;
+    monsoonExamTitle: string;
+    monsoonExamDesc: string;
+    metroVsRoadTitle: string;
+    metroVsRoadDesc: string;
+    heatStrokeSurgeTitle: string;
+    heatStrokeSurgeDesc: string;
+    hospitalGridFuelTitle: string;
+    hospitalGridFuelDesc: string;
+    coastalSquallTitle: string;
+    coastalSquallDesc: string;
+    iceToFishRatioTitle: string;
+    iceToFishRatioDesc: string;
+    factoryTinRoofTitle: string;
+    factoryTinRoofDesc: string;
+    runwayCrosswindTitle: string;
+    runwayCrosswindDesc: string;
+    waterTurbidityTitle: string;
+    waterTurbidityDesc: string;
+    parametricTriggerTitle: string;
+    parametricTriggerDesc: string;
+    coldStorageTitle: string;
+    coldStorageDesc: string;
   };
   assistantDrawer: {
     headerTitle: string;
@@ -114,6 +138,16 @@ export interface TranslationDictionary {
     moreButton: string;
     lessButton: string;
     fallbackAdvisories: string[];
+  };
+  personaTools: {
+    kicker: string;
+    defaultTitle: string;
+    calibratedTitlePrefix: string;
+    badgeAwaiting: string;
+    badgeActiveSingle: string;
+    badgeActivePlural: string;
+    awaitingPrompt: string;
+    inDevelopmentNotice: string;
   };
   forecast: {
     kicker: string;

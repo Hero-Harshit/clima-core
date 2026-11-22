@@ -125,14 +125,19 @@ export default function CorridorRadarModal({ city, onClose }: CorridorRadarModal
       <div className="utility-modal-window" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="utility-modal-header">
-          <div className="utility-modal-header-info">
-            <div className="utility-modal-kicker">
-              <Truck size={13} className="inline-icon" /> LOGISTICS & FREIGHT TELEMETRY
+          <div className="utility-modal-title-wrap">
+            <div className="utility-tool-circle-btn corridor-circle-btn" style={{ width: 36, height: 36 }}>
+              <Truck size={18} />
             </div>
-            <h2>Delivery Corridor Radar</h2>
-            <p className="utility-modal-subtitle">
-              Live route waterlogging, flyover crosswinds, and asphalt thermal stress navigator for {city}
-            </p>
+            <div className="utility-modal-header-info">
+              <div className="utility-modal-kicker">
+                <Truck size={13} className="inline-icon" /> LOGISTICS & FREIGHT TELEMETRY
+              </div>
+              <h2>Delivery Corridor Radar</h2>
+              <p className="utility-modal-subtitle">
+                Live route waterlogging, flyover crosswinds, and asphalt thermal stress navigator for {city}
+              </p>
+            </div>
           </div>
           <button
             type="button"
